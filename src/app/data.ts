@@ -27,6 +27,7 @@ export interface Collaborator {
   importantDates: { label: string; date: string; priority: number }[];
   trainings?: Training[];
   courses?: Course[];
+  isAdmin?: boolean;
 }
 
 export interface ShiftCell {

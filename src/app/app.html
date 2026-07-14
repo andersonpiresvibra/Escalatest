@@ -9,6 +9,111 @@
     </div>
   }
 
+  @if (!getLoggedCollab()) {
+    <!-- TELA DE LOGIN SIMPLICADA - SEM AVIAÇÃO - EM PORTUGUÊS BRASIL -->
+    <div class="flex-1 flex flex-col items-center justify-center p-4 bg-[#020813] select-none text-slate-100 w-full h-full">
+      <div class="w-full max-w-xs p-6 bg-[#030a14] border border-[#10213b] rounded-xl shadow-2xl flex flex-col gap-4 animate-fade-in animate-duration-200" id="login_card_container">
+        
+        <!-- Cabeçalho Minimalista -->
+        <div class="flex flex-col items-center text-center gap-1">
+          <h2 class="text-lg font-black tracking-wider text-white uppercase">ESCALA EASY</h2>
+          <p class="text-[10px] text-slate-400 font-medium">
+            Gestão de Escala de Trabalho Mensal
+          </p>
+        </div>
+
+        <hr class="border-[#10213b]/50">
+
+        <!-- Mensagens de Erro -->
+        @if (loginError()) {
+          <div class="p-2.5 bg-rose-500/10 border border-rose-500/20 rounded-lg flex items-start gap-2 text-left text-rose-400" id="login_error_box">
+            <span class="material-icons text-sm leading-none shrink-0 mt-0.5">error</span>
+            <span class="text-[10px] font-bold leading-normal">{{ loginError() }}</span>
+          </div>
+        }
+
+        <!-- ETAPA 1: Nome Completo -->
+        @if (!matchedCollab()) {
+          <div class="flex flex-col gap-3 text-left animate-fade-in">
+            <div class="flex flex-col gap-1">
+              <label for="login_name" class="text-[9px] font-bold uppercase text-slate-400 tracking-wider">Nome Completo</label>
+              <input type="text"
+                     id="login_name"
+                     [value]="loginNameInput()"
+                     (input)="loginNameInput.set($any($event.target).value)"
+                     (keydown.enter)="checkLoginName()"
+                     placeholder="Digite seu nome completo"
+                     class="w-full px-3 py-2 bg-[#051124] border border-[#10213b] rounded-lg text-xs font-bold text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500 transition-all font-sans uppercase" />
+            </div>
+
+            <button (click)="checkLoginName()"
+                    id="btn_login_advance"
+                    class="w-full py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-black text-xs uppercase tracking-wider rounded-lg transition-all flex items-center justify-center gap-1 cursor-pointer border-none outline-none">
+              Avançar
+              <span class="material-icons text-xs leading-none">arrow_forward</span>
+            </button>
+          </div>
+        } @else {
+          <!-- ETAPA 2: Senha / Criar Senha -->
+          <div class="flex flex-col gap-3 text-left animate-fade-in">
+            
+            <!-- Colaborador Encontrado -->
+            <div class="flex items-center justify-between text-xs py-1 px-0.5 border-b border-[#10213b]/40 pb-2">
+              <span class="text-[10px] text-slate-300">Olá, <strong class="text-white uppercase font-black">{{ matchedCollab()!.name }}</strong></span>
+              <button (click)="resetLoginState()" class="text-[9px] font-black uppercase text-rose-400 hover:text-rose-300 bg-transparent border-none outline-none cursor-pointer tracking-wider">
+                Alterar
+              </button>
+            </div>
+
+            <!-- Senha -->
+            <div class="flex flex-col gap-3">
+              <div class="flex flex-col gap-1">
+                <label for="login_password" class="text-[9px] font-bold uppercase text-slate-400 tracking-wider">
+                  {{ isFirstAccess() ? 'Crie sua senha' : 'Sua senha' }}
+                </label>
+                <input type="password"
+                       id="login_password"
+                       [value]="loginPasswordInput()"
+                       (input)="loginPasswordInput.set($any($event.target).value)"
+                       (keydown.enter)="handleLoginSubmit()"
+                       maxlength="4"
+                       [placeholder]="isFirstAccess() ? 'senha' : 'Digite sua senha'"
+                       class="w-full px-3 py-2 bg-[#051124] border border-[#10213b] rounded-lg text-center text-sm font-black text-white tracking-[0.2em] placeholder-slate-600 focus:outline-none focus:border-emerald-500 transition-all font-mono" />
+              </div>
+
+              <!-- Confirmar Senha (Primeiro acesso) -->
+              @if (isFirstAccess()) {
+                <div class="flex flex-col gap-1 animate-slide-up">
+                  <label for="confirm_password" class="text-[9px] font-bold uppercase text-slate-400 tracking-wider">Confirme sua senha</label>
+                  <input type="password"
+                         id="confirm_password"
+                         [value]="confirmPasswordInput()"
+                         (input)="confirmPasswordInput.set($any($event.target).value)"
+                         (keydown.enter)="handleLoginSubmit()"
+                         maxlength="4"
+                         placeholder="Confirme sua senha"
+                         class="w-full px-3 py-2 bg-[#051124] border border-[#10213b] rounded-lg text-center text-sm font-black text-white tracking-[0.2em] placeholder-slate-600 focus:outline-none focus:border-emerald-500 transition-all font-mono" />
+                </div>
+              }
+
+              <button (click)="handleLoginSubmit()"
+                      id="btn_login_submit"
+                      class="w-full py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-black text-xs uppercase tracking-wider rounded-lg transition-all flex items-center justify-center gap-1 cursor-pointer border-none outline-none">
+                {{ isFirstAccess() ? 'Confirmar e Entrar' : 'Entrar' }}
+                <span class="material-icons text-xs leading-none">login</span>
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+      
+      <!-- Rodapé discreto -->
+      <span class="text-[8px] font-bold text-slate-600 uppercase tracking-widest mt-4">
+        Escala Easy VIBRA • 100% Corporativo
+      </span>
+    </div>
+  } @else {
+
   <!-- GLOBAL UNIFIED TABS BAR (home / matrix / staff + dropdown options) -->
   <header class="flex flex-row items-center justify-between gap-2 md:gap-4 select-none px-4 md:px-6 py-3 border-b border-[#10213b] shadow-xl relative z-[60]" 
           [class.bg-[#030a14]/80]="!isLightTheme()" [class.backdrop-blur-md]="!isLightTheme()" [class.bg-white]="isLightTheme()" id="global_master_header">
@@ -262,96 +367,105 @@
             </div>
 
             <!-- Seções -->
-            <div class="py-1.5 bg-[#030a14] border-t border-[#10213b] hidden md:block" id="dropdown_sections_category">
-              <span class="block px-4 py-1 text-[8px] font-black uppercase text-slate-500 tracking-wider select-none">Seções</span>
-              
-              <button (click)="activeSubTab.set('matrix'); isDropdownOpen.set(false)"
-                      class="w-full text-left px-4 py-2 text-[10px] font-black uppercase transition-colors tracking-wider hidden md:flex items-center gap-2 cursor-pointer border-none outline-none bg-transparent"
-                      [class]="activeSubTab() === 'matrix' ? 'text-emerald-400 font-extrabold bg-[#0b1e36]/30' : 'text-slate-300 hover:bg-[#0b1e36]'">
-                <span class="material-icons text-sm" [class]="activeSubTab() === 'matrix' ? 'text-emerald-400' : 'text-slate-400'">calendar_month</span>
-                Escala
-              </button>
+            @if (isAdmin(getLoggedCollab())) {
+              <div class="py-1.5 bg-[#030a14] border-t border-[#10213b] hidden md:block" id="dropdown_sections_category">
+                <span class="block px-4 py-1 text-[8px] font-black uppercase text-slate-500 tracking-wider select-none">Seções</span>
+                
+                <button (click)="activeSubTab.set('matrix'); isDropdownOpen.set(false)"
+                        class="w-full text-left px-4 py-2 text-[10px] font-black uppercase transition-colors tracking-wider hidden md:flex items-center gap-2 cursor-pointer border-none outline-none bg-transparent"
+                        [class]="activeSubTab() === 'matrix' ? 'text-emerald-400 font-extrabold bg-[#0b1e36]/30' : 'text-slate-300 hover:bg-[#0b1e36]'">
+                  <span class="material-icons text-sm" [class]="activeSubTab() === 'matrix' ? 'text-emerald-400' : 'text-slate-400'">calendar_month</span>
+                  Escala
+                </button>
 
 
-              <button (click)="activeSubTab.set('portal'); isDropdownOpen.set(false)"
-                      class="w-full text-left px-4 py-2 text-[10px] font-black uppercase transition-colors tracking-wider flex items-center gap-2 cursor-pointer border-none outline-none bg-transparent"
-                      [class]="activeSubTab() === 'portal' ? 'text-emerald-400 font-extrabold bg-[#0b1e36]/30' : 'text-slate-300 hover:bg-[#0b1e36]'">
-                <span class="material-icons text-sm" [class]="activeSubTab() === 'portal' ? 'text-emerald-400' : 'text-slate-400'">contact_page</span>
-                Portal do Colaborador
-              </button>
-            </div>
+                <button (click)="activeSubTab.set('portal'); isDropdownOpen.set(false)"
+                        class="w-full text-left px-4 py-2 text-[10px] font-black uppercase transition-colors tracking-wider flex items-center gap-2 cursor-pointer border-none outline-none bg-transparent"
+                        [class]="activeSubTab() === 'portal' ? 'text-emerald-400 font-extrabold bg-[#0b1e36]/30' : 'text-slate-300 hover:bg-[#0b1e36]'">
+                  <span class="material-icons text-sm" [class]="activeSubTab() === 'portal' ? 'text-emerald-400' : 'text-slate-400'">contact_page</span>
+                  Portal do Colaborador
+                </button>
+              </div>
 
-            <!-- Gerenciamento (Turnos & Siglas) -->
-            <div class="py-1.5 bg-[#030a14] border-t border-[#10213b] hidden md:block">
-              <span class="block px-4 py-1 text-[8px] font-black uppercase text-slate-500 tracking-wider select-none">Gerenciamento</span>
-              
-              <button (click)="activeSubTab.set('ger.turnos'); isDropdownOpen.set(false)"
-                      class="w-full text-left px-4 py-2 text-[10px] font-black uppercase transition-colors tracking-wider flex items-center gap-2 cursor-pointer border-none outline-none"
-                      [class]="activeSubTab() === 'ger.turnos' ? 'text-blue-400 bg-blue-950/20' : 'text-slate-300 hover:bg-[#0b1e36]'">
-                <span class="material-icons text-sm" [class]="activeSubTab() === 'ger.turnos' ? 'text-blue-400' : 'text-slate-400'">tune</span>
-                Turno
-              </button>
+              <!-- Gerenciamento (Turnos & Siglas) -->
+              <div class="py-1.5 bg-[#030a14] border-t border-[#10213b] hidden md:block">
+                <span class="block px-4 py-1 text-[8px] font-black uppercase text-slate-500 tracking-wider select-none">Gerenciamento</span>
+                
+                <button (click)="activeSubTab.set('ger.turnos'); isDropdownOpen.set(false)"
+                        class="w-full text-left px-4 py-2 text-[10px] font-black uppercase transition-colors tracking-wider flex items-center gap-2 cursor-pointer border-none outline-none"
+                        [class]="activeSubTab() === 'ger.turnos' ? 'text-blue-400 bg-blue-950/20' : 'text-slate-300 hover:bg-[#0b1e36]'">
+                  <span class="material-icons text-sm" [class]="activeSubTab() === 'ger.turnos' ? 'text-blue-400' : 'text-slate-400'">tune</span>
+                  Turno
+                </button>
 
-              <button (click)="activeSubTab.set('siglas'); isDropdownOpen.set(false)"
-                      class="w-full text-left px-4 py-2 text-[10px] font-black uppercase transition-colors tracking-wider flex items-center gap-2 cursor-pointer border-none outline-none"
-                      [class]="activeSubTab() === 'siglas' ? 'text-blue-400 bg-blue-950/20' : 'text-slate-300 hover:bg-[#0b1e36]'">
-                <span class="material-icons text-sm" [class]="activeSubTab() === 'siglas' ? 'text-blue-400' : 'text-slate-400'">label</span>
-                Siglas
-              </button>
+                <button (click)="activeSubTab.set('siglas'); isDropdownOpen.set(false)"
+                        class="w-full text-left px-4 py-2 text-[10px] font-black uppercase transition-colors tracking-wider flex items-center gap-2 cursor-pointer border-none outline-none"
+                        [class]="activeSubTab() === 'siglas' ? 'text-blue-400 bg-blue-950/20' : 'text-slate-300 hover:bg-[#0b1e36]'">
+                  <span class="material-icons text-sm" [class]="activeSubTab() === 'siglas' ? 'text-blue-400' : 'text-slate-400'">label</span>
+                  Siglas
+                </button>
 
-              <button (click)="activeSubTab.set('team'); teamViewMode.set('mgmt'); isDropdownOpen.set(false)"
-                      class="w-full text-left px-4 py-2 text-[10px] font-black uppercase transition-colors tracking-wider flex items-center gap-2 cursor-pointer border-none outline-none bg-transparent"
-                      [class]="activeSubTab() === 'team' && teamViewMode() === 'mgmt' ? 'text-blue-400 bg-blue-950/20' : 'text-slate-300 hover:bg-[#0b1e36]'">
-                <span class="material-icons text-sm" [class]="activeSubTab() === 'team' && teamViewMode() === 'mgmt' ? 'text-blue-400' : 'text-slate-400'">manage_accounts</span>
-                Ger. de Colaboradores
-              </button>
-            </div>
+                <button (click)="activeSubTab.set('team'); teamViewMode.set('mgmt'); isDropdownOpen.set(false)"
+                        class="w-full text-left px-4 py-2 text-[10px] font-black uppercase transition-colors tracking-wider flex items-center gap-2 cursor-pointer border-none outline-none bg-transparent"
+                        [class]="activeSubTab() === 'team' && teamViewMode() === 'mgmt' ? 'text-blue-400 bg-blue-950/20' : 'text-slate-300 hover:bg-[#0b1e36]'">
+                  <span class="material-icons text-sm" [class]="activeSubTab() === 'team' && teamViewMode() === 'mgmt' ? 'text-blue-400' : 'text-slate-400'">manage_accounts</span>
+                  Ger. de Colaboradores
+                </button>
+              </div>
 
-            <!-- Modo de Apresentação (Restringir Escalas) -->
-            <div class="py-2.5 px-4 bg-[#091526] border-t border-[#10213b] hidden md:block" id="presentation_mode_dropdown_section">
-              <span class="block text-[8px] font-black uppercase text-slate-500 tracking-wider mb-2 select-none">Apresentação</span>
-              @if (onlyNightShift()) {
-                <div class="space-y-1.5" id="presentation_restricted_box">
-                  <div class="text-[9px] font-black text-emerald-400 uppercase tracking-wider flex items-center gap-1">
-                    <span class="material-icons text-[10px] animate-pulse">visibility_off</span> Foco Turno Noite
+              <!-- Modo de Apresentação (Restringir Escalas) -->
+              <div class="py-2.5 px-4 bg-[#091526] border-t border-[#10213b] hidden md:block" id="presentation_mode_dropdown_section">
+                <span class="block text-[8px] font-black uppercase text-slate-500 tracking-wider mb-2 select-none">Apresentação</span>
+                @if (onlyNightShift()) {
+                  <div class="space-y-1.5" id="presentation_restricted_box">
+                    <div class="text-[9px] font-black text-emerald-400 uppercase tracking-wider flex items-center gap-1">
+                      <span class="material-icons text-[10px] animate-pulse">visibility_off</span> Foco Turno Noite
+                    </div>
+                    <p class="text-[8px] text-slate-400 leading-normal">Outras escalas ocultas por padrão.</p>
+                    
+                    <div class="flex items-center gap-1.5 mt-1" id="presentation_unlock_form">
+                      <input type="password" #pinInput placeholder="PIN de Acesso" (keyup.enter)="unlockAllShifts(pinInput.value); pinInput.value=''"
+                             class="bg-[#020813] border border-[#10213b] text-white text-[9px] px-2 py-1.5 rounded-md w-full outline-none focus:border-emerald-500 placeholder:text-slate-600 font-mono">
+                      <button (click)="unlockAllShifts(pinInput.value); pinInput.value=''"
+                              class="px-2.5 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-white font-black text-[9px] uppercase rounded-md cursor-pointer transition-colors border-none outline-none">
+                        Ok
+                      </button>
+                    </div>
                   </div>
-                  <p class="text-[8px] text-slate-400 leading-normal">Outras escalas ocultas por padrão.</p>
-                  
-                  <div class="flex items-center gap-1.5 mt-1" id="presentation_unlock_form">
-                    <input type="password" #pinInput placeholder="PIN de Acesso" (keyup.enter)="unlockAllShifts(pinInput.value); pinInput.value=''"
-                           class="bg-[#020813] border border-[#10213b] text-white text-[9px] px-2 py-1.5 rounded-md w-full outline-none focus:border-emerald-500 placeholder:text-slate-600 font-mono">
-                    <button (click)="unlockAllShifts(pinInput.value); pinInput.value=''"
-                            class="px-2.5 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-white font-black text-[9px] uppercase rounded-md cursor-pointer transition-colors border-none outline-none">
-                      Ok
+                } @else {
+                  <div class="space-y-1.5" id="presentation_unlocked_box">
+                    <div class="text-[9px] font-black text-amber-500 uppercase tracking-wider flex items-center gap-1">
+                      <span class="material-icons text-[10px]">visibility</span> Todos Visíveis
+                    </div>
+                    <p class="text-[8px] text-slate-400 leading-normal font-sans">Todos os turnos de escalas estão liberados para exibição.</p>
+                    <button (click)="lockToNightShift()"
+                            class="w-full text-center py-1.5 bg-[#030a14] hover:bg-slate-800 text-amber-400 hover:text-white border border-[#10213b] font-black text-[9px] uppercase rounded-md cursor-pointer transition-colors outline-none">
+                      Restringir à Noite
                     </button>
                   </div>
-                </div>
-              } @else {
-                <div class="space-y-1.5" id="presentation_unlocked_box">
-                  <div class="text-[9px] font-black text-amber-500 uppercase tracking-wider flex items-center gap-1">
-                    <span class="material-icons text-[10px]">visibility</span> Todos Visíveis
-                  </div>
-                  <p class="text-[8px] text-slate-400 leading-normal font-sans">Todos os turnos de escalas estão liberados para exibição.</p>
-                  <button (click)="lockToNightShift()"
-                          class="w-full text-center py-1.5 bg-[#030a14] hover:bg-slate-800 text-amber-400 hover:text-white border border-[#10213b] font-black text-[9px] uppercase rounded-md cursor-pointer transition-colors outline-none">
-                    Restringir à Noite
-                  </button>
-                </div>
-              }
-            </div>
+                }
+              </div>
 
-            <!-- Management Tools (Admin only) -->
-            <div class="py-1.5 bg-[#071426] border-t border-[#10213b] rounded-b-lg hidden md:block">
-              @if (scaleService.currentRole() !== 'OPERADOR') {
+              <!-- Management Tools (Admin only) -->
+              <div class="py-1.5 bg-[#071426] border-t border-[#10213b] rounded-b-lg hidden md:block">
                 <button (click)="openDbConfigModal(); isDropdownOpen.set(false)"
                         class="w-full text-left px-4 py-2 text-[10px] font-black uppercase text-blue-400 hover:bg-blue-950/20 transition-colors tracking-wider flex items-center gap-2 cursor-pointer border-none outline-none">
                   <span class="material-icons text-blue-400 text-sm">storage</span>
                   Configurar Banco de Dados
                 </button>
-              } @else {
-                <span class="block px-4 py-2 text-[8px] font-bold text-slate-500 italic">Opções restritas para Administradores</span>
-              }
-            </div>
+              </div>
+            } @else {
+              <!-- Para colaboradores comuns, mostramos apenas o atalho do Portal dele (caso precise voltar) -->
+              <div class="py-1.5 bg-[#030a14] border-t border-[#10213b]" id="dropdown_sections_category">
+                <span class="block px-4 py-1 text-[8px] font-black uppercase text-slate-500 tracking-wider select-none">Menu</span>
+                <button (click)="activeSubTab.set('portal'); isDropdownOpen.set(false)"
+                        class="w-full text-left px-4 py-2 text-[10px] font-black uppercase transition-colors tracking-wider flex items-center gap-2 cursor-pointer border-none outline-none bg-transparent"
+                        [class]="activeSubTab() === 'portal' ? 'text-emerald-400 font-extrabold bg-[#0b1e36]/30' : 'text-slate-300 hover:bg-[#0b1e36]'">
+                  <span class="material-icons text-sm" [class]="activeSubTab() === 'portal' ? 'text-emerald-400 font-extrabold' : 'text-slate-400'">contact_page</span>
+                  Portal do Colaborador
+                </button>
+              </div>
+            }
           </div>
         }
       </div>
@@ -499,7 +613,7 @@
 
                   @if (isMatrixOptionsOpen()) {
                     <div (click)="$event.stopPropagation()" class="absolute right-0 mt-2 w-52 rounded-lg bg-[#071426] border border-[#10213b] shadow-2xl z-50 divide-y divide-[#10213b] animate-fade-in" id="matrix_options_dropdown_menu">
-                      @if (scaleService.currentRole() !== 'OPERADOR') {
+                      @if (canEdit()) {
                         <div class="py-1">
                           <!-- Editar em massa -->
                           <button (click)="togglePaintbrushPanel(); isMatrixOptionsOpen.set(false)"
@@ -846,8 +960,8 @@
                           <div class="flex items-center justify-center">
                             <!-- EDIT BUTTON -->
                             <button (click)="startRowScaleEdit(collab)" 
-                                    [disabled]="scaleService.currentRole() === 'OPERADOR'"
-                                    [class.opacity-40]="scaleService.currentRole() === 'OPERADOR'"
+                                    [disabled]="!canEdit()"
+                                    [class.opacity-40]="!canEdit()"
                                     class="w-4 h-4 rounded bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 border border-blue-500/30 flex items-center justify-center cursor-pointer transition-colors"
                                     title="Editar escala desta linha">
                               <span class="material-icons text-[8px]">edit</span>
@@ -1881,7 +1995,7 @@
                       <span>Ordenar A-Z</span>
                     </button>
 
-                    @if (scaleService.currentRole() !== 'OPERADOR') {
+                    @if (canEdit()) {
                       <button (click)="openCreateCollabModal()"
                               class="bg-[#10b981] hover:bg-emerald-600 text-white font-black text-[10px] px-2.5 py-1 ml-1.5 rounded-md uppercase tracking-wider cursor-pointer border-none shadow-md flex items-center gap-1 transition-all outline-none h-[22px]"
                               id="btn_cadastrar_colaborador">
@@ -1901,6 +2015,7 @@
                         <th class="py-3 px-4 md:px-6 bg-[#071426]">Função</th>
                         <th class="py-3 px-4 md:px-6 bg-[#071426]">Setor</th>
                         <th class="py-3 px-4 md:px-6 bg-[#071426]">Turno</th>
+                        <th class="py-3 px-4 md:px-6 bg-[#071426]">Nível de Acesso</th>
                         
                         <th class="py-3 px-4 md:px-6 bg-[#071426] text-center">Ações</th>
                       </tr>
@@ -1945,11 +2060,22 @@
                           <!-- Turno -->
                           <td class="py-3.5 px-4 md:px-6 font-mono uppercase text-slate-400 font-bold">{{ getShiftLabel(collab) }}</td>
 
+                          <!-- Nível de Acesso -->
+                          <td class="py-3.5 px-4 md:px-6">
+                            <select [value]="collab.isAdmin ? 'true' : 'false'"
+                                    (change)="toggleCollabAdmin(collab, $any($event.target).value === 'true')"
+                                    [disabled]="!canEdit()"
+                                    class="bg-[#030a14] text-[11px] font-bold border border-[#10213b] text-slate-300 rounded px-2.5 py-1 outline-none focus:border-emerald-500 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+                              <option value="false">Usuário</option>
+                              <option value="true">Administrador</option>
+                            </select>
+                          </td>
+
                           
 
                           <!-- Ações -->
                           <td class="py-3.5 px-4 md:px-6 text-center flex items-center justify-center gap-1.5">
-                            @if (scaleService.currentRole() !== 'OPERADOR') {
+                            @if (canEdit()) {
                               <!-- Edit Button -->
                               <button (click)="startEditingCollab(collab)"
                                       class="p-1.5 bg-blue-950/20 hover:bg-blue-950 text-blue-400 hover:text-white rounded transition-all cursor-pointer border-none outline-none flex items-center justify-center"
@@ -2129,6 +2255,17 @@
                                    class="bg-[#071426] text-white border border-[#10213b] focus:border-emerald-500 outline-none rounded-lg px-3 py-2 text-xs font-semibold font-mono">
                           </div>
 
+                          <!-- Nível de Acesso (Administrador ou Usuário Comum) -->
+                          <div class="flex flex-col gap-1.5 col-span-1 md:col-span-12">
+                            <label for="modal_collab_is_admin" class="font-black text-[9px] uppercase tracking-wider text-slate-400">Nível de Acesso (Administrador ou Usuário)</label>
+                            <select id="modal_collab_is_admin"
+                                    #editCollabIsAdmin
+                                    class="bg-[#071426] text-white border border-[#10213b] focus:border-emerald-500 outline-none rounded-lg px-3 py-2 text-xs font-semibold w-full">
+                              <option value="false" [selected]="!editingCollab()?.isAdmin">Usuário Comum (Acesso exclusivo ao Portal do Colaborador)</option>
+                              <option value="true" [selected]="editingCollab()?.isAdmin">Administrador (Acesso total às seções e edição da escala)</option>
+                            </select>
+                          </div>
+
                         </div>
 
                         <!-- Seção de Datas Especiais foi movida para o Portal do Colaborador -->
@@ -2143,13 +2280,13 @@
                         </button>
                         
                         @if (editingCollab()) {
-                          <button (click)="saveEditedCollaborator(editingCollab()!.id, editCollabName.value, $any(isNewRoleMode() ? editCollabRoleInput.value : editCollabRoleSelect.value), $any(editCollabGroup.value), $any(editCollabShift.value), $any(isNewSectorMode() ? editCollabSectorInput.value : editCollabSectorSelect.value), 0, +editCollabScore.value || 100, newCollabPhotoData(), editCollabBirthday.value, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined)"
+                          <button (click)="saveEditedCollaborator(editingCollab()!.id, editCollabName.value, $any(isNewRoleMode() ? editCollabRoleInput.value : editCollabRoleSelect.value), $any(editCollabGroup.value), $any(editCollabShift.value), $any(isNewSectorMode() ? editCollabSectorInput.value : editCollabSectorSelect.value), 0, +editCollabScore.value || 100, newCollabPhotoData(), editCollabBirthday.value, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, editCollabIsAdmin.value === 'true')"
                                   class="bg-[#10b981] hover:bg-emerald-600 text-white font-black text-xs px-5 py-2.5 rounded-lg uppercase tracking-wider cursor-pointer border-none shadow-lg shadow-emerald-500/15 flex items-center gap-1.5 select-none transition-all outline-none">
                             <span class="material-icons text-sm">save</span>
                             Salvar Alterações
                           </button>
                         } @else {
-                          <button (click)="registerCollaborator(editCollabName.value, $any(isNewRoleMode() ? editCollabRoleInput.value : editCollabRoleSelect.value), $any(editCollabGroup.value), $any(editCollabShift.value), $any(isNewSectorMode() ? editCollabSectorInput.value : editCollabSectorSelect.value), 0, +editCollabScore.value || 100, newCollabPhotoData() || undefined, editCollabBirthday.value, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined); editCollabName.value = ''; editCollabBirthday.value = ''; newCollabPhotoData.set(null)"
+                          <button (click)="registerCollaborator(editCollabName.value, $any(isNewRoleMode() ? editCollabRoleInput.value : editCollabRoleSelect.value), $any(editCollabGroup.value), $any(editCollabShift.value), $any(isNewSectorMode() ? editCollabSectorInput.value : editCollabSectorSelect.value), 0, +editCollabScore.value || 100, newCollabPhotoData() || undefined, editCollabBirthday.value, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, editCollabIsAdmin.value === 'true'); editCollabName.value = ''; editCollabBirthday.value = ''; newCollabPhotoData.set(null)"
                                   class="bg-[#10b981] hover:bg-emerald-600 text-white font-black text-xs px-5 py-2.5 rounded-lg uppercase tracking-wider cursor-pointer border-none shadow-lg shadow-emerald-500/15 flex items-center gap-1.5 select-none transition-all outline-none">
                             <span class="material-icons text-sm">person_add_alt</span>
                             Cadastrar Colaborador
@@ -3588,7 +3725,10 @@ CREATE TABLE IF NOT EXISTS public.colaboradores (
   score INT DEFAULT 90,
   birthday DATE,
   special_dates JSONB,
-  folga_requests JSONB
+  folga_requests JSONB,
+  password VARCHAR(100),
+  photo_url TEXT,
+  is_admin BOOLEAN DEFAULT false
 );
 
 CREATE TABLE IF NOT EXISTS public.escala_diaria (
@@ -4070,4 +4210,5 @@ CREATE TABLE IF NOT EXISTS public.audit_history (
     </div>
   }
 
+}
 </div>

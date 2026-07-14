@@ -132,6 +132,14 @@ export class App {
   public isPortalCollabListOpen = signal<boolean>(false);
   public isPortalRulesOpen = signal<boolean>(false);
   public isPortalEditingDates = signal<boolean>(false);
+
+  // Login e Fluxo de Primeiro Acesso
+  public loginNameInput = signal<string>('');
+  public loginPasswordInput = signal<string>('');
+  public confirmPasswordInput = signal<string>('');
+  public loginError = signal<string | null>(null);
+  public matchedCollab = signal<Collaborator | null>(null);
+  public isFirstAccess = signal<boolean>(false);
   
   public daysArray = Array.from({ length: 31 }, (_, i) => String(i + 1).padStart(2, '0'));
   public monthsArray = [
@@ -1131,6 +1139,31 @@ export class App {
   scannedDataParsed = signal<any[]>([]);
   unrecognizedCodes = signal<string[]>([]);
 
+  public isHoracio(collab: Collaborator | null): boolean {
+    if (!collab) return false;
+    const nameNorm = collab.name
+      .toUpperCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim();
+    const isHoracioName = nameNorm === 'HORACIO' || nameNorm.startsWith('HORACIO') || nameNorm.includes('HORACIO');
+    const isAdminRole = collab.role.toUpperCase() === 'ADMINISTRADOR' || collab.role.toUpperCase() === 'ADMIN';
+    return collab.id === '058' || isHoracioName || isAdminRole;
+  }
+
+  public isAdmin(collab: Collaborator | null): boolean {
+    if (!collab) return false;
+    return !!collab.isAdmin || this.isHoracio(collab);
+  }
+
+  public canEdit(): boolean {
+    const logged = this.getLoggedCollab();
+    if (logged && this.isAdmin(logged)) {
+      return true;
+    }
+    return this.scaleService.currentRole() !== 'OPERADOR';
+  }
+
   constructor() {
     if (typeof window !== 'undefined' && window.innerWidth < 768) {
       this.activeSubTab.set('portal');
@@ -1149,6 +1182,16 @@ export class App {
         this.scaleService.syncSupabase();
       }
     }, { allowSignalWrites: true });
+
+    // Efeito para forçar o RBAC: Colaboradores normais ficam estritamente travados no Portal do Colaborador
+    effect(() => {
+      const logged = this.getLoggedCollab();
+      if (logged && !this.isAdmin(logged)) {
+        if (this.activeSubTab() !== 'portal') {
+          this.activeSubTab.set('portal');
+        }
+      }
+    });
   }
 
   // Clock Update Function
@@ -1878,7 +1921,7 @@ export class App {
   }
 
   applyPaintbrush(collabId: string, day: number) {
-    if (this.scaleService.currentRole() === 'OPERADOR') {
+    if (!this.canEdit()) {
       this.showToast('Acesso negado: Apenas Líder ou Supervisor pode alterar escalas.');
       return;
     }
@@ -1898,7 +1941,7 @@ export class App {
 
   // Row-level inline scale editing methods
   startRowScaleEdit(collab: Collaborator) {
-    if (this.scaleService.currentRole() === 'OPERADOR') {
+    if (!this.canEdit()) {
       this.showToast('Acesso negado: Apenas Líder ou Supervisor pode alterar escalas.');
       return;
     }
@@ -1930,7 +1973,7 @@ export class App {
   }
 
   saveRowScale(collab: Collaborator) {
-    if (this.scaleService.currentRole() === 'OPERADOR') {
+    if (!this.canEdit()) {
       this.showToast('Acesso negado.');
       return;
     }
@@ -2398,22 +2441,121 @@ export class App {
     this.assignmentShiftCode.set('');
   }
 
-  // Auth Portal Simulation
-  openAuthModal(mode: 'LOGIN' | 'SIGNUP') {
-    this.authMode.set(mode);
-    this.isAuthModalOpen.set(true);
+  // Métodos de autenticação real integrada ao Supabase
+
+  public checkLoginName() {
+    this.loginError.set(null);
+    const rawInput = this.loginNameInput().trim();
+    if (!rawInput) {
+      this.loginError.set('Por favor, insira o seu nome.');
+      return;
+    }
+    const typedName = rawInput.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+    const collabs = this.scaleService.collaborators();
+    // Procurar por correspondência de nome exato ou contido
+    const found = collabs.find(c => {
+      const normName = c.name.trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      return normName === typedName || normName.includes(typedName);
+    });
+
+    if (!found) {
+      this.loginError.set('Colaborador não encontrado. Por favor, digite seu nome exatamente como cadastrado no sistema.');
+      return;
+    }
+
+    this.matchedCollab.set(found);
+    if (!found.password || found.password.trim() === '') {
+      this.isFirstAccess.set(true);
+    } else {
+      this.isFirstAccess.set(false);
+    }
   }
 
-  submitAuth(nameInput: string, emailInput: string) {
-    this.isAuthModalOpen.set(false);
-    this.scaleService.selectedCollabName.set(nameInput || 'Anderson Pires');
-    this.showToast(`Bem-vindo, ${nameInput || 'Anderson Pires'}! Autenticado com sucesso.`);
+  public handleLoginSubmit() {
+    this.loginError.set(null);
+    const collab = this.matchedCollab();
+    if (!collab) return;
+
+    const pin = this.loginPasswordInput().trim();
+    if (pin.length !== 4 || !/^\d{4}$/.test(pin)) {
+      this.loginError.set('A senha de acesso deve possuir exatamente 4 dígitos numéricos.');
+      return;
+    }
+
+    if (this.isFirstAccess()) {
+      const confirmPin = this.confirmPasswordInput().trim();
+      if (pin !== confirmPin) {
+        this.loginError.set('As senhas digitadas não coincidem. Por favor, redigite e confirme.');
+        return;
+      }
+
+      // Cadastrar nova senha de 4 dígitos no Supabase
+      const updatedCollab = { ...collab, password: pin };
+      this.scaleService.updateCollaborator(updatedCollab);
+      
+      // Realizar login oficial
+      this.selectedSimulatedCollabId.set(collab.id);
+      this.scaleService.selectedCollabName.set(collab.name);
+      this.scaleService.currentRole.set(collab.role);
+      
+      this.showToast(`Senha de 4 dígitos cadastrada com sucesso! Bem-vindo, ${collab.name}.`);
+      this.clearLoginInputs();
+      
+      // Redirecionar dependendo de quem logou (Administradores para grid, restante para portal)
+      if (this.isAdmin(collab)) {
+        this.activeSubTab.set('matrix');
+      } else {
+        this.activeSubTab.set('portal');
+      }
+    } else {
+      // Login com senha existente
+      if (collab.password === pin) {
+        this.selectedSimulatedCollabId.set(collab.id);
+        this.scaleService.selectedCollabName.set(collab.name);
+        this.scaleService.currentRole.set(collab.role);
+        
+        this.showToast(`Bem-vindo de volta, ${collab.name}!`);
+        this.clearLoginInputs();
+        
+        if (this.isAdmin(collab)) {
+          this.activeSubTab.set('matrix');
+        } else {
+          this.activeSubTab.set('portal');
+        }
+      } else {
+        this.loginError.set('Senha incorreta de 4 dígitos. Por favor, tente novamente.');
+      }
+    }
+  }
+
+  public resetLoginState() {
+    this.matchedCollab.set(null);
+    this.isFirstAccess.set(false);
+    this.loginPasswordInput.set('');
+    this.confirmPasswordInput.set('');
+    this.loginError.set(null);
+  }
+
+  private clearLoginInputs() {
+    this.loginNameInput.set('');
+    this.loginPasswordInput.set('');
+    this.confirmPasswordInput.set('');
+    this.matchedCollab.set(null);
+    this.isFirstAccess.set(false);
+    this.loginError.set(null);
+  }
+
+  // Auth Portal Simulation legacy wrapper
+  openAuthModal(mode: 'LOGIN' | 'SIGNUP') {
+    this.resetLoginState();
   }
 
   logout() {
     this.scaleService.selectedCollabName.set(null);
     this.selectedSimulatedCollabId.set(null);
     this.showToast('Sessão encerrada.');
+    this.resetLoginState();
   }
 
   loginAsCollab(id: string) {
@@ -2423,6 +2565,11 @@ export class App {
       this.scaleService.selectedCollabName.set(collab.name);
       this.scaleService.currentRole.set(collab.role);
       this.showToast(`Sessão simulada como ${collab.name}!`);
+      if (this.isAdmin(collab)) {
+        this.activeSubTab.set('matrix');
+      } else {
+        this.activeSubTab.set('portal');
+      }
     } else {
       this.selectedSimulatedCollabId.set(null);
       this.scaleService.selectedCollabName.set('');
@@ -2450,7 +2597,8 @@ export class App {
     sd2Desc?: string, sd2Date?: string,
     sd3Desc?: string, sd3Date?: string,
     sd4Desc?: string, sd4Date?: string,
-    sd5Desc?: string, sd5Date?: string
+    sd5Desc?: string, sd5Date?: string,
+    isAdmin?: boolean
   ) {
     const specialDates: SpecialDate[] = [];
     if (sd1Desc && sd1Date) specialDates.push({ description: sd1Desc, date: sd1Date, priority: 1 });
@@ -2480,7 +2628,9 @@ export class App {
       score,
       photo,
       birthday,
-      specialDates
+      specialDates,
+      undefined,
+      isAdmin
     );
     this.isCollabModalOpen.set(false);
     this.isNewSectorMode.set(false);
@@ -3528,7 +3678,8 @@ Verifique se os nomes no PDF correspondem aos nomes no sistema.`;
     sd2Desc?: string, sd2Date?: string,
     sd3Desc?: string, sd3Date?: string,
     sd4Desc?: string, sd4Date?: string,
-    sd5Desc?: string, sd5Date?: string
+    sd5Desc?: string, sd5Date?: string,
+    isAdmin?: boolean
   ) {
     if (!name.trim()) {
       this.showToast('O nome completo do colaborador é obrigatório.');
@@ -3584,7 +3735,8 @@ Verifique se os nomes no PDF correspondem aos nomes no sistema.`;
       photo: photo || target.photo,
       birthday: birthday || '',
       specialDates,
-      scale: updatedScale
+      scale: updatedScale,
+      isAdmin: isAdmin !== undefined ? isAdmin : target.isAdmin
     };
 
     this.scaleService.updateCollaborator(updatedCollab);
@@ -3600,6 +3752,15 @@ Verifique se os nomes no PDF correspondem aos nomes no sistema.`;
     }
 
     this.cancelEditingCollab();
+  }
+
+  public toggleCollabAdmin(collab: Collaborator, isAdmin: boolean) {
+    const updatedCollab: Collaborator = {
+      ...collab,
+      isAdmin
+    };
+    this.scaleService.updateCollaborator(updatedCollab);
+    this.showToast(`Nível de acesso de "${collab.name}" alterado para ${isAdmin ? 'Administrador' : 'Usuário'}.`);
   }
 
   onCollabPhotoSelected(event: any) {

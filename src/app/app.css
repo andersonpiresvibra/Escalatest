@@ -33,3 +33,9 @@ app-root:nth-of-type(1) > div#main_app_layout:nth-of-type(1) > main:nth-of-type(
 app-root:nth-of-type(1) > div#main_app_layout:nth-of-type(1) > main:nth-of-type(1) > section#primary_workspace_tabs:nth-of-type(1) > div#portal_tab_content:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) {
   background-color: #ffffff !important;
 }
+
+app-root:nth-of-type(1) > div#main_app_layout:nth-of-type(1) > header#global_master_header:nth-of-type(1) > div:nth-of-type(3) > div#options_dropdown_container:nth-of-type(2) > button#btn_options_dropdown:nth-of-type(1),
+app-root:nth-of-type(1) > div#main_app_layout:nth-of-type(1) > header#global_master_header:nth-of-type(1) > div:nth-of-type(3) > div#options_dropdown_container:nth-of-type(1) > button#btn_options_dropdown:nth-of-type(1) {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+}

@@ -77,6 +77,8 @@ export interface Collaborator {
   birthday?: string; // Format: "YYYY-MM-DD"
   specialDates?: SpecialDate[];
   folgaRequests?: FolgaRequest[];
+  password?: string;
+  isAdmin?: boolean;
 }
 
 export interface ShiftType {
@@ -479,7 +481,9 @@ export class ScaleService {
             photo: row.photo_url || row.photo || '',
             birthday: row.birthday || '',
             specialDates: typeof row.special_dates === 'string' ? JSON.parse(row.special_dates) : (row.special_dates || []),
-            folgaRequests: typeof row.folga_requests === 'string' ? JSON.parse(row.folga_requests) : (row.folga_requests || [])
+            folgaRequests: typeof row.folga_requests === 'string' ? JSON.parse(row.folga_requests) : (row.folga_requests || []),
+            password: row.password || '',
+            isAdmin: row.is_admin === true || row.is_admin === 'true' || row.is_admin === 1
           };
         });
 
@@ -779,7 +783,8 @@ export class ScaleService {
     photo?: string,
     birthday?: string,
     specialDates?: SpecialDate[],
-    folgaRequests?: FolgaRequest[]
+    folgaRequests?: FolgaRequest[],
+    isAdmin = false
   ) {
     if (!name.trim()) return;
     const id = 'collab_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
@@ -810,7 +815,8 @@ export class ScaleService {
       photo: photo || undefined,
       birthday: birthday || '',
       specialDates: specialDates || [],
-      folgaRequests: folgaRequests || []
+      folgaRequests: folgaRequests || [],
+      isAdmin: isAdmin
     };
 
     newCollab = this.refreshPreSelectedFolgas(newCollab, true);
@@ -829,7 +835,9 @@ export class ScaleService {
           photo_url: newCollab.photoUrl || newCollab.photo || null,
           birthday: newCollab.birthday || null,
           special_dates: newCollab.specialDates || null,
-          folga_requests: newCollab.folgaRequests || null
+          folga_requests: newCollab.folgaRequests || null,
+          password: newCollab.password || null,
+          is_admin: newCollab.isAdmin
         };
         const upRes = await this.supabase.from('colaboradores').upsert(dbRow);
         if (upRes.error) throw upRes.error;
@@ -924,7 +932,9 @@ export class ScaleService {
           photo_url: refreshedCol.photoUrl || refreshedCol.photo || null,
           birthday: refreshedCol.birthday || null,
           special_dates: refreshedCol.specialDates || null,
-          folga_requests: refreshedCol.folgaRequests || null
+          folga_requests: refreshedCol.folgaRequests || null,
+          password: refreshedCol.password || null,
+          is_admin: refreshedCol.isAdmin
         };
         const upRes = await this.supabase.from('colaboradores').upsert(dbRow);
         if (upRes.error) throw upRes.error;
