@@ -732,25 +732,66 @@ export class App {
   selectedCollabTeamDayTab = signal<'today' | 'tomorrow' | 'other'>('today');
   selectedCollabTeamDayOther = signal<number>(new Date().getDate());
 
-  // --- Long Press Edit Dates Logic ---
-  private datesLongPressTimer: any;
+  // --- Direct Edit Dates Logic ---
+  public readonly daysOptions = Array.from({ length: 31 }, (_, i) => (i + 1).toString().padStart(2, '0'));
+  public readonly monthsOptions = [
+    { value: '01', name: 'Jan' },
+    { value: '02', name: 'Fev' },
+    { value: '03', name: 'Mar' },
+    { value: '04', name: 'Abr' },
+    { value: '05', name: 'Mai' },
+    { value: '06', name: 'Jun' },
+    { value: '07', name: 'Jul' },
+    { value: '08', name: 'Ago' },
+    { value: '09', name: 'Set' },
+    { value: '10', name: 'Out' },
+    { value: '11', name: 'Nov' },
+    { value: '12', name: 'Dez' }
+  ];
+
   public editingSpecialDates = signal<{date: string, description: string, priority: number}[]>([]);
 
-  onImportantDatesPointerDown(event: Event) {
-    this.datesLongPressTimer = setTimeout(() => {
-      this.isPortalEditingDates.set(true);
-      const logged = this.getLoggedCollab();
-      if (logged) {
-         const currentDates = JSON.parse(JSON.stringify(logged.specialDates || []));
-         this.editingSpecialDates.set(currentDates);
-      }
-    }, 2000);
+  openEditSpecialDates() {
+    this.isPortalEditingDates.set(true);
+    const logged = this.getLoggedCollab();
+    if (logged) {
+       const currentDates = JSON.parse(JSON.stringify(logged.specialDates || []));
+       this.editingSpecialDates.set(currentDates);
+    }
   }
 
-  onImportantDatesPointerUp() {
-    if (this.datesLongPressTimer) {
-      clearTimeout(this.datesLongPressTimer);
-    }
+  updateSpecialDateDay(index: number, dayValue: string) {
+    this.editingSpecialDates.update(dates => {
+      const newDates = [...dates];
+      if (index >= 0 && index < newDates.length) {
+        const currentVal = newDates[index].date || '2026-01-01';
+        const parts = currentVal.split('-');
+        const year = parts[0] || '2026';
+        const month = parts[1] || '01';
+        newDates[index] = {
+          ...newDates[index],
+          date: `${year}-${month}-${dayValue.padStart(2, '0')}`
+        };
+      }
+      return newDates;
+    });
+  }
+
+  updateSpecialDateMonth(index: number, monthValue: string) {
+    this.editingSpecialDates.update(dates => {
+      const newDates = [...dates];
+      if (index >= 0 && index < newDates.length) {
+        const currentVal = newDates[index].date || '2026-01-01';
+        const parts = currentVal.split('-');
+        const year = parts[0] || '2026';
+        const day = parts[2] || '01';
+        newDates[index] = {
+          ...newDates[index],
+          date: `${year}-${monthValue.padStart(2, '0')}-${day}`
+        };
+      }
+      return newDates;
+    });
   }
 
   updateSpecialDateRow(index: number, field: 'date' | 'description', value: string) {
@@ -762,7 +803,7 @@ export class App {
   }
 
   addSpecialDateRow() {
-    this.editingSpecialDates.update(dates => [...dates, { date: '', description: '', priority: 1 }]);
+    this.editingSpecialDates.update(dates => [...dates, { date: '2026-01-01', description: '', priority: 1 }]);
   }
 
   removeSpecialDateRow(index: number) {
@@ -2927,6 +2968,45 @@ export class App {
 
   selectCalendarDay(day: number): void {
     this.selectedCalendarDay.set(day);
+  }
+
+  onPortalCalendarDayClick(day: number): void {
+    this.selectCalendarDay(day);
+    this.togglePortalDayOff(day);
+  }
+
+  togglePortalDayOff(day: number): void {
+    const logged = this.getLoggedCollab();
+    if (!logged) return;
+
+    const dayInfo = this.getCollaboratorDayScheduleInfo(logged, day);
+    const updatedScale = { ...logged.scale };
+
+    let actionLabel = '';
+    if (dayInfo.status === 'folga') {
+      // Remove day off -> set to standard shift
+      const shiftCode = logged.shift || 'ADM';
+      updatedScale[day] = shiftCode;
+      actionLabel = `Removida folga do dia ${day}. Definido turno de trabalho "${shiftCode}".`;
+    } else {
+      // Insert day off -> set to 'F'
+      updatedScale[day] = 'F';
+      actionLabel = `Inserida folga no dia ${day}.`;
+    }
+
+    const updatedCollab = {
+      ...logged,
+      scale: updatedScale
+    };
+
+    this.scaleService.updateCollaborator(updatedCollab);
+    this.showToast(actionLabel);
+
+    // Register in audit history
+    this.scaleService.addAuditHistory(
+      'ALTERACAO_PORTAL',
+      `Colaborador ${logged.name} alterou sua própria escala no dia ${day} via portal: ${actionLabel}`
+    );
   }
 
   getTodayTeamCollaborators(): any[] {

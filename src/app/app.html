@@ -3091,17 +3091,21 @@
                 </div>
 
                 <!-- SECTION: MINHAS DATAS IMPORTANTES -->
-                <div (pointerdown)="onImportantDatesPointerDown($event)" (pointerup)="onImportantDatesPointerUp()" (pointerleave)="onImportantDatesPointerUp()" class="bg-[#030a14] border border-[#10213b] rounded-lg p-5 shadow-xl space-y-3 cursor-pointer select-none hover:border-rose-500/30 transition-colors relative group" title="Pressione por 2 segundos para editar">
-                  <div class="absolute inset-0 bg-rose-500/0 group-active:bg-rose-500/5 transition-colors duration-[2000ms] rounded-lg pointer-events-none"></div>
+                <div (click)="openEditSpecialDates()" class="bg-[#030a14] border border-[#10213b] rounded-lg p-5 shadow-xl space-y-3 cursor-pointer select-none hover:border-rose-500/30 transition-colors relative group" title="Clique para editar suas datas importantes">
+                  <div class="absolute inset-0 bg-rose-500/0 group-active:bg-rose-500/5 transition-colors duration-300 rounded-lg pointer-events-none"></div>
                   <div class="flex items-center justify-between pb-1 border-b border-[#10213b]/40">
-                    <h4 class="font-black text-xs text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                    <h4 class="font-black text-xs text-slate-900 uppercase tracking-wider flex items-center gap-1.5"
+                        [class.text-slate-800]="isLightTheme()">
                       <span class="material-icons text-rose-500 text-sm">favorite</span>
                       Minhas Datas Importantes
                     </h4>
-                    <span class="text-[8px] font-bold font-mono px-1.5 py-0.5 rounded shrink-0 transition-colors"
-                          [class]="isLightTheme() ? 'text-rose-600 bg-rose-100 border border-rose-200' : 'text-rose-400 bg-rose-950/40 border border-rose-500/20'">
-                      {{ getImportantDatesForCollab(logged).length }} Registros
-                    </span>
+                    <div class="flex items-center gap-1.5">
+                      <span class="text-[8px] font-bold font-mono px-1.5 py-0.5 rounded shrink-0 transition-colors"
+                            [class]="isLightTheme() ? 'text-rose-600 bg-rose-100 border border-rose-200' : 'text-rose-400 bg-rose-950/40 border border-rose-500/20'">
+                        {{ getImportantDatesForCollab(logged).length }} Registros
+                      </span>
+                      <span class="material-icons text-xs text-slate-400 group-hover:text-rose-400 transition-colors">edit</span>
+                    </div>
                   </div>
 
                   <div class="grid grid-cols-1 gap-2">
@@ -3213,7 +3217,7 @@
                         @let dayInfo = getCollaboratorDayScheduleInfo(logged, day);
                         @let count = getFolgaRequestCount(day);
 
-                        <button (click)="selectCalendarDay(day)"
+                        <button (click)="onPortalCalendarDayClick(day)"
                                 [class]="getCollaboratorCalendarDayClass(logged, day, count)"
                                 [class.opacity-45]="isPastDay(day)"
                                 [class.saturate-[0.45]]="isPastDay(day)"
@@ -3845,7 +3849,24 @@ CREATE TABLE IF NOT EXISTS public.audit_history (
         <div class="p-4 space-y-4 max-h-[60vh] overflow-y-auto scrollbar-thin">
            @for (date of editingSpecialDates(); track $index) {
              <div class="flex items-center gap-2">
-                <input type="date" [value]="date.date" (change)="updateSpecialDateRow($index, 'date', $any($event.target).value)" class="bg-[#071426] text-white border border-[#10213b] focus:border-emerald-500 outline-none rounded-lg px-2 py-1.5 text-[11px] font-mono h-8">
+                <!-- Seleção de Dia e Mês (Sem Ano) -->
+                <div class="flex items-center gap-1 shrink-0">
+                  <select [value]="getDayFromDate(date.date)"
+                          (change)="updateSpecialDateDay($index, $any($event.target).value)"
+                          class="bg-[#071426] text-white border border-[#10213b] focus:border-emerald-500 outline-none rounded-lg px-2 py-1.5 text-[11px] font-mono h-8 cursor-pointer w-14">
+                    @for (d of daysOptions; track d) {
+                      <option [value]="d">{{ d }}</option>
+                    }
+                  </select>
+                  <span class="text-slate-500 text-xs font-bold">/</span>
+                  <select [value]="getMonthFromDate(date.date)"
+                          (change)="updateSpecialDateMonth($index, $any($event.target).value)"
+                          class="bg-[#071426] text-white border border-[#10213b] focus:border-emerald-500 outline-none rounded-lg px-2 py-1.5 text-[11px] font-mono h-8 cursor-pointer w-20">
+                    @for (m of monthsOptions; track m.value) {
+                      <option [value]="m.value">{{ m.name }}</option>
+                    }
+                  </select>
+                </div>
                 <input type="text" [value]="date.description" (input)="updateSpecialDateRow($index, 'description', $any($event.target).value)" placeholder="Descrição (ex: Casamento)" class="flex-1 bg-[#071426] text-white border border-[#10213b] focus:border-emerald-500 outline-none rounded-lg px-2 py-1.5 text-xs h-8">
                 <button (click)="removeSpecialDateRow($index)" class="w-8 h-8 rounded flex items-center justify-center bg-rose-500/10 text-rose-500 border border-rose-500/20 hover:bg-rose-500/20 cursor-pointer">
                   <span class="material-icons text-sm leading-none">delete</span>
