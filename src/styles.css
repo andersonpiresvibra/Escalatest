@@ -1,0 +1,39 @@
+/* Global Stylesheet for Escala Easy VIBRA */
+@import "./themes.css";
+
+body {
+  margin: 0;
+  padding: 0;
+}
+
+app-root:nth-of-type(1) > div#main_app_layout:nth-of-type(1) > main:nth-of-type(1) > section#primary_workspace_tabs:nth-of-type(1) > div#shifts_tab_content:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > h3:nth-of-type(1) {
+  color: #ffffff !important;
+}
+
+app-root:nth-of-type(1) > div#main_app_layout:nth-of-type(1) > main:nth-of-type(1) > section#primary_workspace_tabs:nth-of-type(1) > div#shifts_tab_content:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > h3:nth-of-type(1) > span:nth-of-type(1) {
+  color: #ffffff !important;
+}
+
+app-root:nth-of-type(1) > div#main_app_layout:nth-of-type(1) > main:nth-of-type(1) > section#primary_workspace_tabs:nth-of-type(1) > div#portal_tab_content:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(7) > span:nth-of-type(1) {
+  color: #ffffff !important;
+  font-size: 12px !important;
+}
+
+app-root:nth-of-type(1) > div#main_app_layout:nth-of-type(1) > main:nth-of-type(1) > section#primary_workspace_tabs:nth-of-type(1) > div#portal_tab_content:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(7) > span:nth-of-type(2) {
+  color: #ffffff !important;
+}
+
+app-root:nth-of-type(1) > div#main_app_layout:nth-of-type(1) > main:nth-of-type(1) > section#primary_workspace_tabs:nth-of-type(1) > div#portal_tab_content:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(5) > span:nth-of-type(1) {
+  color: #ffffff !important;
+  font-size: 12px !important;
+}
+
+app-root:nth-of-type(1) > div#main_app_layout:nth-of-type(1) > header#global_master_header:nth-of-type(1) > div:nth-of-type(2) > div#options_dropdown_container:nth-of-type(2) > button#btn_options_dropdown:nth-of-type(1) {
+  background-color: #3ed791 !important;
+  color: #ffffff !important;
+}
+
+app-root:nth-of-type(1) > div#main_app_layout:nth-of-type(1) > header#global_master_header:nth-of-type(1) > div:nth-of-type(2) > div#options_dropdown_container:nth-of-type(2) > button#btn_options_dropdown:nth-of-type(1) > span:nth-of-type(1) {
+  color: #ffffff !important;
+}
+

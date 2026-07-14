@@ -1,0 +1,35 @@
+app-root:nth-of-type(1) > div#main_app_layout:nth-of-type(1) > header#global_master_header:nth-of-type(1) > div:nth-of-type(1) {
+  width: 205px;
+  font-size: 10px;
+}
+app-root:nth-of-type(1) > div#main_app_layout:nth-of-type(1) > header#global_master_header:nth-of-type(1) > div:nth-of-type(3) {
+  /* Using min-width instead of fixed width to avoid layout breaks on desktop, but keeping their intent */
+  min-width: 120px;
+}
+app-root:nth-of-type(1) > div#main_app_layout:nth-of-type(1) > header#global_master_header:nth-of-type(1) {
+
+}
+app-root:nth-of-type(1) > div#main_app_layout:nth-of-type(1) > header#global_master_header:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > span:nth-of-type(1) {
+  font-size: 13px;
+}
+app-root:nth-of-type(1) > div#main_app_layout:nth-of-type(1) > header#global_master_header:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div#database_sync_indicators:nth-of-type(2) > div:nth-of-type(1) {
+  font-size: 8px;
+}
+app-root:nth-of-type(1) > div#main_app_layout:nth-of-type(1) > header#global_master_header:nth-of-type(1) > div:nth-of-type(3) > div#options_dropdown_container:nth-of-type(1) > button#btn_options_dropdown:nth-of-type(1) > div:nth-of-type(1) > img:nth-of-type(1),
+app-root:nth-of-type(1) > div#main_app_layout:nth-of-type(1) > header#global_master_header:nth-of-type(1) > div:nth-of-type(3) > div#options_dropdown_container:nth-of-type(1) > button#btn_options_dropdown:nth-of-type(1) > div:nth-of-type(1) {
+  width: 35px !important;
+  height: 35px !important;
+}
+app-root:nth-of-type(1) > div#main_app_layout:nth-of-type(1) > header#global_master_header:nth-of-type(1) > div:nth-of-type(3) > div#options_dropdown_container:nth-of-type(1) > button#btn_options_dropdown:nth-of-type(1) {
+  padding-left: 5px !important;
+  padding-top: 5px !important;
+  padding-right: 5px !important;
+  padding-bottom: 5px !important;
+  margin-left: 0px !important;
+}
+app-root:nth-of-type(1) > div#main_app_layout:nth-of-type(1) > main:nth-of-type(1) > section#primary_workspace_tabs:nth-of-type(1) > div#portal_tab_content:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) {
+  background-color: #ffffff;
+}
+app-root:nth-of-type(1) > div#main_app_layout:nth-of-type(1) > main:nth-of-type(1) > section#primary_workspace_tabs:nth-of-type(1) > div#portal_tab_content:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) {
+  background-color: #ffffff !important;
+}

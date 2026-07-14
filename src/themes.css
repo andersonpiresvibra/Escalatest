@@ -1,0 +1,709 @@
+/* ==========================================================================
+   ESCALA EASY VIBRA - CENTRALIZED LIGHT & DARK THEMES
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. BASE DARK THEME & CUSTOM SCROLLBARS (DEFAULT)
+   -------------------------------------------------------------------------- */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #020813;
+}
+::-webkit-scrollbar-thumb {
+  background: #10213b;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #10b981;
+}
+
+body {
+  background-color: #020813;
+  color: #f1f5f9;
+  font-family: 'Inter', sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Special Day (Sábado, Domingo, Feriado) default styling - Dark Theme */
+.day-header-cell.special-day {
+  background-color: rgba(16, 185, 129, 0.05) !important; /* Elegant soft emerald tint */
+  border-right-color: rgba(16, 185, 129, 0.15) !important;
+}
+.day-header-cell.special-day span {
+  color: #34d399 !important; /* Warm emerald green */
+}
+.day-header-cell.special-day .special-label {
+  color: #10b981 !important;
+}
+.day-grid-cell.special-day {
+  background-color: rgba(16, 185, 129, 0.1) !important; /* Noticeable emerald column highlight */
+  border-right-color: rgba(16, 185, 129, 0.15) !important;
+}
+
+/* --------------------------------------------------------------------------
+   2. LIGHT THEME SPECIFIC OVERRIDES
+   High readability, visible borders, card shadows, distinct layout elements.
+   -------------------------------------------------------------------------- */
+body.light-theme {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+
+/* Custom Scrollbar for light theme */
+body.light-theme ::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+body.light-theme ::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+}
+body.light-theme ::-webkit-scrollbar-thumb:hover {
+  background: #10b981;
+}
+
+/* Override dark backgrounds with premium off-white & solid borders */
+.light-theme .bg-\[\#020813\] {
+  background-color: #f1f5f9 !important;
+}
+.light-theme .bg-\[\#071426\],
+.light-theme .bg-\[\#071426\]\/90 {
+  background-color: #ffffff !important;
+  border: 1.5px solid #cbd5e1 !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03) !important;
+}
+.light-theme .bg-\[\#030a14\],
+.light-theme .bg-\[\#030a14\]\/50,
+.light-theme .bg-\[\#030a14\]\/80,
+.light-theme .bg-\[\#030a14\]\/90 {
+  background-color: #ffffff !important;
+  border: 1.5px solid #cbd5e1 !important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05) !important;
+}
+.light-theme .bg-\[\#0b1e36\] {
+  background-color: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+}
+.light-theme .bg-\[\#091524\] {
+  background-color: #ffffff !important;
+  border: 1.5px solid #cbd5e1 !important;
+}
+.light-theme .bg-\[\#0b1a30\] {
+  background-color: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+}
+.light-theme .bg-\[\#01050a\] {
+  background-color: #ffffff !important;
+  border: 1.5px solid #cbd5e1 !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+}
+.light-theme .bg-\[\#0e1628\] {
+  background-color: #ffffff !important;
+  border-bottom: 1.5px solid #cbd5e1 !important;
+}
+.light-theme .bg-\[\#122b4f\] {
+  background-color: #f1f5f9 !important;
+}
+.light-theme .bg-slate-900\/30,
+.light-theme .bg-slate-900\/40 {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  border: 1.5px solid #cbd5e1 !important;
+}
+.light-theme .bg-slate-900 {
+  background-color: #ffffff !important;
+  border: 1.5px solid #cbd5e1 !important;
+}
+
+/* Sticky rows & cols in Matrix Table */
+.light-theme th,
+.light-theme thead,
+.light-theme thead tr,
+.light-theme thead th {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+.light-theme th.sticky {
+  background-color: #f1f5f9 !important;
+  color: #498571 !important;
+  border-bottom: 1px solid #cbd5e1 !important;
+  border-right: 1px solid #cbd5e1 !important;
+}
+.light-theme td.sticky {
+  background-color: #ffffff !important;
+  border-top: 1px solid #cbd5e1 !important;
+  border-bottom: 1px solid #cbd5e1 !important;
+  border-left: none !important;
+  border-right: none !important;
+  box-shadow: none !important;
+}
+.light-theme td.sticky.left-0 {
+  border-right: 1px solid #cbd5e1 !important;
+}
+.light-theme td.sticky.right-0 {
+  border-left: 1px solid #cbd5e1 !important;
+}
+.light-theme tr.bg-amber-950 td.sticky,
+.light-theme tr.bg-amber-950:hover td.sticky {
+  background-color: #fef3c7 !important;
+}
+
+/* Day header and grid cells overrides - Clean White for weekdays, Elegant Mint Green for weekends/holidays */
+.light-theme .day-header-cell {
+  background-color: #ffffff !important;
+  color: #498571 !important;
+  border-right-color: #cbd5e1 !important;
+}
+.light-theme .day-header-cell span {
+  color: #498571 !important;
+}
+.light-theme .day-grid-cell {
+  background-color: #ffffff; /* Pure White background for collaborator days as requested */
+  color: #0f172a !important;
+  border-right-color: #cbd5e1 !important;
+}
+.light-theme .day-header-cell.special-day {
+  background-color: #BAF5CE !important; /* Premium light green header (#BAF5CE) as requested */
+  border-right-color: #86efac !important; /* green-300 border */
+}
+.light-theme .day-header-cell.special-day span {
+  color: #498571 !important;
+}
+.light-theme .day-grid-cell.special-day {
+  background-color: #BAF5CE; /* Same premium light green as requested (#BAF5CE) */
+  border-right-color: #86efac !important; /* green-300 border */
+}
+.light-theme .special-label {
+  color: #498571 !important; /* Distinct green week day labels matching #498571 */
+}
+
+/* Time Badge custom classes */
+.time-badge {
+  background-color: #0b1e36;
+  color: #34d399 !important;
+  border-color: rgba(16, 185, 129, 0.2) !important;
+}
+.light-theme .time-badge {
+  background-color: #f0fdf4 !important;
+  color: #15803d !important;
+  border-color: #bbf7d0 !important;
+}
+
+/* Month Picker Button and Search Toolbar styling under Light Theme */
+.light-theme #matrix_search_toolbar {
+  background-color: #10B981 !important;
+  border-color: rgba(16, 185, 129, 0.2) !important;
+}
+
+.light-theme #btn_month_picker_trigger {
+  background-color: #ffffff !important;
+  color: #347660 !important;
+  border: 1px solid #ffffff !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+}
+
+.light-theme #btn_month_picker_trigger span {
+  color: #347660 !important;
+}
+
+.light-theme #txt_month_picker_label {
+  color: #347660 !important;
+  background-color: #ffffff !important;
+}
+
+.light-theme #matrix_search_toolbar select,
+.light-theme #matrix_search_toolbar input {
+  background-color: rgba(255, 255, 255, 0.9) !important;
+  color: #065f46 !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
+}
+
+.light-theme #matrix_search_toolbar select:focus,
+.light-theme #matrix_search_toolbar input:focus {
+  background-color: #ffffff !important;
+  border-color: #ffffff !important;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.2) !important;
+}
+
+.light-theme #matrix_search_toolbar select option {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+}
+
+.light-theme tr:hover td.sticky {
+  background-color: #f8fafc !important;
+}
+.light-theme thead tr {
+  background-color: #e2e8f0 !important;
+}
+.light-theme tr {
+  border-color: #cbd5e1 !important;
+}
+.light-theme tbody tr:hover {
+  background-color: rgba(226, 232, 240, 0.5) !important;
+}
+
+/* Inputs, Selects & Buttons */
+.light-theme input,
+.light-theme select {
+  background-color: #ffffff !important;
+  border: 1.5px solid #cbd5e1 !important;
+  color: #0f172a !important;
+}
+.light-theme input::placeholder {
+  color: #94a3b8 !important;
+}
+.light-theme select option {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+}
+
+/* Secondary slate buttons high-contrast in light theme */
+.light-theme .bg-\[\#1e293b\] {
+  background-color: #e2e8f0 !important; /* premium light slate secondary background */
+  color: #0f172a !important;            /* high contrast dark text */
+  border: 1px solid #cbd5e1 !important;
+}
+.light-theme .bg-\[\#1e293b\]:hover {
+  background-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+/* Force any direct or nested text in this secondary button to be dark slate */
+.light-theme button.bg-\[\#1e293b\],
+.light-theme button.bg-\[\#1e293b\] span,
+.light-theme button.bg-\[\#1e293b\] * {
+  color: #0f172a !important;
+}
+
+/* Schedule detail cards in light theme */
+.light-theme .bg-\[\#041021\],
+.light-theme .bg-\[\#041021\]\/80 {
+  background-color: #f8fafc !important;
+  border: 1.5px solid #cbd5e1 !important;
+}
+.light-theme .bg-\[\#041021\] *,
+.light-theme .bg-\[\#041021\]\/80 * {
+  color: #0f172a !important;
+}
+
+/* Keep green background buttons and tags vibrant */
+.light-theme .bg-\[\#10b981\] {
+  background-color: #10b981 !important;
+  border-color: #059669 !important;
+}
+/* Hover overrides */
+.light-theme .hover\:bg-\[\#0b1e36\]:hover {
+  background-color: #f1f5f9 !important;
+}
+.light-theme .hover\:bg-slate-800\/40:hover {
+  background-color: #e2e8f0 !important;
+}
+.light-theme .hover\:text-white:hover {
+  color: #0f172a !important;
+}
+
+/* Global Borders Overrides to make lines and spacing beautifully defined */
+.light-theme .border-\[\#10213b\] {
+  border-color: #cbd5e1 !important;
+}
+.light-theme .border-slate-800 {
+  border-color: #cbd5e1 !important;
+}
+.light-theme .border-r {
+  border-right-color: #cbd5e1 !important;
+}
+.light-theme .border-l {
+  border-left-color: #cbd5e1 !important;
+}
+.light-theme .border-t {
+  border-top-color: #cbd5e1 !important;
+}
+.light-theme .border-b {
+  border-bottom-color: #cbd5e1 !important;
+}
+
+/* Dynamic borders for specific status blocks */
+.light-theme .border-emerald-500\/20,
+.light-theme .border-emerald-500\/30 {
+  border-color: rgba(16, 185, 129, 0.4) !important;
+}
+.light-theme .border-amber-500\/20,
+.light-theme .border-amber-500\/30 {
+  border-color: rgba(245, 158, 11, 0.4) !important;
+}
+.light-theme .border-rose-500\/20,
+.light-theme .border-rose-500\/30 {
+  border-color: rgba(239, 68, 68, 0.4) !important;
+}
+
+/* High contrast text color mappings */
+.light-theme .text-slate-100 {
+  color: #1e293b !important;
+}
+.light-theme .text-slate-200 {
+  color: #334155 !important;
+}
+.light-theme .text-slate-300 {
+  color: #475569 !important;
+}
+.light-theme .text-slate-400 {
+  color: #475569 !important;
+}
+.light-theme .text-slate-500 {
+  color: #64748b !important;
+}
+.light-theme .text-white:not(button):not(input):not(select):not(.bg-\[\#10b981\]):not(.bg-emerald-500):not(.bg-emerald-600):not(.bg-blue-500):not(.bg-rose-500):not(.bg-amber-500):not(.bg-red-500):not(.text-white-force) {
+  color: #0f172a !important;
+}
+.light-theme h1,
+.light-theme h2,
+.light-theme h3,
+.light-theme h4,
+.light-theme h5,
+.light-theme h6 {
+  color: #0f172a !important;
+}
+
+/* Brand/Vibrant text contrasts */
+.light-theme .text-emerald-300,
+.light-theme .text-emerald-400,
+.light-theme .text-\[\#10b981\] {
+  color: #047857 !important;
+}
+.light-theme .text-amber-400,
+.light-theme .text-amber-500 {
+  color: #b45309 !important;
+}
+.light-theme .text-purple-400 {
+  color: #6d28d9 !important;
+}
+.light-theme .text-blue-400 {
+  color: #1d4ed8 !important;
+}
+.light-theme .text-rose-400 {
+  color: #be123c !important;
+}
+
+/* Dropdowns & Popups */
+.light-theme #notification_dropdown,
+.light-theme #matrix_options_dropdown_menu,
+.light-theme #month_picker_dropdown,
+.light-theme #collab_detail_dropdown_menu,
+.light-theme #options_dropdown_menu,
+.light-theme .absolute.z-50 {
+  background-color: #ffffff !important;
+  border: 1.5px solid #cbd5e1 !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Clean color badge mappings for light theme - soft pastel bg with vibrant font */
+.light-theme .bg-blue-950,
+.light-theme .bg-blue-950\/10,
+.light-theme .bg-blue-950\/20,
+.light-theme .bg-blue-950\/40 {
+  background-color: #eff6ff !important;
+  color: #1d4ed8 !important;
+  border: 1px solid rgba(29, 78, 216, 0.2) !important;
+}
+.light-theme .bg-amber-950,
+.light-theme .bg-amber-950\/20,
+.light-theme .bg-amber-950\/40 {
+  background-color: #fef3c7 !important;
+  color: #b45309 !important;
+  border: 1px solid rgba(180, 83, 9, 0.2) !important;
+}
+.light-theme .bg-purple-950,
+.light-theme .bg-purple-950\/20,
+.light-theme .bg-purple-950\/40 {
+  background-color: #f5f3ff !important;
+  color: #6d28d9 !important;
+  border: 1px solid rgba(109, 40, 217, 0.2) !important;
+}
+.light-theme .bg-red-950,
+.light-theme .bg-red-950\/20,
+.light-theme .bg-red-950\/40,
+.light-theme .bg-rose-950\/20 {
+  background-color: #fef2f2 !important;
+  color: #b91c1c !important;
+  border: 1px solid rgba(185, 28, 28, 0.2) !important;
+}
+.light-theme .bg-emerald-950,
+.light-theme .bg-emerald-950\/10,
+.light-theme .bg-emerald-950\/20,
+.light-theme .bg-emerald-950\/30,
+.light-theme .bg-emerald-950\/40,
+.light-theme .bg-emerald-950\/50 {
+  background-color: #ecfdf5 !important;
+  color: #047857 !important;
+  border: 1px solid rgba(4, 120, 87, 0.2) !important;
+}
+.light-theme .bg-slate-900 {
+  background-color: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+}
+.light-theme .bg-slate-900\/40 {
+  background-color: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+}
+.light-theme .bg-slate-950,
+.light-theme .bg-slate-950\/40 {
+  background-color: #f1f5f9 !important;
+  border: 1.5px solid #cbd5e1 !important;
+}
+.light-theme .bg-\[\#10213b\] {
+  background-color: #e2e8f0 !important;
+  color: #334155 !important;
+  border: 1px solid #cbd5e1 !important;
+}
+
+.light-theme #notification_dropdown div,
+.light-theme #matrix_options_dropdown_menu button,
+.light-theme #options_dropdown_menu button {
+  color: #1e293b !important;
+}
+.light-theme #notification_dropdown div:hover,
+.light-theme #matrix_options_dropdown_menu button:hover,
+.light-theme #options_dropdown_menu button:hover {
+  background-color: #f1f5f9 !important;
+}
+
+/* Specific elements inside matrix cells */
+.light-theme .group-cell:hover {
+  background-color: rgba(16, 185, 129, 0.08) !important;
+}
+
+/* ==========================================================================
+   SPECIFIC UX FIXES FOR NOTIFICATION BADGE & COLLABORATOR CARDS
+   ========================================================================== */
+
+/* 1. Notification bell absolute badge perfect high-contrast style */
+.light-theme #notification_bell_btn span.absolute {
+  background-color: #ef4444 !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 0 2px #ffffff !important; /* Premium white ring border separator */
+  font-weight: 800 !important;
+}
+.light-theme .bg-red-500,
+.light-theme .bg-red-500 *,
+.light-theme .bg-emerald-500,
+.light-theme .bg-emerald-500 *,
+.light-theme .bg-\[\#10b981\],
+.light-theme .bg-\[\#10b981\] *,
+.light-theme .bg-blue-500,
+.light-theme .bg-blue-500 *,
+.light-theme .bg-rose-500,
+.light-theme .bg-rose-500 * {
+  color: #ffffff !important;
+}
+
+/* 2. Unselected Collaborator Card background & font harmony (No dark/dirty grey - Solid #f1f5f9) */
+.light-theme .bg-\[\#071426\]\/40 {
+  background-color: #f1f5f9 !important;
+  border: 1px solid #cbd5e1 !important;
+  box-shadow: none !important;
+}
+.light-theme .bg-\[\#071426\]\/40:hover {
+  background-color: #e2e8f0 !important;
+  border-color: #94a3b8 !important;
+}
+.light-theme .bg-\[\#071426\]\/40 p {
+  color: #0f172a !important;
+}
+.light-theme .bg-\[\#071426\]\/40 p.text-slate-400 {
+  color: #475569 !important;
+}
+.light-theme .bg-\[\#071426\]\/40 .bg-\[\#030a14\] {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #475569 !important;
+}
+
+/* 3. Selected Collaborator Card vibrant pastel green background (No dark/black block) */
+.light-theme .bg-emerald-950\/20 {
+  background-color: #ecfdf5 !important;
+  border: 2.5px solid #10b981 !important;
+  box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.15), 0 2px 4px -1px rgba(16, 185, 129, 0.1) !important;
+}
+.light-theme .bg-emerald-950\/20 p,
+.light-theme .bg-emerald-950\/20 span {
+  color: #047857 !important;
+}
+.light-theme .bg-emerald-950\/20 .text-slate-400 {
+  color: #065f46 !important;
+  opacity: 0.9;
+}
+.light-theme .bg-emerald-950\/20 .bg-\[\#030a14\] {
+  background-color: #d1fae5 !important;
+  border-color: #a7f3d0 !important;
+  color: #065f46 !important;
+}
+
+/* 4. Active Date Indicator (Green pill) text correction */
+.light-theme [style*="background-color: #10B981"],
+.light-theme [style*="background-color:#10B981"],
+.light-theme .bg-emerald-500,
+.light-theme .bg-emerald-500 span,
+.light-theme .bg-emerald-600,
+.light-theme .text-white-force {
+  color: #ffffff !important;
+  font-weight: 700 !important;
+}
+
+/* 5. Portal Grid Container & Fatigue Bento Widgets styling in Light Theme (Solid #f1f5f9) */
+.light-theme .bg-\[\#071426\]\/30 {
+  background-color: #f1f5f9 !important;
+  border: 1.5px solid #cbd5e1 !important;
+  box-shadow: none !important;
+}
+.light-theme .bg-\[\#071426\]\/60 {
+  background-color: #f1f5f9 !important;
+  border: 1px solid #cbd5e1 !important;
+  box-shadow: none !important;
+}
+.light-theme .bg-\[\#071426\]\/60 .text-white {
+  color: #0f172a !important;
+}
+.light-theme .bg-\[\#071426\]\/60 .text-slate-300 {
+  color: #334155 !important;
+}
+.light-theme .bg-\[\#071426\]\/60 .text-slate-400 {
+  color: #475569 !important;
+}
+.light-theme .bg-\[\#071426\]\/60 .text-slate-500 {
+  color: #64748b !important;
+}
+.light-theme .bg-\[\#071426\]\/60 .bg-\[\#030a14\] {
+  background-color: #e2e8f0 !important;
+}
+
+/* 6. Form input & select text color stability under Light Theme */
+.light-theme input,
+.light-theme select {
+  color: #0f172a !important;
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+}
+
+/* 7. Portal Regulamento Button styling overrides to preserve premium emerald look */
+#btn_portal_regulamento {
+  background-color: #10b981 !important;
+  color: #ffffff !important;
+  border-color: #10213b !important;
+}
+#btn_portal_regulamento:hover {
+  background-color: #059669 !important;
+  color: #ffffff !important;
+}
+#btn_portal_regulamento span {
+  color: #ffffff !important;
+}
+.light-theme #btn_portal_regulamento {
+  background-color: #10b981 !important;
+  color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+}
+.light-theme #btn_portal_regulamento:hover {
+  background-color: #059669 !important;
+  color: #ffffff !important;
+}
+.light-theme #btn_portal_regulamento span {
+  color: #ffffff !important;
+}
+
+/* 8. Voltar para Lista Button styling overrides to preserve vibrant emerald green background */
+#btn_voltar_lista {
+  background-color: #10b981 !important;
+  color: #ffffff !important;
+  border-color: #10213b !important;
+}
+#btn_voltar_lista:hover {
+  background-color: #059669 !important;
+  color: #ffffff !important;
+}
+#btn_voltar_lista span {
+  color: #ffffff !important;
+}
+.light-theme #btn_voltar_lista {
+  background-color: #10b981 !important;
+  color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+}
+.light-theme #btn_voltar_lista:hover {
+  background-color: #059669 !important;
+  color: #ffffff !important;
+}
+.light-theme #btn_voltar_lista span {
+  color: #ffffff !important;
+}
+
+/* 9. Seções category inside options dropdown styling overrides */
+#dropdown_sections_category button.text-emerald-400 {
+  color: #34d399 !important;
+}
+#dropdown_sections_category button.text-emerald-400 span {
+  color: #34d399 !important;
+}
+
+.light-theme #dropdown_sections_category button {
+  color: #475569 !important;
+}
+.light-theme #dropdown_sections_category button:hover {
+  background-color: #f1f5f9 !important;
+}
+.light-theme #dropdown_sections_category button.text-emerald-400 {
+  color: #059669 !important;
+  background-color: rgba(16, 185, 129, 0.1) !important;
+}
+.light-theme #dropdown_sections_category button.text-emerald-400 span {
+  color: #059669 !important;
+}
+
+/* 10. Radar da Folga (Widget 3) light theme overrides for background and borders */
+.light-theme .bg-\[\#030a14\]\/40,
+.light-theme .bg-\[\#030a14\]\/60 {
+  background-color: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: none !important;
+}
+
+.light-theme .border-\[\#10213b\]\/40,
+.light-theme .border-\[\#10213b\]\/50,
+.light-theme .border-\[\#10213b\]\/60 {
+  border-color: #cbd5e1 !important;
+}
+
+.light-theme .bg-\[\#030a14\]\/40 .text-slate-400,
+.light-theme .bg-\[\#030a14\]\/60 .text-slate-400,
+.light-theme .bg-\[\#030a14\]\/40 .text-slate-500,
+.light-theme .bg-\[\#030a14\]\/60 .text-slate-500 {
+  color: #475569 !important;
+}
+
+.light-theme .bg-\[\#030a14\]\/40 .text-white,
+.light-theme .bg-\[\#030a14\]\/60 .text-white {
+  color: #0f172a !important;
+}
+
+.light-theme .bg-emerald-400 {
+  background-color: #10b981 !important;
+}
+
+/* 11. Light Theme support for square off-day tag widgets */
+.light-theme .light-theme-tag-wrapper {
+  background-color: #ecfdf5 !important;
+  border-color: rgba(4, 120, 87, 0.2) !important;
+}
+
+.light-theme .light-theme-tag-wrapper span {
+  color: #047857 !important;
+}
+
+.light-theme .light-theme-border-override {
+  border-color: #cbd5e1 !important;
+}
+
+.light-theme .light-theme-border-divide-override {
+  border-color: #cbd5e1 !important;
+}
+

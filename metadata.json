@@ -1,0 +1,8 @@
+{
+  "name": "Remix: Escala Easy VIBRA",
+  "description": "Sistema inteligente de planejamento e gestão de escalas operacionais corporativas com validação anti-fadiga e controle de contingente mínimo.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
