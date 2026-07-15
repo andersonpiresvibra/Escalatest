@@ -4231,5 +4231,90 @@ CREATE TABLE IF NOT EXISTS public.audit_history (
     </div>
   }
 
+  <!-- MODAL: SELECIONAR ESCALA DO DIA NO PORTAL DO COLABORADOR -->
+  @if (isPortalDayEditModalOpen()) {
+    @let logged = getLoggedCollab();
+    @if (logged) {
+      <div class="fixed inset-0 z-[250] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in" id="modal_portal_day_edit_overlay">
+        <div class="bg-[#030a14] border border-[#10213b] rounded-xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col animate-slide-up" id="modal_portal_day_edit_content">
+          <!-- Header -->
+          <div class="px-5 py-4 border-b border-[#10213b]/60 flex justify-between items-center bg-[#071426]">
+            <div>
+              <h3 class="font-black text-sm uppercase tracking-wider text-white flex items-center gap-2">
+                <span class="material-icons text-emerald-500 text-lg">edit_calendar</span>
+                Escala do Dia {{ portalEditSelectedDay() }}
+              </h3>
+              <span class="text-[9px] font-bold text-slate-400 block uppercase mt-0.5">
+                Altere seu status de trabalho, folga ou ausência para este dia
+              </span>
+            </div>
+            <button (click)="isPortalDayEditModalOpen.set(false)" class="text-slate-400 hover:text-white transition-colors bg-transparent border-none outline-none cursor-pointer p-1">
+              <span class="material-icons text-base">close</span>
+            </button>
+          </div>
+
+          <!-- Body -->
+          <div class="p-5 bg-[#030a14] flex flex-col gap-4">
+            <!-- Turno Base -->
+            <div>
+              <h4 class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Turno Regular de Trabalho</h4>
+              <div class="grid grid-cols-2 gap-2">
+                <button (click)="setPortalDayScale(getShiftCode(logged.shift))" 
+                        class="flex items-center justify-between p-3 rounded-lg border border-[#10213b] bg-[#071426] hover:border-emerald-500/50 hover:bg-[#10213b] transition-all cursor-pointer text-left w-full">
+                  <div>
+                    <span class="block text-xs font-bold text-white uppercase">{{ getShiftCode(logged.shift) }}</span>
+                    <span class="text-[9px] text-slate-400">Regular</span>
+                  </div>
+                  <span class="material-icons text-sm text-emerald-400">work</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Folga -->
+            <div>
+              <h4 class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2 font-mono">Folga ou DSR</h4>
+              <div class="grid grid-cols-2 gap-2">
+                <button (click)="setPortalDayScale('F')" 
+                        class="flex items-center justify-between p-3 rounded-lg border border-[#10213b] bg-[#071426] hover:border-emerald-500/50 hover:bg-[#10213b] transition-all cursor-pointer text-left w-full">
+                  <div>
+                    <span class="block text-xs font-bold text-white uppercase">F</span>
+                    <span class="text-[9px] text-slate-400">Folga Escala</span>
+                  </div>
+                  <span class="material-icons text-sm text-emerald-400">event_available</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Afastamentos / Siglas cadastrados -->
+            <div>
+              <h4 class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2 font-mono">Ausências / Afastamentos / Licenças</h4>
+              <div class="grid grid-cols-2 gap-2 max-h-[160px] overflow-y-auto pr-1 scrollbar-thin">
+                @for (sigla of scaleService.siglaTypes(); track sigla.code) {
+                  <!-- Skip regular shifts or basic work codes if any -->
+                  <button (click)="setPortalDayScale(sigla.code)" 
+                          class="flex items-center justify-between p-3 rounded-lg border border-[#10213b] bg-[#071426] hover:border-emerald-500/50 hover:bg-[#10213b] transition-all cursor-pointer text-left w-full">
+                    <div class="truncate">
+                      <span class="block text-xs font-bold text-white uppercase truncate">{{ sigla.code }}</span>
+                      <span class="text-[9px] text-slate-400 block truncate" [title]="sigla.label">{{ sigla.label }}</span>
+                    </div>
+                    <span class="material-icons text-sm text-rose-400 shrink-0">badge</span>
+                  </button>
+                }
+              </div>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div class="px-5 py-4 border-t border-[#10213b]/60 bg-[#071426] flex justify-end">
+            <button (click)="isPortalDayEditModalOpen.set(false)" 
+                    class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white font-bold text-[10px] uppercase tracking-wider rounded-lg transition-all cursor-pointer border-none">
+              Cancelar
+            </button>
+          </div>
+        </div>
+      </div>
+    @}
+  }
+
 }
 </div>

@@ -108,6 +108,28 @@ export interface BackupHistory {
   description: string;
 }
 
+// Safe localStorage wrapper to prevent fatal crashes in iframes/WebViews/WAP
+function safeGetLocalStorageItem(key: string): string | null {
+  try {
+    if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+      return localStorage.getItem(key);
+    }
+  } catch (e) {
+    console.warn(`localStorage.getItem blocked for key ${key}:`, e);
+  }
+  return null;
+}
+
+function safeSetLocalStorageItem(key: string, value: string): void {
+  try {
+    if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+      localStorage.setItem(key, value);
+    }
+  } catch (e) {
+    console.warn(`localStorage.setItem blocked for key ${key}:`, e);
+  }
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -139,7 +161,7 @@ export class ScaleService {
 
   // Helper to resolve initial Supabase URL
   private getInitialSupabaseUrl(): string {
-    const stored = typeof localStorage !== 'undefined' ? localStorage.getItem('supabase_url') : null;
+    const stored = safeGetLocalStorageItem('supabase_url');
     if (stored && stored !== 'undefined' && stored !== 'null' && stored.trim() !== '') {
       return stored.trim();
     }
@@ -150,19 +172,19 @@ export class ScaleService {
 
     const windowUrl = typeof window !== 'undefined' ? ((window as any)['SUPABASE_URL'] || (window as any)['env']?.['SUPABASE_URL']) : null;
     if (windowUrl && typeof windowUrl === 'string' && windowUrl.trim() !== '') {
-      if (typeof localStorage !== 'undefined') localStorage.setItem('supabase_url', windowUrl.trim());
+      safeSetLocalStorageItem('supabase_url', windowUrl.trim());
       return windowUrl.trim();
     }
 
     const processUrl = typeof process !== 'undefined' ? process?.env?.['SUPABASE_URL'] || process?.env?.['NG_APP_SUPABASE_URL'] : '';
     if (processUrl && typeof processUrl === 'string' && processUrl.trim() !== '') {
-      if (typeof localStorage !== 'undefined') localStorage.setItem('supabase_url', processUrl.trim());
+      safeSetLocalStorageItem('supabase_url', processUrl.trim());
       return processUrl.trim();
     }
 
     const importMetaUrl = (import.meta as any).env?.['SUPABASE_URL'] || (import.meta as any).env?.['NG_APP_SUPABASE_URL'] || (import.meta as any).env?.['VITE_SUPABASE_URL'];
     if (importMetaUrl && typeof importMetaUrl === 'string' && importMetaUrl.trim() !== '') {
-      if (typeof localStorage !== 'undefined') localStorage.setItem('supabase_url', importMetaUrl.trim());
+      safeSetLocalStorageItem('supabase_url', importMetaUrl.trim());
       return importMetaUrl.trim();
     }
 
@@ -171,7 +193,7 @@ export class ScaleService {
 
   // Helper to resolve initial Supabase Key
   private getInitialSupabaseKey(): string {
-    const stored = typeof localStorage !== 'undefined' ? localStorage.getItem('supabase_key') : null;
+    const stored = safeGetLocalStorageItem('supabase_key');
     if (stored && stored !== 'undefined' && stored !== 'null' && stored.trim() !== '') {
       return stored.trim();
     }
@@ -182,19 +204,19 @@ export class ScaleService {
 
     const windowKey = typeof window !== 'undefined' ? ((window as any)['SUPABASE_KEY'] || (window as any)['env']?.['SUPABASE_KEY']) : null;
     if (windowKey && typeof windowKey === 'string' && windowKey.trim() !== '') {
-      if (typeof localStorage !== 'undefined') localStorage.setItem('supabase_key', windowKey.trim());
+      safeSetLocalStorageItem('supabase_key', windowKey.trim());
       return windowKey.trim();
     }
 
     const processKey = typeof process !== 'undefined' ? process?.env?.['SUPABASE_KEY'] || process?.env?.['NG_APP_SUPABASE_KEY'] : '';
     if (processKey && typeof processKey === 'string' && processKey.trim() !== '') {
-      if (typeof localStorage !== 'undefined') localStorage.setItem('supabase_key', processKey.trim());
+      safeSetLocalStorageItem('supabase_key', processKey.trim());
       return processKey.trim();
     }
 
     const importMetaKey = (import.meta as any).env?.['SUPABASE_KEY'] || (import.meta as any).env?.['NG_APP_SUPABASE_KEY'] || (import.meta as any).env?.['VITE_SUPABASE_KEY'];
     if (importMetaKey && typeof importMetaKey === 'string' && importMetaKey.trim() !== '') {
-      if (typeof localStorage !== 'undefined') localStorage.setItem('supabase_key', importMetaKey.trim());
+      safeSetLocalStorageItem('supabase_key', importMetaKey.trim());
       return importMetaKey.trim();
     }
 
@@ -203,7 +225,7 @@ export class ScaleService {
 
   // Database Connection Configuration
   activeDb = signal<'firebase' | 'supabase'>(
-    ((typeof localStorage !== 'undefined' ? localStorage.getItem('active_db') : null) as 'firebase' | 'supabase') || 'supabase'
+    (safeGetLocalStorageItem('active_db') as 'firebase' | 'supabase') || 'supabase'
   );
   activeMonth = signal<number>(7); // Default is July (7)
   activeYear = signal<number>(new Date().getFullYear()); // Default is new Date().getFullYear()
@@ -236,7 +258,7 @@ export class ScaleService {
 
   constructor() {
     this.activeDb.set('supabase');
-    if (typeof localStorage !== 'undefined') localStorage.setItem('active_db', 'supabase');
+    safeSetLocalStorageItem('active_db', 'supabase');
     
     if (this.activeDb() === 'firebase') {
       this.initFirebaseSync();
@@ -247,7 +269,7 @@ export class ScaleService {
 
   setDatabaseProvider(provider: 'firebase' | 'supabase') {
     this.activeDb.set(provider);
-    if (typeof localStorage !== 'undefined') localStorage.setItem('active_db', provider);
+    safeSetLocalStorageItem('active_db', provider);
     this.databaseError.set(null);
     if (provider === 'supabase') {
       this.clearFirebaseSync();
@@ -260,8 +282,8 @@ export class ScaleService {
   setSupabaseConfig(url: string, key: string) {
     this.supabaseUrl.set(url);
     this.supabaseKey.set(key);
-    if (typeof localStorage !== 'undefined') localStorage.setItem('supabase_url', url);
-    if (typeof localStorage !== 'undefined') localStorage.setItem('supabase_key', key);
+    safeSetLocalStorageItem('supabase_url', url);
+    safeSetLocalStorageItem('supabase_key', key);
     this.setDatabaseProvider('supabase');
   }
 
@@ -503,8 +525,8 @@ export class ScaleService {
         console.warn('Supabase sync failed with custom/stored credentials. Performing self-healing rollback to default env credentials...');
         this.supabaseUrl.set(defaultUrl);
         this.supabaseKey.set(defaultKey);
-        if (typeof localStorage !== 'undefined') localStorage.setItem('supabase_url', defaultUrl);
-        if (typeof localStorage !== 'undefined') localStorage.setItem('supabase_key', defaultKey);
+        safeSetLocalStorageItem('supabase_url', defaultUrl);
+        safeSetLocalStorageItem('supabase_key', defaultKey);
         try {
           this.supabase = createClient(defaultUrl, defaultKey);
           await this.syncSupabase();

@@ -8,6 +8,38 @@ if (typeof window !== 'undefined' && pdfjsLib.GlobalWorkerOptions) {
   pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
 }
 
+// Safe localStorage helper to prevent SecurityError/DOMException crashes in iframe/webview environments
+function safeGetLocalStorage(key: string): string | null {
+  try {
+    if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+      return localStorage.getItem(key);
+    }
+  } catch (e) {
+    console.warn(`localStorage.getItem blocked for ${key}:`, e);
+  }
+  return null;
+}
+
+function safeSetLocalStorage(key: string, value: string): void {
+  try {
+    if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+      localStorage.setItem(key, value);
+    }
+  } catch (e) {
+    console.warn(`localStorage.setItem blocked for ${key}:`, e);
+  }
+}
+
+function safeRemoveLocalStorage(key: string): void {
+  try {
+    if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+      localStorage.removeItem(key);
+    }
+  } catch (e) {
+    console.warn(`localStorage.removeItem blocked for ${key}:`, e);
+  }
+}
+
 interface AppNotification {
   id: string;
   type: 'publish' | 'alert' | 'trade';
@@ -1167,6 +1199,8 @@ export class App {
   selectedSimulatedCollabId = signal<string | null>(null);
   hasInitiallyLogged = signal<boolean>(false);
   collaboratorProfileDarkMode = signal<boolean>(true);
+  isPortalDayEditModalOpen = signal<boolean>(false);
+  portalEditSelectedDay = signal<number>(1);
 
   // Permuta (Trade Shift) simulation state
   isPermutaModalOpen = signal<boolean>(false);
@@ -1205,6 +1239,32 @@ export class App {
     return this.scaleService.currentRole() !== 'OPERADOR';
   }
 
+  private inactivityTimeoutId: any = null;
+
+  public resetInactivityTimer() {
+    if (typeof window === 'undefined') return;
+    
+    const loggedId = this.selectedSimulatedCollabId();
+    if (loggedId) {
+      safeSetLocalStorage('lastActivityTime', Date.now().toString());
+
+      if (this.inactivityTimeoutId) {
+        clearTimeout(this.inactivityTimeoutId);
+      }
+
+      this.inactivityTimeoutId = setTimeout(() => {
+        this.logoutDueToInactivity();
+      }, 5 * 60 * 1000); // 5 minutes inactivity
+    }
+  }
+
+  private logoutDueToInactivity() {
+    if (this.selectedSimulatedCollabId()) {
+      this.logout();
+      this.showToast('Sessão encerrada por inatividade de 5 minutos.');
+    }
+  }
+
   constructor() {
     if (typeof window !== 'undefined' && window.innerWidth < 768) {
       this.activeSubTab.set('portal');
@@ -1215,6 +1275,47 @@ export class App {
     if (typeof document !== 'undefined') {
       document.body.classList.add('light-theme');
     }
+
+    if (typeof window !== 'undefined') {
+      const reset = () => this.resetInactivityTimer();
+      ['click', 'mousemove', 'keydown', 'scroll', 'touchstart'].forEach(event => {
+        window.addEventListener(event, reset, { passive: true });
+      });
+      this.resetInactivityTimer();
+    }
+
+    // Restore session from localStorage once collaborators are loaded
+    effect(() => {
+      const collabs = this.scaleService.collaborators();
+      if (collabs.length > 0 && !this.selectedSimulatedCollabId() && !this.hasInitiallyLogged()) {
+        this.hasInitiallyLogged.set(true); // Ensure this block runs only once
+        const restoredId = safeGetLocalStorage('selectedSimulatedCollabId');
+        const lastActivity = safeGetLocalStorage('lastActivityTime');
+        
+        if (restoredId && lastActivity) {
+          const elapsed = Date.now() - parseInt(lastActivity, 10);
+          if (elapsed > 5 * 60 * 1000) {
+            // Expired (5 minutes)
+            safeRemoveLocalStorage('selectedSimulatedCollabId');
+            safeRemoveLocalStorage('lastActivityTime');
+          } else {
+            const collab = collabs.find(c => c.id === restoredId);
+            if (collab) {
+              this.selectedSimulatedCollabId.set(restoredId);
+              this.scaleService.selectedCollabName.set(collab.name);
+              this.scaleService.currentRole.set(collab.role);
+              this.resetInactivityTimer();
+              if (this.isAdmin(collab)) {
+                this.activeSubTab.set('matrix');
+              } else {
+                this.activeSubTab.set('portal');
+              }
+            }
+          }
+        }
+      }
+    }, { allowSignalWrites: true });
+
     effect(() => {
       const month = this.selectedMonthIndex() + 1;
       this.scaleService.activeMonth.set(month);
@@ -2540,6 +2641,10 @@ export class App {
       this.scaleService.selectedCollabName.set(collab.name);
       this.scaleService.currentRole.set(collab.role);
       
+      safeSetLocalStorage('selectedSimulatedCollabId', collab.id);
+      safeSetLocalStorage('lastActivityTime', Date.now().toString());
+      this.resetInactivityTimer();
+
       this.showToast(`Senha de 4 dígitos cadastrada com sucesso! Bem-vindo, ${collab.name}.`);
       this.clearLoginInputs();
       
@@ -2556,6 +2661,10 @@ export class App {
         this.scaleService.selectedCollabName.set(collab.name);
         this.scaleService.currentRole.set(collab.role);
         
+        safeSetLocalStorage('selectedSimulatedCollabId', collab.id);
+        safeSetLocalStorage('lastActivityTime', Date.now().toString());
+        this.resetInactivityTimer();
+
         this.showToast(`Bem-vindo de volta, ${collab.name}!`);
         this.clearLoginInputs();
         
@@ -2595,6 +2704,11 @@ export class App {
   logout() {
     this.scaleService.selectedCollabName.set(null);
     this.selectedSimulatedCollabId.set(null);
+    safeRemoveLocalStorage('selectedSimulatedCollabId');
+    safeRemoveLocalStorage('lastActivityTime');
+    if (this.inactivityTimeoutId) {
+      clearTimeout(this.inactivityTimeoutId);
+    }
     this.showToast('Sessão encerrada.');
     this.resetLoginState();
   }
@@ -2605,6 +2719,11 @@ export class App {
     if (collab) {
       this.scaleService.selectedCollabName.set(collab.name);
       this.scaleService.currentRole.set(collab.role);
+      
+      safeSetLocalStorage('selectedSimulatedCollabId', collab.id);
+      safeSetLocalStorage('lastActivityTime', Date.now().toString());
+      this.resetInactivityTimer();
+
       this.showToast(`Sessão simulada como ${collab.name}!`);
       if (this.isAdmin(collab)) {
         this.activeSubTab.set('matrix');
@@ -2615,6 +2734,8 @@ export class App {
       this.selectedSimulatedCollabId.set(null);
       this.scaleService.selectedCollabName.set('');
       this.scaleService.currentRole.set('SUPERVISOR');
+      safeRemoveLocalStorage('selectedSimulatedCollabId');
+      safeRemoveLocalStorage('lastActivityTime');
     }
   }
 
@@ -2972,7 +3093,43 @@ export class App {
 
   onPortalCalendarDayClick(day: number): void {
     this.selectCalendarDay(day);
-    this.togglePortalDayOff(day);
+    this.openPortalDayEditModal(day);
+  }
+
+  openPortalDayEditModal(day: number): void {
+    this.portalEditSelectedDay.set(day);
+    this.isPortalDayEditModalOpen.set(true);
+  }
+
+  setPortalDayScale(code: string): void {
+    const logged = this.getLoggedCollab();
+    const day = this.portalEditSelectedDay();
+    if (!logged || !day) return;
+
+    const updatedScale = { ...logged.scale };
+    const oldCode = updatedScale[day] || '-';
+    updatedScale[day] = code;
+
+    const updatedCollab = {
+      ...logged,
+      scale: updatedScale
+    };
+
+    this.scaleService.updateCollaborator(updatedCollab);
+    
+    // Find label for sigla or shift code
+    const siglaObj = this.scaleService.siglaTypes().find(s => s.code.toUpperCase().trim() === code.toUpperCase().trim());
+    const label = code === 'F' ? 'Folga' : (siglaObj?.label || code);
+    const actionLabel = `Definida a escala do dia ${day} como "${label}" (${code}).`;
+    this.showToast(actionLabel);
+
+    // Register in audit history
+    this.scaleService.addAuditHistory(
+      'ALTERACAO_PORTAL',
+      `Colaborador ${logged.name} alterou sua própria escala no dia ${day} via portal: de "${oldCode}" para "${code}"`
+    );
+
+    this.isPortalDayEditModalOpen.set(false);
   }
 
   togglePortalDayOff(day: number): void {
@@ -3366,8 +3523,10 @@ export class App {
     if (!current) return [];
     
     const currentShiftRaw = current.scale[day] || '-';
-    const currentShift = (currentShiftRaw === '-') ? this.getShiftCode(current.shift) : currentShiftRaw;
-    if (this.isSiglaAbsence(currentShift)) return []; // Off duty
+    let currentShift = (currentShiftRaw === '-') ? this.getShiftCode(current.shift) : currentShiftRaw;
+    if (this.isSiglaAbsence(currentShift)) {
+      currentShift = this.getShiftCode(current.shift);
+    }
 
     return this.scaleService.collaborators().filter(c => {
       if (c.id === current.id) return false;
