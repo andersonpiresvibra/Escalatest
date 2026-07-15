@@ -109,6 +109,7 @@ export class App {
   public isFullscreen = signal<boolean>(false);
   public portalSequenceTab = signal<'weeks' | 'stretches'>('weeks');
   public portalWidgetTab = signal<'trabalho' | 'semanas'>('trabalho');
+  public turnVacationTab = signal<'work' | 'vacation'>('work');
 
   public setPortalSequenceTab(tab: 'weeks' | 'stretches'): void {
     this.portalSequenceTab.set(tab);
@@ -116,6 +117,25 @@ export class App {
 
   public setPortalWidgetTab(tab: 'trabalho' | 'semanas'): void {
     this.portalWidgetTab.set(tab);
+  }
+
+  public setTurnVacationTab(tab: 'work' | 'vacation'): void {
+    this.turnVacationTab.set(tab);
+    const logged = this.getLoggedCollab();
+    if (logged) {
+      const currentDay = this.selectedCalendarDay();
+      if (tab === 'work') {
+        const workDays = this.getCollabWorkDays(logged);
+        if (workDays.length > 0 && !workDays.includes(currentDay)) {
+          this.selectedCalendarDay.set(workDays[0]);
+        }
+      } else {
+        const vacationDays = this.getCollabOffDays(logged);
+        if (vacationDays.length > 0 && !vacationDays.includes(currentDay)) {
+          this.selectedCalendarDay.set(vacationDays[0]);
+        }
+      }
+    }
   }
 
   public toggleTheme(): void {
@@ -1323,12 +1343,18 @@ export class App {
       if (collabs.length > 0 && !this.selectedSimulatedCollabId() && !this.hasInitiallyLogged()) {
         this.hasInitiallyLogged.set(true); // Ensure this block runs only once
         
-        // Detect if running in development mode (AI Studio or localhost)
+        // Detect if running in development mode (AI Studio, localhost, or inside an iframe)
         const isDevelopment = typeof window !== 'undefined' && (
           window.location.hostname === 'localhost' ||
           window.location.hostname.includes('127.0.0.1') ||
           window.location.hostname.includes('ais-dev') ||
-          (window.location.hostname.includes('run.app') && window.location.hostname.includes('-dev-'))
+          window.location.hostname.includes('aistudio') ||
+          window.location.hostname.includes('googleusercontent') ||
+          window.location.hostname.includes('cloudshell') ||
+          window.location.hostname.includes('web-preview') ||
+          (window.location.hostname.includes('run.app') && !window.location.hostname.includes('prod')) ||
+          (window.location.hostname.includes('run.app') && window.location.hostname.includes('-dev-')) ||
+          (window.self !== window.top) // If we are inside an iframe (AI Studio preview iframe)
         );
         
         const devLoggedOut = safeGetSessionStorage('dev_logged_out') === 'true';
@@ -1348,6 +1374,7 @@ export class App {
               this.activeSubTab.set('matrix');
             } else {
               this.activeSubTab.set('portal');
+              this.autoSelectTodayTabForLoggedCollab(devCollab);
             }
             this.showToast(`Modo Desenvolvimento: Auto-login como ${devCollab.name} (${devCollab.role})`);
             return;
@@ -1358,13 +1385,21 @@ export class App {
         const lastActivity = safeGetLocalStorage('lastActivityTime');
         const sessionActive = safeGetSessionStorage('session_active');
         
-        // Browser tab / window close check:
-        // if sessionStorage has no 'session_active' marker, but we have a restoredId from localStorage,
-        // it means the browser or tab was closed and reopened. Therefore, we clear the session.
+        // Browser tab / window close check with modern, resilient fallback:
+        // if sessionStorage does not have 'session_active' marker, but we have a restoredId from localStorage,
+        // we check if the last activity was very recent (within 45 seconds). If it was, this is considered
+        // a page reload, application code update, or quick container reboot, so we preserve the session
+        // and re-initialize 'session_active'. If it was longer, the tab/browser was likely closed and reopened later,
+        // so we clear the session.
         if (restoredId && !sessionActive) {
-          safeRemoveLocalStorage('selectedSimulatedCollabId');
-          safeRemoveLocalStorage('lastActivityTime');
-          return;
+          const isRecentRefresh = lastActivity && (Date.now() - parseInt(lastActivity, 10) < 45 * 1000);
+          if (isRecentRefresh) {
+            safeSetSessionStorage('session_active', 'true');
+          } else {
+            safeRemoveLocalStorage('selectedSimulatedCollabId');
+            safeRemoveLocalStorage('lastActivityTime');
+            return;
+          }
         }
 
         if (restoredId && lastActivity) {
@@ -1385,6 +1420,7 @@ export class App {
                 this.activeSubTab.set('matrix');
               } else {
                 this.activeSubTab.set('portal');
+                this.autoSelectTodayTabForLoggedCollab(collab);
               }
             }
           }
@@ -2810,6 +2846,7 @@ export class App {
         this.activeSubTab.set('matrix');
       } else {
         this.activeSubTab.set('portal');
+        this.autoSelectTodayTabForLoggedCollab(collab);
       }
     } else {
       this.selectedSimulatedCollabId.set(null);
@@ -3260,6 +3297,14 @@ export class App {
       if (!this.isWorkDay(c, day)) return false;
       // Must match the same shift code
       return this.getCollabEffectiveShiftForDay(c, day) === myShiftCode;
+    });
+  }
+
+  getCollaboratorsOnVacationForDay(day: number): any[] {
+    const logged = this.getLoggedCollab();
+    return this.scaleService.collaborators().filter(c => {
+      if (logged && c.id === logged.id) return false;
+      return !this.isWorkDay(c, day);
     });
   }
 
@@ -4209,5 +4254,149 @@ Verifique se os nomes no PDF correspondem aos nomes no sistema.`;
       img.src = e.target.result;
     };
     reader.readAsDataURL(file);
+  }
+
+  getAbbreviatedName(name: string): string {
+    if (!name) return '';
+    const parts = name.trim().split(/\s+/);
+    if (parts.length === 1) return parts[0];
+    const first = parts[0];
+    const last = parts[parts.length - 1];
+    return `${first} ${last[0]}.`;
+  }
+
+  getFolgaCountdownState(collab: Collaborator | null | undefined) {
+    this.currentTimeString(); // Register reactivity dependency for signals!
+    if (!collab) return { showCountdown: false, countdownText: '', isReady: false };
+
+    // Only run if we are looking at the current month and year
+    const today = new Date();
+    const currentMonth = today.getMonth();
+    const currentYear = today.getFullYear();
+    if (this.selectedMonthIndex() !== currentMonth || this.currentYear() !== currentYear) {
+      return { showCountdown: false, countdownText: '', isReady: false };
+    }
+
+    const dayToAnalyze = today.getDate();
+    const isTodayWork = this.isWorkDay(collab, dayToAnalyze);
+    const isTomorrowWork = dayToAnalyze < 31 ? this.isWorkDay(collab, dayToAnalyze + 1) : false;
+
+    // Shift times
+    let entryTime = '08:00';
+    let exitTime = '17:00';
+    
+    const hours = collab.hours || '';
+    if (hours.includes('-')) {
+      const parts = hours.split('-');
+      if (parts.length === 2) {
+        entryTime = parts[0].trim();
+        exitTime = parts[1].trim();
+      }
+    } else {
+      const sCode = (collab.shift || '').trim().toUpperCase();
+      const shiftType = this.scaleService.shiftTypes().find(s => 
+        s.code.trim().toUpperCase() === sCode || 
+        s.label.trim().toUpperCase() === sCode
+      );
+      if (shiftType && shiftType.startTime && shiftType.endTime) {
+        entryTime = shiftType.startTime;
+        exitTime = shiftType.endTime;
+      } else {
+        if (sCode === 'MANHÃ' || sCode === 'M') {
+          entryTime = '06:00';
+          exitTime = '14:00';
+        } else if (sCode === 'TARDE' || sCode === 'T') {
+          entryTime = '14:00';
+          exitTime = '22:00';
+        } else if (sCode === 'MADRUGADA' || sCode === 'NOITE' || sCode === 'N') {
+          entryTime = '22:00';
+          exitTime = '06:00';
+        } else if (sCode === 'ADMINISTRATIVO' || sCode === 'ADM') {
+          entryTime = '08:00';
+          exitTime = '17:00';
+        }
+      }
+    }
+
+    const [entryHour, entryMin] = entryTime.split(':').map(Number);
+    const [exitHour, exitMin] = exitTime.split(':').map(Number);
+
+    const isOvernight = exitHour < entryHour;
+
+    const shiftStart = new Date(today);
+    let shiftEnd = new Date(today);
+
+    if (isOvernight) {
+      if (today.getHours() >= entryHour) {
+        shiftStart.setHours(entryHour, entryMin, 0, 0);
+        shiftEnd = new Date(today);
+        shiftEnd.setDate(today.getDate() + 1);
+        shiftEnd.setHours(exitHour, exitMin, 0, 0);
+      } else if (today.getHours() < exitHour) {
+        shiftStart.setDate(today.getDate() - 1);
+        shiftStart.setHours(entryHour, entryMin, 0, 0);
+        shiftEnd.setHours(exitHour, exitMin, 0, 0);
+      } else {
+        shiftStart.setHours(entryHour, entryMin, 0, 0);
+        shiftEnd = new Date(today);
+        shiftEnd.setDate(today.getDate() + 1);
+        shiftEnd.setHours(exitHour, exitMin, 0, 0);
+      }
+    } else {
+      shiftStart.setHours(entryHour, entryMin, 0, 0);
+      shiftEnd.setHours(exitHour, exitMin, 0, 0);
+    }
+
+    let onFolga = false;
+    let countdownText = '';
+    let showCountdown = false;
+
+    if (!isTodayWork) {
+      if (isOvernight && today.getHours() < exitHour) {
+        showCountdown = true;
+        const diffMs = shiftEnd.getTime() - today.getTime();
+        const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
+        const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+        countdownText = `${String(diffHrs).padStart(2, '0')}h ${String(diffMins).padStart(2, '0')}m`;
+      } else {
+        onFolga = true;
+      }
+    } else {
+      if (!isTomorrowWork) {
+        if (today.getTime() < shiftEnd.getTime()) {
+          showCountdown = true;
+          const diffMs = shiftEnd.getTime() - today.getTime();
+          const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
+          const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+          countdownText = `${String(diffHrs).padStart(2, '0')}h ${String(diffMins).padStart(2, '0')}m`;
+        } else {
+          onFolga = true;
+        }
+      }
+    }
+
+    return {
+      showCountdown,
+      countdownText,
+      isReady: onFolga
+    };
+  }
+
+  autoSelectTodayTabForLoggedCollab(logged: Collaborator | null | undefined) {
+    if (!logged) return;
+    const today = new Date();
+    const currentDayNum = today.getDate();
+    const currentMonth = today.getMonth();
+    const currentYear = today.getFullYear();
+
+    if (this.selectedMonthIndex() === currentMonth && this.currentYear() === currentYear) {
+      const isWork = this.isWorkDay(logged, currentDayNum);
+      if (isWork) {
+        this.turnVacationTab.set('work');
+      } else {
+        this.turnVacationTab.set('vacation');
+      }
+      this.selectedCalendarDay.set(currentDayNum);
+    }
   }
 }
