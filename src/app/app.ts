@@ -2461,7 +2461,7 @@ export class App {
 
     // Standard Fallbacks if not registered in DB
     if (this.isLightTheme()) {
-      if (upperCode === 'X') return '#f1f5f9';
+      if (upperCode === 'X') return '#ecfdf5';
       if (upperCode === 'F') return '#f59e0b';
       if (upperCode === 'LM') return '#ef4444';
       if (upperCode.startsWith('M')) return '#10b981';
@@ -2470,7 +2470,7 @@ export class App {
       if (upperCode === 'ADM') return '#06b6d4';
       return '#10b981';
     } else {
-      if (upperCode === 'X') return '#475569';
+      if (upperCode === 'X') return '#061d15';
       if (upperCode === 'F') return '#a855f7';
       if (upperCode === 'LM') return '#ef4444';
       return '#1e293b';
@@ -3299,6 +3299,44 @@ export class App {
       textColor: this.isLightTheme() ? 'text-slate-700' : 'text-slate-300',
       icon: 'work'
     };
+  }
+
+  /**
+   * Retorna as classes CSS do Tailwind de forma dinâmica para renderizar os cards do calendário (estático/apenas representativo).
+   */
+  getCollaboratorCalendarDayStaticClass(collab: any, day: number, count: number): string {
+    const base = 'p-1.5 sm:p-3 border rounded-lg sm:rounded-xl flex flex-col justify-between gap-1 sm:gap-1.5 min-h-[54px] sm:min-h-[96px] w-full text-left shadow-sm duration-200 select-none relative overflow-hidden cursor-default';
+    
+    if (!collab) {
+      return `${base} bg-slate-900/30 border-slate-800 text-slate-500`;
+    }
+
+    const cellValRaw = collab.scale && collab.scale[day] !== undefined ? collab.scale[day] : '-';
+    const cellVal = (cellValRaw === '-') ? (collab.shift || '-') : cellValRaw;
+    const upperCode = cellVal.toUpperCase().trim();
+
+    const isFolga = ['F', 'FF', 'FE', 'FM', 'FT', 'FN', 'X'].includes(upperCode);
+    const isAbsence = ['LM', 'LMT', 'LA'].includes(upperCode);
+
+    if (isFolga) {
+      if (this.isLightTheme()) {
+        return `${base} bg-emerald-50/80 border-emerald-400 text-emerald-800 shadow-emerald-100/50`;
+      } else {
+        return `${base} bg-gradient-to-br from-emerald-950/20 to-[#030a14] border-emerald-500/50 text-emerald-200 shadow-emerald-950/10`;
+      }
+    } else if (isAbsence) {
+      if (this.isLightTheme()) {
+        return `${base} bg-rose-50 border-rose-300 text-rose-800`;
+      } else {
+        return `${base} bg-gradient-to-br from-red-950/20 to-[#030a14] border-rose-500/40 text-rose-200`;
+      }
+    } else {
+      if (this.isLightTheme()) {
+        return `${base} bg-white border-slate-200 text-slate-700`;
+      } else {
+        return `${base} bg-[#041021]/80 border-[#10213b] text-slate-300`;
+      }
+    }
   }
 
   /**

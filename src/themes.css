@@ -707,3 +707,25 @@ body.light-theme ::-webkit-scrollbar-thumb:hover {
   border-color: #cbd5e1 !important;
 }
 
+/* ==========================================================================
+   MATRIX TABLE ROW HOVER OVERLAY HIGHLIGHT
+   Overlays a semi-transparent highlight color over cells on row hover
+   ========================================================================== */
+#matrix_table_scroll_container tbody tr:not(#matrix_summary_row):hover td {
+  position: relative;
+}
+
+#matrix_table_scroll_container tbody tr:not(#matrix_summary_row):hover td::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-color: rgba(16, 185, 129, 0.15) !important; /* Visible, noticeable emerald tint */
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* Light Theme overrides for Row Hover highlight */
+body.light-theme #matrix_table_scroll_container tbody tr:not(#matrix_summary_row):hover td::after {
+  background-color: rgba(16, 185, 129, 0.18) !important; /* Perfectly noticeable light green highlight */
+}
+

@@ -930,7 +930,13 @@
                           <div class="w-full h-full flex items-center justify-center font-bold text-[9px] transition-transform"
                                [style.background-color]="getShiftOrSiglaColor(cellVal, day)"
                                [style.color]="getShiftOrSiglaTextColor(cellVal)">
-                            {{ cellVal }}
+                            @if (cellVal === 'X') {
+                              <span class="material-icons text-[12px] font-black flex items-center justify-center select-none" 
+                                    [style.color]="isLightTheme() ? '#059669' : '#10b981'" 
+                                    style="font-weight: 900 !important;">close</span>
+                            } @else {
+                              {{ cellVal }}
+                            }
                           </div>
                         </td>
                       }
@@ -2667,48 +2673,62 @@
 
                           <div class="grid grid-cols-4 xs:grid-cols-5 sm:grid-cols-6 lg:grid-cols-4 xl:grid-cols-5 gap-1">
                             @for (day of getCollabOffDays(logged); track day) {
-                              <div class="p-1 border rounded-lg flex flex-col items-center justify-center text-center select-none min-h-[42px] transition-all duration-300 relative overflow-hidden group hover:scale-[1.03]"
-                                   [class.bg-amber-950/20]="!isPastDay(day) && !isToday(day) && !isLightTheme()"
-                                   [class.border-amber-500/30]="!isPastDay(day) && !isToday(day) && !isLightTheme()"
-                                   [class.text-amber-300]="!isPastDay(day) && !isToday(day) && !isLightTheme()"
+                              @let isSelected = day === selectedCalendarDay();
+                              <div (click)="selectedCalendarDay.set(day)"
+                                   class="p-1 border rounded-lg flex flex-col items-center justify-center text-center select-none min-h-[42px] transition-all duration-300 relative overflow-hidden group hover:scale-[1.03] cursor-pointer hover:border-amber-500/50"
+                                   [class.bg-amber-500]="isSelected && !isLightTheme()"
+                                   [class.bg-amber-600]="isSelected && isLightTheme()"
+                                   [class.text-white]="isSelected"
+                                   [class.border-amber-500]="isSelected && !isLightTheme()"
+                                   [class.border-amber-600]="isSelected && isLightTheme()"
+                                   [class.ring-2]="isSelected"
+                                   [class.ring-amber-400]="isSelected"
+                                   [class.ring-offset-2]="isSelected"
+                                   [class.ring-offset-[#020813]]="isSelected && !isLightTheme()"
+                                   [class.ring-offset-white]="isSelected && isLightTheme()"
+
+                                   [class.bg-amber-950/20]="!isSelected && !isPastDay(day) && !isToday(day) && !isLightTheme()"
+                                   [class.border-amber-500/30]="!isSelected && !isPastDay(day) && !isToday(day) && !isLightTheme()"
+                                   [class.text-amber-300]="!isSelected && !isPastDay(day) && !isToday(day) && !isLightTheme()"
                                    
-                                   [class.bg-amber-50/50]="!isPastDay(day) && !isToday(day) && isLightTheme()"
-                                   [class.border-amber-200]="!isPastDay(day) && !isToday(day) && isLightTheme()"
-                                   [class.text-amber-800]="!isPastDay(day) && !isToday(day) && isLightTheme()"
+                                   [class.bg-amber-50/50]="!isSelected && !isPastDay(day) && !isToday(day) && isLightTheme()"
+                                   [class.border-amber-200]="!isSelected && !isPastDay(day) && !isToday(day) && isLightTheme()"
+                                   [class.text-amber-800]="!isSelected && !isPastDay(day) && !isToday(day) && isLightTheme()"
                                    
-                                   [class.opacity-35]="isPastDay(day)"
-                                   [class.bg-slate-950/30]="isPastDay(day) && !isLightTheme()"
-                                   [class.border-slate-800]="isPastDay(day) && !isLightTheme()"
-                                   [class.text-slate-500]="isPastDay(day) && !isLightTheme()"
+                                   [class.opacity-35]="!isSelected && isPastDay(day)"
+                                   [class.bg-slate-950/30]="!isSelected && isPastDay(day) && !isLightTheme()"
+                                   [class.border-slate-800]="!isSelected && isPastDay(day) && !isLightTheme()"
+                                   [class.text-slate-500]="!isSelected && isPastDay(day) && !isLightTheme()"
                                    
-                                   [class.bg-slate-100]="isPastDay(day) && isLightTheme()"
-                                   [class.border-slate-200]="isPastDay(day) && isLightTheme()"
-                                   [class.text-slate-500]="isPastDay(day) && isLightTheme()"
+                                   [class.bg-slate-100]="!isSelected && isPastDay(day) && isLightTheme()"
+                                   [class.border-slate-200]="!isSelected && isPastDay(day) && isLightTheme()"
+                                   [class.text-slate-500]="!isSelected && isPastDay(day) && isLightTheme()"
                                    
-                                   [class.bg-amber-500]="isToday(day) && !isLightTheme()"
-                                   [class.text-white]="isToday(day) && !isLightTheme()"
-                                   [class.border-amber-500]="isToday(day) && !isLightTheme()"
+                                   [class.bg-amber-500/60]="!isSelected && isToday(day) && !isLightTheme()"
+                                   [class.text-white/90]="!isSelected && isToday(day) && !isLightTheme()"
+                                   [class.border-amber-500/60]="!isSelected && isToday(day) && !isLightTheme()"
                                    
-                                   [class.bg-amber-600]="isToday(day) && isLightTheme()"
-                                   [class.text-white]="isToday(day) && isLightTheme()"
-                                   [class.border-amber-600]="isToday(day) && isLightTheme()"
+                                   [class.bg-amber-600/60]="!isSelected && isToday(day) && isLightTheme()"
+                                   [class.text-white/90]="!isSelected && isToday(day) && isLightTheme()"
+                                   [class.border-amber-600/60]="!isSelected && isToday(day) && isLightTheme()"
                                    
-                                   [class.ring-1]="isToday(day)"
-                                   [class.ring-amber-400]="isToday(day)">
+                                   [class.ring-1]="!isSelected && isToday(day)"
+                                   [class.ring-amber-400]="!isSelected && isToday(day)">
                                  <span class="text-[10px] font-mono font-black leading-none"
-                                       [class.text-amber-400]="!isPastDay(day) && !isToday(day) && !isLightTheme()"
-                                       [class.text-amber-700]="!isPastDay(day) && !isToday(day) && isLightTheme()"
-                                       [class.text-slate-600]="isPastDay(day) && !isLightTheme()"
-                                       [class.text-slate-500]="isPastDay(day) && isLightTheme()"
-                                       [class.text-white]="isToday(day) && !isLightTheme()"
-                                       [class.text-white]="isToday(day) && isLightTheme()">
+                                       [class.text-white]="isSelected"
+                                       [class.text-amber-400]="!isSelected && !isPastDay(day) && !isToday(day) && !isLightTheme()"
+                                       [class.text-amber-700]="!isSelected && !isPastDay(day) && !isToday(day) && isLightTheme()"
+                                       [class.text-slate-600]="!isSelected && isPastDay(day) && !isLightTheme()"
+                                       [class.text-slate-500]="!isSelected && isPastDay(day) && isLightTheme()"
+                                       [class.text-white]="!isSelected && isToday(day)">
                                    {{ day < 10 ? '0' + day : day }}
                                  </span>
                                  <span class="text-[6px] font-black uppercase tracking-wider leading-none"
-                                       [class.text-amber-500]="!isPastDay(day) && !isToday(day) && !isLightTheme()"
-                                       [class.text-amber-800]="!isPastDay(day) && !isToday(day) && isLightTheme()"
-                                       [class.text-slate-500]="isPastDay(day)"
-                                       [class.text-white]="isToday(day)">
+                                       [class.text-white/90]="isSelected"
+                                       [class.text-amber-500]="!isSelected && !isPastDay(day) && !isToday(day) && !isLightTheme()"
+                                       [class.text-amber-800]="!isSelected && !isPastDay(day) && !isToday(day) && isLightTheme()"
+                                       [class.text-slate-500]="!isSelected && isPastDay(day)"
+                                       [class.text-white]="!isSelected && isToday(day)">
                                    {{ getDayOfWeekLabel(day) }}
                                  </span>
                               </div>
@@ -2749,51 +2769,65 @@
                           <div class="grid grid-cols-4 xs:grid-cols-5 sm:grid-cols-6 lg:grid-cols-4 xl:grid-cols-5 gap-1">
                             @for (day of getCollabWorkDays(logged); track day) {
                               @let dayInfo = getCollaboratorDayScheduleInfo(logged, day);
-                              <div class="p-1 border rounded-lg flex flex-col items-center justify-center text-center select-none min-h-[42px] transition-all duration-300 relative overflow-hidden group hover:scale-[1.03]"
-                                   [class.bg-emerald-950/20]="!isPastDay(day) && !isToday(day) && !isLightTheme()"
-                                   [class.border-emerald-500/30]="!isPastDay(day) && !isToday(day) && !isLightTheme()"
-                                   [class.text-emerald-300]="!isPastDay(day) && !isToday(day) && !isLightTheme()"
+                              @let isSelected = day === selectedCalendarDay();
+                              <div (click)="selectedCalendarDay.set(day)"
+                                   class="p-1 border rounded-lg flex flex-col items-center justify-center text-center select-none min-h-[42px] transition-all duration-300 relative overflow-hidden group hover:scale-[1.03] cursor-pointer hover:border-emerald-500/50"
+                                   [class.bg-emerald-500]="isSelected && !isLightTheme()"
+                                   [class.bg-emerald-600]="isSelected && isLightTheme()"
+                                   [class.text-white]="isSelected"
+                                   [class.border-emerald-500]="isSelected && !isLightTheme()"
+                                   [class.border-emerald-600]="isSelected && isLightTheme()"
+                                   [class.ring-2]="isSelected"
+                                   [class.ring-emerald-400]="isSelected"
+                                   [class.ring-offset-2]="isSelected"
+                                   [class.ring-offset-[#020813]]="isSelected && !isLightTheme()"
+                                   [class.ring-offset-white]="isSelected && isLightTheme()"
+
+                                   [class.bg-emerald-950/20]="!isSelected && !isPastDay(day) && !isToday(day) && !isLightTheme()"
+                                   [class.border-emerald-500/30]="!isSelected && !isPastDay(day) && !isToday(day) && !isLightTheme()"
+                                   [class.text-emerald-300]="!isSelected && !isPastDay(day) && !isToday(day) && !isLightTheme()"
                                    
-                                   [class.bg-emerald-50/50]="!isPastDay(day) && !isToday(day) && isLightTheme()"
-                                   [class.border-emerald-200]="!isPastDay(day) && !isToday(day) && isLightTheme()"
-                                   [class.text-emerald-800]="!isPastDay(day) && !isToday(day) && isLightTheme()"
+                                   [class.bg-emerald-50/50]="!isSelected && !isPastDay(day) && !isToday(day) && isLightTheme()"
+                                   [class.border-emerald-200]="!isSelected && !isPastDay(day) && !isToday(day) && isLightTheme()"
+                                   [class.text-emerald-800]="!isSelected && !isPastDay(day) && !isToday(day) && isLightTheme()"
                                    
-                                   [class.opacity-35]="isPastDay(day)"
-                                   [class.bg-slate-950/30]="isPastDay(day) && !isLightTheme()"
-                                   [class.border-slate-800]="isPastDay(day) && !isLightTheme()"
-                                   [class.text-slate-500]="isPastDay(day) && !isLightTheme()"
+                                   [class.opacity-35]="!isSelected && isPastDay(day)"
+                                   [class.bg-slate-950/30]="!isSelected && isPastDay(day) && !isLightTheme()"
+                                   [class.border-slate-800]="!isSelected && isPastDay(day) && !isLightTheme()"
+                                   [class.text-slate-500]="!isSelected && isPastDay(day) && !isLightTheme()"
                                    [class.border-dashed]="isPastDay(day)"
                                    
-                                   [class.bg-slate-100]="isPastDay(day) && isLightTheme()"
-                                   [class.border-slate-200]="isPastDay(day) && isLightTheme()"
-                                   [class.text-slate-500]="isPastDay(day) && isLightTheme()"
+                                   [class.bg-slate-100]="!isSelected && isPastDay(day) && isLightTheme()"
+                                   [class.border-slate-200]="!isSelected && isPastDay(day) && isLightTheme()"
+                                   [class.text-slate-500]="!isSelected && isPastDay(day) && isLightTheme()"
                                    
-                                   [class.bg-emerald-500]="isToday(day) && !isLightTheme()"
-                                   [class.text-white]="isToday(day) && !isLightTheme()"
-                                   [class.border-emerald-500]="isToday(day) && !isLightTheme()"
+                                   [class.bg-emerald-500/60]="!isSelected && isToday(day) && !isLightTheme()"
+                                   [class.text-white/90]="!isSelected && isToday(day) && !isLightTheme()"
+                                   [class.border-emerald-500/60]="!isSelected && isToday(day) && !isLightTheme()"
                                    
-                                   [class.bg-emerald-600]="isToday(day) && isLightTheme()"
-                                   [class.text-white]="isToday(day) && isLightTheme()"
-                                   [class.border-emerald-600]="isToday(day) && isLightTheme()"
+                                   [class.bg-emerald-600/60]="!isSelected && isToday(day) && isLightTheme()"
+                                   [class.text-white/90]="!isSelected && isToday(day) && isLightTheme()"
+                                   [class.border-emerald-600/60]="!isSelected && isToday(day) && isLightTheme()"
                                    
-                                   [class.ring-1]="isToday(day)"
-                                   [class.ring-emerald-400]="isToday(day)">
+                                   [class.ring-1]="!isSelected && isToday(day)"
+                                   [class.ring-emerald-400]="!isSelected && isToday(day)">
                                    
                                 <span class="text-[10px] font-mono font-black leading-none"
-                                      [class.text-emerald-400]="!isPastDay(day) && !isToday(day) && !isLightTheme()"
-                                      [class.text-emerald-700]="!isPastDay(day) && !isToday(day) && isLightTheme()"
-                                      [class.text-slate-600]="isPastDay(day) && !isLightTheme()"
-                                      [class.text-slate-500]="isPastDay(day) && isLightTheme()"
-                                      [class.text-white]="isToday(day) && !isLightTheme()"
-                                      [class.text-white]="isToday(day) && isLightTheme()">
+                                      [class.text-white]="isSelected"
+                                      [class.text-emerald-400]="!isSelected && !isPastDay(day) && !isToday(day) && !isLightTheme()"
+                                      [class.text-emerald-700]="!isSelected && !isPastDay(day) && !isToday(day) && isLightTheme()"
+                                      [class.text-slate-600]="!isSelected && isPastDay(day) && !isLightTheme()"
+                                      [class.text-slate-500]="!isSelected && isPastDay(day) && isLightTheme()"
+                                      [class.text-white]="!isSelected && isToday(day)">
                                   {{ day < 10 ? '0' + day : day }}
                                 </span>
                                 
                                 <span class="text-[6px] font-black uppercase tracking-wider leading-none"
-                                      [class.text-emerald-500]="!isPastDay(day) && !isToday(day) && !isLightTheme()"
-                                      [class.text-emerald-800]="!isPastDay(day) && !isToday(day) && isLightTheme()"
-                                      [class.text-slate-500]="isPastDay(day)"
-                                      [class.text-white]="isToday(day)">
+                                      [class.text-white/90]="isSelected"
+                                      [class.text-emerald-500]="!isSelected && !isPastDay(day) && !isToday(day) && !isLightTheme()"
+                                      [class.text-emerald-800]="!isSelected && !isPastDay(day) && !isToday(day) && isLightTheme()"
+                                      [class.text-slate-500]="!isSelected && isPastDay(day)"
+                                      [class.text-white]="!isSelected && isToday(day)">
                                   {{ getDayOfWeekLabel(day) }}
                                 </span>
                               </div>
@@ -2803,6 +2837,77 @@
                                    [class.border-slate-200]="isLightTheme()">
                                 <span class="material-icons text-slate-500 text-sm">info</span>
                                 <span class="text-[8px] font-bold uppercase tracking-wider text-slate-500">Nenhum dia de trabalho neste mês</span>
+                              </div>
+                            }
+                          </div>
+
+                          <!-- Equipe do Dia Compact Integration -->
+                          <div class="mt-4 pt-3 border-t border-dashed"
+                               [class.border-[#10213b]/60]="!isLightTheme()"
+                               [class.border-slate-200]="isLightTheme()">
+                            
+                            <div class="flex items-center justify-between mb-2">
+                              <span class="text-[8px] font-black uppercase tracking-wider flex items-center gap-1 text-slate-400"
+                                    [class.text-slate-500]="isLightTheme()">
+                                <span class="material-icons text-[10px] text-emerald-400">group</span>
+                                Equipe em {{ selectedCalendarDay() }}/{{ selectedMonthIndex() + 1 }} &mdash; {{ getTodayTeamShiftLabel() }}
+                              </span>
+                              <span class="text-[7px] font-black font-mono text-emerald-400 bg-emerald-500/10 px-1.5 py-0.2 rounded shrink-0">
+                                {{ getTodayTeamCollaborators().length }} Membros
+                              </span>
+                            </div>
+
+                            @let team = getTodayTeamCollaborators();
+                            @if (team.length > 0) {
+                              <div class="flex flex-wrap gap-1.5 justify-start">
+                                @for (collab of team; track collab.id) {
+                                  <!-- Compact Avatar Card -->
+                                  <div (click)="navigateToCollabPortal(collab.id)"
+                                       class="flex items-center gap-1.5 p-1 rounded-md border transition-all duration-200 select-none cursor-pointer max-w-[130px] shrink-0 hover:scale-[1.03]"
+                                       title="Ir para o Portal do Colaborador"
+                                       [class.bg-emerald-950/15]="!isLightTheme() && collab.id === logged.id"
+                                       [class.border-emerald-500/30]="!isLightTheme() && collab.id === logged.id"
+                                       [class.bg-emerald-50/50]="isLightTheme() && collab.id === logged.id"
+                                       [class.border-emerald-300]="isLightTheme() && collab.id === logged.id"
+                                       [class.bg-[#030a14]/60]="!isLightTheme() && collab.id !== logged.id"
+                                       [class.border-[#10213b]]="!isLightTheme() && collab.id !== logged.id"
+                                       [class.bg-white]="isLightTheme() && collab.id !== logged.id"
+                                       [class.border-slate-200]="isLightTheme() && collab.id !== logged.id"
+                                       [class.hover:border-emerald-500/50]="true">
+                                    
+                                    <!-- Avatar Photo -->
+                                    <div class="w-6 h-6 rounded-full overflow-hidden shrink-0 border relative"
+                                         [class.border-emerald-500]="collab.id === logged.id"
+                                         [class.border-slate-700]="!isLightTheme() && collab.id !== logged.id"
+                                         [class.border-slate-300]="isLightTheme() && collab.id !== logged.id">
+                                      <img [src]="getCollabPhoto(collab)" [alt]="collab.name" referrerpolicy="no-referrer"
+                                           class="w-full h-full object-cover">
+                                      @if (collab.id === logged.id) {
+                                        <div class="absolute inset-0 bg-emerald-500/10 flex items-center justify-center"></div>
+                                      }
+                                    </div>
+
+                                    <!-- Collab Name / Role -->
+                                    <div class="min-w-0 leading-none">
+                                      <div class="text-[8.5px] font-black truncate text-slate-200 max-w-[85px] leading-tight"
+                                           [class.text-slate-800]="isLightTheme()"
+                                           [class.text-emerald-400]="!isLightTheme() && collab.id === logged.id"
+                                           [class.text-emerald-800]="isLightTheme() && collab.id === logged.id">
+                                        {{ collab.name }}
+                                      </div>
+                                      <div class="text-[6.5px] font-mono text-slate-500 truncate leading-none uppercase tracking-wider">
+                                        {{ collab.role }}
+                                      </div>
+                                    </div>
+                                    
+                                  </div>
+                                }
+                              </div>
+                            } @else {
+                              <div class="p-2 border border-dashed rounded-lg text-center flex flex-col items-center justify-center"
+                                   [class.border-[#10213b]]="!isLightTheme()"
+                                   [class.border-slate-200]="isLightTheme()">
+                                <span class="text-[7.5px] font-bold text-slate-500 uppercase">Nenhum membro trabalhando neste dia</span>
                               </div>
                             }
                           </div>
@@ -3217,19 +3322,15 @@
                         @let dayInfo = getCollaboratorDayScheduleInfo(logged, day);
                         @let count = getFolgaRequestCount(day);
 
-                        <button (click)="onPortalCalendarDayClick(day)"
-                                [class]="getCollaboratorCalendarDayClass(logged, day, count)"
-                                [class.opacity-45]="isPastDay(day)"
-                                [class.saturate-[0.45]]="isPastDay(day)"
-                                [class.hover:opacity-95]="isPastDay(day)"
-                                [class.hover:saturate-100]="isPastDay(day)"
-                                class="transition-all duration-300"
-                                [class.ring-2]="isToday(day) || day === selectedCalendarDay()"
-                                [class.ring-emerald-400]="isToday(day) && day !== selectedCalendarDay()"
-                                [class.ring-emerald-500]="day === selectedCalendarDay()"
-                                [class.ring-offset-2]="isToday(day) || day === selectedCalendarDay()"
-                                [class.ring-offset-[#020813]]="(isToday(day) || day === selectedCalendarDay()) && !isLightTheme()"
-                                [class.ring-offset-white]="(isToday(day) || day === selectedCalendarDay()) && isLightTheme()">
+                        <div [class]="getCollaboratorCalendarDayStaticClass(logged, day, count)"
+                             [class.opacity-45]="isPastDay(day)"
+                             [class.saturate-[0.45]]="isPastDay(day)"
+                             class="transition-all duration-300"
+                             [class.ring-2]="isToday(day)"
+                             [class.ring-emerald-400]="isToday(day)"
+                             [class.ring-offset-2]="isToday(day)"
+                             [class.ring-offset-[#020813]]="isToday(day) && !isLightTheme()"
+                             [class.ring-offset-white]="isToday(day) && isLightTheme()">
                           
                           <div class="flex items-center justify-between w-full shrink-0">
                             <span class="font-extrabold font-mono text-[10px] sm:text-[12px] h-5 w-5 sm:h-6 sm:w-6 flex items-center justify-center rounded-full"
@@ -3266,132 +3367,10 @@
                           </div>
 
                           <div class="w-full text-left pt-1 border-t border-[#10213b]/20 shrink-0 select-none mt-1 leading-none hidden sm:flex items-center justify-between">
+                            <span class="text-[8.5px] font-bold text-slate-400 font-mono">{{ dayInfo.subLabel }}</span>
                           </div>
-                        </button>
-                      }
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Equipe de Hoje Section -->
-                <div class="p-5 rounded-xl border shadow-xl space-y-3 transition-all duration-300"
-                     [class.bg-[#030a14]]="!isLightTheme()"
-                     [class.border-[#10213b]]="!isLightTheme()"
-                     [class.bg-white]="isLightTheme()"
-                     [class.border-slate-200]="isLightTheme()"
-                     id="today_team_section">
-                  <div class="flex items-center justify-between pb-1">
-                    <span class="text-[10px] font-black uppercase text-slate-400 tracking-wider flex items-center gap-1.5">
-                      <span class="material-icons text-xs text-emerald-400">group</span>
-                      @if (selectedCalendarDay() === getTodayDay()) {
-                        Equipe de Hoje &mdash; {{ getTodayTeamShiftLabel() }}
-                      } @else {
-                        Equipe do Dia {{ selectedCalendarDay() }}/{{ selectedMonthIndex() + 1 }} &mdash; {{ getTodayTeamShiftLabel() }}
-                      }
-                    </span>
-                    <span class="text-[8px] font-bold font-mono text-emerald-400 bg-emerald-950/40 border border-emerald-500/20 px-1.5 py-0.5 rounded">
-                      {{ getTodayTeamCollaborators().length }} Membros
-                    </span>
-                  </div>
-
-                  <p class="text-[9.5px] text-slate-400 leading-relaxed">
-                    @if (selectedCalendarDay() === getTodayDay()) {
-                      Seus colegas de turno que estão escalados para trabalhar hoje (Dia {{ getTodayDay() }}).
-                    } @else {
-                      Seus colegas de turno que estão escalados para trabalhar no dia {{ selectedCalendarDay() }} ({{ getDayOfWeekLabel(selectedCalendarDay()) }}).
-                    }
-                  </p>
-
-                  <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                    @for (collab of getTodayTeamCollaborators(); track collab.id) {
-                      <div class="p-2 border rounded-lg transition-all duration-200 flex flex-col items-center justify-center text-center gap-1.5 select-none h-[105px]"
-                           [class.bg-[#071426]]="!isLightTheme()"
-                           [class.border-[#10213b]]="!isLightTheme() && collab.id !== logged.id"
-                           [class.border-emerald-500/40]="!isLightTheme() && collab.id === logged.id"
-                           [class.bg-emerald-950/15]="!isLightTheme() && collab.id === logged.id"
-                           
-                           [class.bg-white]="isLightTheme()"
-                           [class.border-slate-200]="isLightTheme() && collab.id !== logged.id"
-                           [class.border-emerald-500/60]="isLightTheme() && collab.id === logged.id"
-                           [class.bg-emerald-50/40]="isLightTheme() && collab.id === logged.id">
-                        
-                        <!-- Circular Photo Wrapper with elegant double-border moldura -->
-                        <div (click)="navigateToCollabPortal(collab.id)"
-                             class="w-11 h-11 relative shrink-0 rounded-full border p-[1.5px] transition-all duration-300 shadow-[0_2px_8px_rgba(0,0,0,0.3)] cursor-pointer hover:scale-105"
-                             title="Ir para o Portal do Colaborador"
-                             [class.border-emerald-500]="collab.id === logged.id"
-                             [class.bg-emerald-950/30]="!isLightTheme() && collab.id === logged.id"
-                             [class.bg-emerald-50/50]="isLightTheme() && collab.id === logged.id"
-                             [class.border-[#10213b]]="!isLightTheme() && collab.id !== logged.id"
-                             [class.border-slate-200]="isLightTheme() && collab.id !== logged.id"
-                             [class.bg-slate-900/40]="!isLightTheme() && collab.id !== logged.id"
-                             [class.bg-slate-50]="isLightTheme() && collab.id !== logged.id">
-                          <div class="w-full h-full rounded-full overflow-hidden">
-                            <img [src]="getCollabPhoto(collab)" [alt]="collab.name" referrerpolicy="no-referrer"
-                                 class="w-full h-full object-cover">
-                          </div>
-                          @if (collab.id === logged.id) {
-                            <div class="absolute -bottom-0.5 -right-0.5 bg-emerald-500 text-white rounded-full w-3.5 h-3.5 flex items-center justify-center shadow-md border border-[#030a14]">
-                              <span class="material-icons text-[8px] font-black">check</span>
-                            </div>
-                          }
                         </div>
-
-                        <!-- Collaborator Info -->
-                        <div class="w-full min-w-0">
-                          <h6 (click)="navigateToCollabPortal(collab.id)"
-                              class="text-[10px] font-black truncate leading-tight cursor-pointer hover:text-emerald-400 hover:underline transition-all"
-                              title="Ir para o Portal do Colaborador"
-                              [class.text-white]="!isLightTheme()"
-                              [class.text-slate-800]="isLightTheme()">
-                            {{ collab.name }}
-                          </h6>
-                          <p class="text-[7.5px] font-mono mt-0.5 font-bold uppercase tracking-widest truncate"
-                             [class.text-slate-500]="collab.id !== logged.id"
-                             [class.text-emerald-400]="!isLightTheme() && collab.id === logged.id"
-                             [class.text-emerald-700]="isLightTheme() && collab.id === logged.id">
-                            {{ collab.role }}
-                          </p>
-                        </div>
-                      </div>
-                    } @empty {
-                      <div class="col-span-full py-8 text-center rounded-lg border border-dashed flex flex-col items-center justify-center gap-1.5"
-                           [class.border-[#10213b]/60]="!isLightTheme()"
-                           [class.bg-slate-900/10]="!isLightTheme()"
-                           [class.border-slate-300]="isLightTheme()"
-                           [class.bg-slate-50]="isLightTheme()">
-                        <span class="material-icons text-xl text-slate-500">sentiment_neutral</span>
-                        <span class="text-[9px] font-bold uppercase tracking-wider text-slate-400">
-                          @if (selectedCalendarDay() === getTodayDay()) {
-                            Nenhum colega escalado hoje
-                          } @else {
-                            Nenhum colega escalado neste dia
-                          }
-                        </span>
-                      </div>
-                    }
-                  </div>
-
-                  <!-- Botões de Ação para o dia selecionado (Folga, Permuta, etc.) -->
-                  @let selDay = selectedCalendarDay();
-                  @let isChosen = isChosenByCollab(logged, selDay);
-                  @let isPre = isPreSelectedByCollab(logged, selDay);
-                  @let dayInfo = getCollaboratorDayScheduleInfo(logged, selDay);
-
-                  <div class="mt-4 pt-3 border-t border-[#10213b]/20 flex flex-wrap gap-3 items-center justify-between" id="selected_day_action_bar">
-                    <div class="flex items-center gap-2">
-                      <span class="text-[8.5px] font-bold text-slate-400 uppercase tracking-wider">
-                        Seu Status no dia {{ selDay }}:
-                      </span>
-                      <span class="text-[8.5px] font-black uppercase px-2 py-0.5 rounded tracking-widest font-mono"
-                            [style.background-color]="getShiftOrSiglaColor(dayInfo.label, selDay)"
-                            [style.color]="getShiftOrSiglaTextColor(dayInfo.label)">
-                        {{ dayInfo.label || 'N/A' }}
-                      </span>
-                      <span class="text-[8.5px] font-bold text-slate-400 font-mono">{{ dayInfo.subLabel }}</span>
-                    </div>
-
-                    <div class="flex flex-wrap items-center gap-2">
+                      }
                     </div>
                   </div>
                 </div>
