@@ -298,6 +298,7 @@ export class App {
   public selectedDetailCollab = signal<any | null>(null);
   public dayDetailsActiveTab = signal<'seu_turno' | 'turno_posterior' | 'geral'>('seu_turno');
   public selectedCalendarDay = signal<number>(new Date().getDate());
+  public hidePastDays = signal<boolean>(false);
 
   public openCollabProfile(id: string): void {
     this.selectedProfileCollabId.set(id);
@@ -912,9 +913,9 @@ export class App {
     this.showToast('Datas importantes atualizadas com sucesso!');
   }
 
-  getImportantDatesForCollab(collab: any): { dateLabel: string; label: string; icon: string; color: string; details: string; priorityLabel?: string; rawDate: string; isBirthday?: boolean; priorityValue?: number }[] {
+  getImportantDatesForCollab(collab: any): { dateLabel: string; day: string; monthLabel: string; label: string; icon: string; color: string; details: string; priorityLabel?: string; rawDate: string; isBirthday?: boolean; priorityValue?: number }[] {
     if (!collab) return [];
-    const dates: { dateLabel: string; label: string; icon: string; color: string; details: string; priorityLabel?: string; rawDate: string; isBirthday?: boolean; priorityValue?: number }[] = [];
+    const dates: { dateLabel: string; day: string; monthLabel: string; label: string; icon: string; color: string; details: string; priorityLabel?: string; rawDate: string; isBirthday?: boolean; priorityValue?: number }[] = [];
     
     // Birthday
     if (collab.birthday) {
@@ -926,6 +927,8 @@ export class App {
         
         dates.push({
           dateLabel: `${String(d).padStart(2, '0')}/${String(m).padStart(2, '0')}`,
+          day: String(d).padStart(2, '0'),
+          monthLabel: monthNames[m - 1],
           label: 'Aniversário',
           icon: 'cake',
           color: 'text-rose-500 bg-rose-500/10 border-rose-500/20 text-rose-500',
@@ -961,6 +964,8 @@ export class App {
 
           dates.push({
             dateLabel: `${String(d).padStart(2, '0')}/${String(m).padStart(2, '0')}`,
+            day: String(d).padStart(2, '0'),
+            monthLabel: monthNames[m - 1],
             label: sd.description,
             icon,
             color,
@@ -1437,6 +1442,29 @@ export class App {
       }
     }, { allowSignalWrites: true });
 
+    // Auto-match collaborator for first access detection dynamically as they type
+    effect(() => {
+      const name = this.loginNameInput().trim();
+      if (!name) {
+        this.matchedCollab.set(null);
+        this.isFirstAccess.set(false);
+        return;
+      }
+      const typedName = name.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      const collabs = this.scaleService.collaborators();
+      const found = collabs.find(c => {
+        const normName = c.name.trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        return normName === typedName || normName.includes(typedName);
+      });
+      if (found) {
+        this.matchedCollab.set(found);
+        this.isFirstAccess.set(!found.password || found.password.trim() === '');
+      } else {
+        this.matchedCollab.set(null);
+        this.isFirstAccess.set(false);
+      }
+    }, { allowSignalWrites: true });
+
     // Efeito para forçar o RBAC: Colaboradores normais ficam estritamente travados no Portal do Colaborador
     effect(() => {
       const logged = this.getLoggedCollab();
@@ -1706,9 +1734,25 @@ export class App {
     return this.daysInMonth().filter(day => !this.isWorkDay(collab, day));
   }
 
+  getFilteredCollabOffDays(collab: any): number[] {
+    const days = this.getCollabOffDays(collab);
+    if (this.hidePastDays()) {
+      return days.filter(day => !this.isPastDay(day));
+    }
+    return days;
+  }
+
   getCollabWorkDays(collab: any): number[] {
     if (!collab) return [];
     return this.daysInMonth().filter(day => this.isWorkDay(collab, day));
+  }
+
+  getFilteredCollabWorkDays(collab: any): number[] {
+    const days = this.getCollabWorkDays(collab);
+    if (this.hidePastDays()) {
+      return days.filter(day => !this.isPastDay(day));
+    }
+    return days;
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -3285,6 +3329,25 @@ export class App {
     );
   }
 
+  sortCollaboratorsWithLoggedFirst(collabsList: any[]): any[] {
+    const logged = this.getLoggedCollab();
+    
+    const getRank = (c: any) => {
+      if (logged && c.id === logged.id) return 0;
+      if (c.role === 'SUPERVISOR') return 1;
+      if (c.role === 'LIDER') return 2;
+      if (c.role === 'OPERADOR') return 3;
+      return 4;
+    };
+
+    return [...collabsList].sort((a, b) => {
+      const rA = getRank(a);
+      const rB = getRank(b);
+      if (rA !== rB) return rA - rB;
+      return (a.name || '').localeCompare(b.name || '');
+    });
+  }
+
   getTodayTeamCollaborators(): any[] {
     const logged = this.getLoggedCollab();
     if (!logged) return [];
@@ -3292,20 +3355,21 @@ export class App {
     const day = this.selectedCalendarDay();
     const myShiftCode = this.getCollabEffectiveShiftForDay(logged, day);
     
-    return this.scaleService.collaborators().filter(c => {
+    const filtered = this.scaleService.collaborators().filter(c => {
       // Must be scheduled to work on that day
       if (!this.isWorkDay(c, day)) return false;
       // Must match the same shift code
       return this.getCollabEffectiveShiftForDay(c, day) === myShiftCode;
     });
+
+    return this.sortCollaboratorsWithLoggedFirst(filtered);
   }
 
   getCollaboratorsOnVacationForDay(day: number): any[] {
-    const logged = this.getLoggedCollab();
-    return this.scaleService.collaborators().filter(c => {
-      if (logged && c.id === logged.id) return false;
+    const filtered = this.scaleService.collaborators().filter(c => {
       return !this.isWorkDay(c, day);
     });
+    return this.sortCollaboratorsWithLoggedFirst(filtered);
   }
 
   getTodayTeamShiftLabel(): string {
@@ -3328,18 +3392,20 @@ export class App {
 
     const allScheduled = this.getCollaboratorsScheduledForDay(day);
     if (tab === 'geral') {
-      return allScheduled;
+      return this.sortCollaboratorsWithLoggedFirst(allScheduled);
     }
 
     const myShiftCode = this.getCollabEffectiveShiftForDay(collab, day);
     if (tab === 'seu_turno') {
-      return allScheduled.filter(c => this.getCollabEffectiveShiftForDay(c, day) === myShiftCode);
+      const filtered = allScheduled.filter(c => this.getCollabEffectiveShiftForDay(c, day) === myShiftCode);
+      return this.sortCollaboratorsWithLoggedFirst(filtered);
     }
 
     if (tab === 'turno_posterior') {
       const nextShiftCode = this.getNextShiftCode(myShiftCode);
       if (!nextShiftCode) return [];
-      return allScheduled.filter(c => this.getCollabEffectiveShiftForDay(c, day) === nextShiftCode);
+      const filtered = allScheduled.filter(c => this.getCollabEffectiveShiftForDay(c, day) === nextShiftCode);
+      return this.sortCollaboratorsWithLoggedFirst(filtered);
     }
 
     return [];
@@ -3436,6 +3502,14 @@ export class App {
     
     if (!collab) {
       return `${base} bg-slate-900/30 border-slate-800 text-slate-500`;
+    }
+
+    if (this.isToday(day)) {
+      if (this.isLightTheme()) {
+        return `${base} bg-emerald-100/95 border-emerald-600 border-2 text-emerald-950 shadow-[0_4px_16px_rgba(16,185,129,0.3)] z-10`;
+      } else {
+        return `${base} bg-[#032e18] border-emerald-400 border-2 text-emerald-100 shadow-[0_0_25px_rgba(16,185,129,0.55),_inset_0_0_10px_rgba(16,185,129,0.3)] z-10`;
+      }
     }
 
     const cellValRaw = collab.scale && collab.scale[day] !== undefined ? collab.scale[day] : '-';

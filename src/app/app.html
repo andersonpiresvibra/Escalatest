@@ -1,13 +1,7 @@
 <!-- MAIN WRAPPER: PREMIUM WORK SCALE MANAGEMENT DARK MODE -->
 <div class="h-screen bg-[#020813] font-sans text-slate-100 flex flex-col antialiased selection:bg-emerald-600 selection:text-white overflow-hidden" id="main_app_layout" [class.light-theme]="isLightTheme()">
 
-  <!-- TOAST ALERTS BANNER -->
-  @if (toastMessage()) {
-    <div class="fixed top-4 right-4 z-50 bg-[#10b981] text-white p-4 rounded-lg shadow-2xl flex items-center gap-3 animate-fade-in max-w-sm border border-emerald-500/50" id="toast_notification">
-      <span class="material-icons select-none text-white text-xl animate-bounce">verified</span>
-      <span class="text-sm font-bold tracking-wide">{{ toastMessage() }}</span>
-    </div>
-  }
+
 
   @if (!getLoggedCollab()) {
     <!-- TELA DE LOGIN SIMPLICADA - SEM AVIAÇÃO - EM PORTUGUÊS BRASIL -->
@@ -32,79 +26,61 @@
           </div>
         }
 
-        <!-- ETAPA 1: Nome Completo -->
-        @if (!matchedCollab()) {
-          <div class="flex flex-col gap-3 text-left animate-fade-in">
-            <div class="flex flex-col gap-1">
-              <label for="login_name" class="text-[9px] font-bold uppercase text-slate-400 tracking-wider">Nome Completo</label>
-              <input type="text"
-                     id="login_name"
-                     [value]="loginNameInput()"
-                     (input)="loginNameInput.set($any($event.target).value)"
-                     (keydown.enter)="checkLoginName()"
-                     placeholder="Digite seu nome completo"
-                     class="w-full px-3 py-2 bg-[#051124] border border-[#10213b] rounded-lg text-xs font-bold text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500 transition-all font-sans uppercase" />
-            </div>
-
-            <button (click)="checkLoginName()"
-                    id="btn_login_advance"
-                    class="w-full py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-black text-xs uppercase tracking-wider rounded-lg transition-all flex items-center justify-center gap-1 cursor-pointer border-none outline-none">
-              Avançar
-              <span class="material-icons text-xs leading-none">arrow_forward</span>
-            </button>
+        <!-- FORM UNIFICADO: Nome e Senha juntos -->
+        <div class="flex flex-col gap-3.5 text-left animate-fade-in">
+          
+          <!-- Nome de Usuário -->
+          <div class="flex flex-col gap-1">
+            <label for="login_name" class="text-[9px] font-bold uppercase text-slate-400 tracking-wider">Nome do Colaborador</label>
+            <input type="text"
+                   id="login_name"
+                   [value]="loginNameInput()"
+                   (input)="loginNameInput.set($any($event.target).value)"
+                   (keydown.enter)="handleLoginSubmit()"
+                   placeholder="Digite seu nome"
+                   class="w-full px-3 py-2 bg-[#051124] border border-[#10213b] rounded-lg text-xs font-bold text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500 transition-all font-sans uppercase" />
           </div>
-        } @else {
-          <!-- ETAPA 2: Senha / Criar Senha -->
-          <div class="flex flex-col gap-3 text-left animate-fade-in">
-            
-            <!-- Colaborador Encontrado -->
-            <div class="flex items-center justify-between text-xs py-1 px-0.5 border-b border-[#10213b]/40 pb-2">
-              <span class="text-[10px] text-slate-300">Olá, <strong class="text-white uppercase font-black">{{ matchedCollab()!.name }}</strong></span>
-              <button (click)="resetLoginState()" class="text-[9px] font-black uppercase text-rose-400 hover:text-rose-300 bg-transparent border-none outline-none cursor-pointer tracking-wider">
-                Alterar
-              </button>
-            </div>
 
-            <!-- Senha -->
-            <div class="flex flex-col gap-3">
-              <div class="flex flex-col gap-1">
-                <label for="login_password" class="text-[9px] font-bold uppercase text-slate-400 tracking-wider">
-                  {{ isFirstAccess() ? 'Crie sua senha' : 'Sua senha' }}
-                </label>
-                <input type="password"
-                       id="login_password"
-                       [value]="loginPasswordInput()"
-                       (input)="loginPasswordInput.set($any($event.target).value)"
-                       (keydown.enter)="handleLoginSubmit()"
-                       maxlength="4"
-                       [placeholder]="isFirstAccess() ? 'senha' : 'Digite sua senha'"
-                       class="w-full px-3 py-2 bg-[#051124] border border-[#10213b] rounded-lg text-center text-sm font-black text-white tracking-[0.2em] placeholder-slate-600 focus:outline-none focus:border-emerald-500 transition-all font-mono" />
-              </div>
-
-              <!-- Confirmar Senha (Primeiro acesso) -->
-              @if (isFirstAccess()) {
-                <div class="flex flex-col gap-1 animate-slide-up">
-                  <label for="confirm_password" class="text-[9px] font-bold uppercase text-slate-400 tracking-wider">Confirme sua senha</label>
-                  <input type="password"
-                         id="confirm_password"
-                         [value]="confirmPasswordInput()"
-                         (input)="confirmPasswordInput.set($any($event.target).value)"
-                         (keydown.enter)="handleLoginSubmit()"
-                         maxlength="4"
-                         placeholder="Confirme sua senha"
-                         class="w-full px-3 py-2 bg-[#051124] border border-[#10213b] rounded-lg text-center text-sm font-black text-white tracking-[0.2em] placeholder-slate-600 focus:outline-none focus:border-emerald-500 transition-all font-mono" />
-                </div>
-              }
-
-              <button (click)="handleLoginSubmit()"
-                      id="btn_login_submit"
-                      class="w-full py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-black text-xs uppercase tracking-wider rounded-lg transition-all flex items-center justify-center gap-1 cursor-pointer border-none outline-none">
-                {{ isFirstAccess() ? 'Confirmar e Entrar' : 'Entrar' }}
-                <span class="material-icons text-xs leading-none">login</span>
-              </button>
-            </div>
+          <!-- Senha (sempre visível abaixo) -->
+          <div class="flex flex-col gap-1">
+            <label for="login_password" class="text-[9px] font-bold uppercase text-slate-400 tracking-wider">
+              {{ isFirstAccess() ? 'Crie sua senha de 4 dígitos' : 'Senha de acesso (4 dígitos)' }}
+            </label>
+            <input type="password"
+                   id="login_password"
+                   [value]="loginPasswordInput()"
+                   (input)="loginPasswordInput.set($any($event.target).value)"
+                   (keydown.enter)="handleLoginSubmit()"
+                   maxlength="4"
+                   placeholder="Digite sua senha"
+                   class="w-full px-3 py-2 bg-[#051124] border border-[#10213b] rounded-lg text-xs font-bold text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500 transition-all font-sans" />
           </div>
-        }
+
+          <!-- Confirmar Senha (Aparece dinamicamente se for Primeiro Acesso) -->
+          @if (isFirstAccess()) {
+            <div class="flex flex-col gap-1 animate-slide-up">
+              <label for="confirm_password" class="text-[9px] font-bold uppercase text-slate-400 tracking-wider">Confirme sua nova senha</label>
+              <input type="password"
+                     id="confirm_password"
+                     [value]="confirmPasswordInput()"
+                     (input)="confirmPasswordInput.set($any($event.target).value)"
+                     (keydown.enter)="handleLoginSubmit()"
+                     maxlength="4"
+                     placeholder="Confirme sua senha"
+                     class="w-full px-3 py-2 bg-[#051124] border border-[#10213b] rounded-lg text-xs font-bold text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500 transition-all font-sans" />
+              <p class="text-[8px] text-emerald-400 font-bold leading-normal mt-0.5 uppercase tracking-wide">
+                Primeiro acesso detectado! Digite e confirme uma senha de 4 dígitos para cadastrar.
+              </p>
+            </div>
+          }
+
+          <button (click)="handleLoginSubmit()"
+                  id="btn_login_submit"
+                  class="w-full py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-black text-xs uppercase tracking-wider rounded-lg transition-all flex items-center justify-center gap-1 cursor-pointer border-none outline-none mt-1">
+            {{ isFirstAccess() ? 'Confirmar e Entrar' : 'Entrar' }}
+            <span class="material-icons text-xs leading-none">login</span>
+          </button>
+        </div>
       </div>
       
       <!-- Rodapé discreto -->
@@ -115,7 +91,7 @@
   } @else {
 
   <!-- GLOBAL UNIFIED TABS BAR (home / matrix / staff + dropdown options) -->
-  <header class="flex flex-row items-center justify-between gap-2 md:gap-4 select-none px-4 md:px-6 py-3 border-b border-[#10213b] shadow-xl relative z-[60]" 
+  <header class="flex flex-row items-center justify-between gap-2 md:gap-3.5 select-none px-3 md:px-4 py-2 border-b border-[#10213b] shadow-xl relative z-[60]" 
           [class.bg-[#030a14]/80]="!isLightTheme()" [class.backdrop-blur-md]="!isLightTheme()" [class.bg-white]="isLightTheme()" id="global_master_header">
     <div class="flex items-center gap-2 md:gap-4 select-none">
       <!-- Logo Square Emblem -->
@@ -485,7 +461,7 @@
         <div class="flex-1 flex flex-col w-full gap-0 overflow-hidden animate-fade-in" id="matrix_general_card">
           
           <!-- SEARCH & FILTER TOOLBAR -->
-          <div id="matrix_search_toolbar" class="flex flex-col gap-3 border-b border-[#10213b] px-4 md:px-6 py-4"
+          <div id="matrix_search_toolbar" class="flex flex-col gap-2 border-b border-[#10213b] px-3 md:px-4 py-2.5"
                [class.bg-[#030a14]]="!isLightTheme()" [class.bg-white]="isLightTheme()">
             <!-- Main header row -->
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -1068,7 +1044,7 @@
       @if (activeSubTab() === 'ger.turnos') {
         <div class="flex flex-col h-full overflow-hidden animate-fade-in font-sans w-full flex-1" id="shifts_tab_content">
           <!-- FIXED HEADER -->
-          <div class="p-4 md:p-6 pb-3 border-b border-[#10213b] flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0" style="height: 44px; background-color: #10B981; color: #ffffff;">
+          <div class="px-3 md:px-4 py-2 border-b border-[#10213b] flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0" style="height: 44px; background-color: #10B981; color: #ffffff;">
             <div>
               <h3 class="font-black text-sm uppercase tracking-tight text-white flex items-center gap-1.5">
                 <span class="material-icons text-white">tune</span>
@@ -1082,10 +1058,10 @@
           </div>
 
           <!-- FIXED BODY WRAPPER -->
-          <div class="flex-1 min-h-0 flex flex-col overflow-hidden p-4 md:p-6 space-y-6 relative">
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 min-h-0 items-stretch">
+          <div class="flex-1 min-h-0 flex flex-col overflow-hidden p-2 md:p-3 space-y-3 relative">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-3 flex-1 min-h-0 items-stretch">
               <!-- SHIFTS TABLE LIST (Span 2) -->
-              <div class="lg:col-span-2 flex flex-col h-full min-h-0 space-y-4">
+              <div class="lg:col-span-2 flex flex-col h-full min-h-0 space-y-3">
                 <div class="border border-[#10213b] rounded-lg overflow-hidden bg-[#030a14] flex flex-col flex-1 min-h-0">
                   <div class="bg-[#071426] px-4 py-3 border-b border-[#10213b] flex items-center justify-between shrink-0">
                     <span class="text-[10px] font-black text-slate-300 uppercase tracking-widest flex items-center gap-1.5">
@@ -1417,7 +1393,7 @@
       @if (activeSubTab() === 'siglas') {
         <div class="flex flex-col h-full overflow-hidden animate-fade-in font-sans w-full flex-1" id="siglas_tab_content">
           <!-- FIXED HEADER -->
-          <div class="p-4 md:p-6 pb-3 border-b border-[#10213b] flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0" style="height: 44px; background-color: #10B981; color: #ffffff;">
+          <div class="px-3 md:px-4 py-2 border-b border-[#10213b] flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0" style="height: 44px; background-color: #10B981; color: #ffffff;">
             <div>
               <h3 class="font-black text-sm uppercase tracking-tight text-white flex items-center gap-1.5">
                 <span class="material-icons text-blue-400" style="color: #ffffff;">label</span>
@@ -1431,10 +1407,10 @@
           </div>
 
           <!-- FIXED BODY WRAPPER -->
-          <div class="flex-1 min-h-0 flex flex-col overflow-hidden p-4 md:p-6 space-y-6 relative">
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 min-h-0 items-stretch">
+          <div class="flex-1 min-h-0 flex flex-col overflow-hidden p-2 md:p-3 space-y-3 relative">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-3 flex-1 min-h-0 items-stretch">
               <!-- SIGLAS TABLE LIST (Span 2) -->
-              <div class="lg:col-span-2 flex flex-col h-full min-h-0 space-y-4">
+              <div class="lg:col-span-2 flex flex-col h-full min-h-0 space-y-3">
                 <div class="border border-[#10213b] rounded-lg overflow-hidden bg-[#030a14] flex flex-col flex-1 min-h-0">
                   <div class="bg-[#071426] px-4 py-3 border-b border-[#10213b] flex items-center justify-between shrink-0">
                     <span class="text-[10px] font-black text-slate-300 uppercase tracking-widest flex items-center gap-1.5">
@@ -1684,7 +1660,7 @@
       @if (activeSubTab() === 'team') {
         <div class="flex-1 flex flex-col w-full gap-0 overflow-hidden animate-fade-in font-sans" id="team_gallery_tab_content">
           <!-- Page Header -->
-          <div class="px-4 md:px-6 py-3 border-b border-[#10213b] flex flex-row items-center justify-between gap-4 select-none"
+          <div class="px-3 md:px-4 py-2 border-b border-[#10213b] flex flex-row items-center justify-between gap-4 select-none"
                [class.bg-[#030a14]]="!isLightTheme()" [class.bg-white]="isLightTheme()">
             <div>
               <h3 class="font-black text-sm uppercase tracking-tight text-white flex items-center gap-1.5">
@@ -1696,11 +1672,11 @@
 
           @if (teamViewMode() === 'gallery') {
             <!-- Master-Detail Grid -->
-            <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 p-4 md:p-6 flex-1 overflow-hidden min-h-0 h-[calc(100vh-130px)]">
+            <div class="grid grid-cols-1 xl:grid-cols-3 gap-3 p-2 md:p-3 flex-1 overflow-hidden min-h-0 h-[calc(100vh-130px)]">
             
              <!-- LEFT COLUMN: CARDS GALLERY (1/3 Width on desktop) -->
-             <div class="xl:col-span-1 flex flex-col gap-4 h-full min-h-0 overflow-hidden">
-               <div class="bg-[#030a14] border border-[#10213b] rounded-lg p-4 space-y-3 shrink-0">
+             <div class="xl:col-span-1 flex flex-col gap-2 h-full min-h-0 overflow-hidden">
+               <div class="bg-[#030a14] border border-[#10213b] rounded-lg p-3 space-y-2 shrink-0">
                  <span class="text-[9px] font-black uppercase text-slate-400 tracking-wider block">Filtro de Seleção Rápida</span>
                  
                  <!-- Search within tab -->
@@ -1777,7 +1753,7 @@
              </div>
 
              <!-- RIGHT COLUMN: DETAILED VIEW (2/3 Width on desktop) -->
-             <div class="xl:col-span-2 h-full min-h-0 overflow-y-auto scrollbar-thin pr-1 pb-16 space-y-6">
+             <div class="xl:col-span-2 h-full min-h-0 overflow-y-auto scrollbar-thin pr-1 pb-16 space-y-3">
                @let stats = collabStats();
                
                @if (selectedProfileCollab()) {
@@ -2309,10 +2285,10 @@
 
       <!-- SECTION C: PORTAL DO COLABORADOR -->
       @if (activeSubTab() === 'portal') {
-        <div class="p-4 md:p-6 lg:p-8 space-y-6 animate-fade-in font-sans w-full flex-1 overflow-y-auto scrollbar-thin max-w-full" id="portal_tab_content">
+        <div class="p-2 sm:p-3 lg:p-4 space-y-3 animate-fade-in font-sans w-full flex-1 overflow-y-auto scrollbar-thin max-w-full" id="portal_tab_content">
           <!-- SIMULATION BAR & QUICK SWITCH -->
           @if (!getLoggedCollab()) {
-            <div [class]="'border rounded-lg p-5 shadow-xl space-y-4 transition-all duration-300 ' + (isLightTheme() ? 'bg-white border-slate-200 text-slate-900' : 'bg-[#030a14] border-[#10213b] text-white')">
+            <div [class]="'border rounded-lg p-3.5 shadow-md space-y-3 transition-all duration-300 ' + (isLightTheme() ? 'bg-white border-slate-200 text-slate-900' : 'bg-[#030a14] border-[#10213b] text-white')">
               <div [class]="'flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b ' + (isLightTheme() ? 'border-slate-100' : 'border-[#10213b]/60')">
                 <div>
                   <div class="flex items-center gap-2">
@@ -2374,15 +2350,15 @@
             @let seqStats = getConsecutiveWorkStats(logged);
             @let offStats = getDaysUntilNextOff(logged);
             
-            <div class="space-y-6 w-full">
+            <div class="space-y-3 w-full">
               <!-- PORTAL GRID -->
-              <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 w-full">
+              <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 w-full">
                 
                 <!-- LEFT SIDEBAR: PROFILE MONITOR & STATS -->
-                <div class="lg:col-span-4 space-y-6">
+                <div class="lg:col-span-4 space-y-3">
 
                   <!-- CARD 1: MONITOR DE ESCALA -->
-                  <div [class]="'w-full border rounded-[16px] flex flex-col p-4 gap-3.5 transition-all duration-300 shadow-xl ' + (isLightTheme() ? 'bg-white border-slate-200 text-slate-900 shadow-slate-100/40' : 'bg-[#0F172A] border-[#334155] text-[#F8FAFC] shadow-black/25')" style="box-shadow: 0 12px 24px rgba(0,0,0,0.25);">
+                  <div [class]="'w-full border rounded-xl flex flex-col p-3 gap-2 transition-all duration-300 shadow-lg ' + (isLightTheme() ? 'bg-white border-slate-200 text-slate-900 shadow-slate-100/40' : 'bg-[#0F172A] border-[#334155] text-[#F8FAFC] shadow-black/25')" style="box-shadow: 0 12px 24px rgba(0,0,0,0.25);">
                     <!-- HEADER -->
                     <div class="flex items-center pb-2 border-b" [class]="isLightTheme() ? 'border-slate-100' : 'border-[#334155]'">
                       <div class="flex items-center gap-2">
@@ -2621,12 +2597,12 @@
                   
                   <!-- HEADER / TABS (SPLIT 50% / 50%) -->
                   <div id="trabalho-folga-header" class="w-full border-b border-slate-100/10 pb-2.5" [class.border-slate-100]="isLightTheme()">
-                    <div class="grid grid-cols-2 w-full p-1.5 rounded-2xl" [class]="isLightTheme() ? 'bg-slate-100' : 'bg-[#0b1329]'">
+                    <div class="grid grid-cols-2 w-full sm:max-w-xs p-1.5 rounded-2xl" [class]="isLightTheme() ? 'bg-slate-100' : 'bg-[#0b1329]'">
                       <button id="btn-tab-trabalho" (click)="setTurnVacationTab('work')"
                               class="w-full py-3.5 rounded-xl text-[11px] font-black uppercase tracking-wider transition-all duration-300 cursor-pointer flex items-center justify-center gap-2"
                               [class]="turnVacationTab() === 'work' ? (isLightTheme() ? 'bg-white text-slate-850 shadow-md border-b border-slate-200' : 'bg-emerald-500 text-emerald-950 shadow-lg') : (isLightTheme() ? 'text-slate-500 hover:text-slate-700' : 'text-slate-400 hover:text-slate-200')">
                         <span class="material-icons text-sm">work</span>
-                        Dias de Trabalho
+                        Trabalho
                       </button>
                       <button id="btn-tab-folga" (click)="setTurnVacationTab('vacation')"
                               class="w-full py-3.5 rounded-xl text-[11px] font-black uppercase tracking-wider transition-all duration-300 cursor-pointer flex items-center justify-center gap-2"
@@ -2679,10 +2655,21 @@
                       <div id="section-calendar-work" class="p-4 border rounded-xl transition-all duration-300" [class]="isLightTheme() ? 'bg-slate-50 border-slate-200' : 'bg-[#071426]/40 border-[#10213b]'">
                         <div class="flex items-center justify-between pb-2.5 border-b border-slate-100/10 mb-3" [class.border-slate-200]="isLightTheme()">
                           <span class="text-[10px] font-black uppercase tracking-wider text-slate-400">Meus Dias de Trabalho</span>
-                          <span class="text-[9px] font-mono text-emerald-400 bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-500/20">{{ getCollabWorkDays(logged).length }} Ativos</span>
+                          <div class="flex items-center gap-2">
+                            <!-- Toggle button -->
+                            <button (click)="hidePastDays.set(!hidePastDays())"
+                                    class="flex items-center gap-1 px-1.5 py-0.5 rounded border text-[8.5px] font-black uppercase tracking-wider transition-all duration-300 cursor-pointer shadow-sm select-none"
+                                    [class]="hidePastDays() ? 
+                                             (isLightTheme() ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-emerald-500 text-emerald-950 border-emerald-500') : 
+                                             (isLightTheme() ? 'bg-white border-slate-200 text-slate-400 hover:text-slate-600' : 'bg-[#0b1329]/40 border-[#10213b] text-slate-400 hover:text-[#F8FAFC]')">
+                              <span class="material-icons text-[10px]">{{ hidePastDays() ? 'visibility_off' : 'visibility' }}</span>
+                              {{ hidePastDays() ? 'Futuros' : 'Todos' }}
+                            </button>
+                            <span class="text-[9px] font-mono text-emerald-400 bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-500/20">{{ getFilteredCollabWorkDays(logged).length }} Ativos</span>
+                          </div>
                         </div>
                         <div class="grid grid-cols-5 xs:grid-cols-6 sm:grid-cols-8 md:grid-cols-10 gap-1.5">
-                          @for (day of getCollabWorkDays(logged); track day) {
+                          @for (day of getFilteredCollabWorkDays(logged); track day) {
                             @let isSel = day === selectedCalendarDay();
                             <div (click)="selectedCalendarDay.set(day)"
                                  [id]="'work-day-' + day"
@@ -2751,10 +2738,21 @@
                       <div id="section-calendar-vacation" class="p-4 border rounded-xl transition-all duration-300" [class]="isLightTheme() ? 'bg-slate-50 border-slate-200' : 'bg-[#071426]/40 border-[#10213b]'">
                         <div class="flex items-center justify-between pb-2.5 border-b border-slate-100/10 mb-3" [class.border-slate-200]="isLightTheme()">
                           <span class="text-[10px] font-black uppercase tracking-wider text-slate-400">Meus Dias de Folga</span>
-                          <span class="text-[9px] font-mono text-amber-400 bg-amber-950/40 px-2 py-0.5 rounded border border-amber-500/20">{{ getCollabOffDays(logged).length }} Folgas</span>
+                          <div class="flex items-center gap-2">
+                            <!-- Toggle button -->
+                            <button (click)="hidePastDays.set(!hidePastDays())"
+                                    class="flex items-center gap-1 px-1.5 py-0.5 rounded border text-[8.5px] font-black uppercase tracking-wider transition-all duration-300 cursor-pointer shadow-sm select-none"
+                                    [class]="hidePastDays() ? 
+                                             (isLightTheme() ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-emerald-500 text-emerald-950 border-emerald-500') : 
+                                             (isLightTheme() ? 'bg-white border-slate-200 text-slate-400 hover:text-slate-600' : 'bg-[#0b1329]/40 border-[#10213b] text-slate-400 hover:text-[#F8FAFC]')">
+                              <span class="material-icons text-[10px]">{{ hidePastDays() ? 'visibility_off' : 'visibility' }}</span>
+                              {{ hidePastDays() ? 'Futuros' : 'Todos' }}
+                            </button>
+                            <span class="text-[9px] font-mono text-amber-400 bg-amber-950/40 px-2 py-0.5 rounded border border-amber-500/20">{{ getFilteredCollabOffDays(logged).length }} Folgas</span>
+                          </div>
                         </div>
                         <div class="grid grid-cols-5 xs:grid-cols-6 sm:grid-cols-8 md:grid-cols-10 gap-1.5">
-                          @for (day of getCollabOffDays(logged); track day) {
+                          @for (day of getFilteredCollabOffDays(logged); track day) {
                             @let isSel = day === selectedCalendarDay();
                             <div (click)="selectedCalendarDay.set(day)"
                                  [id]="'vacation-day-' + day"
@@ -2806,12 +2804,14 @@
                 </div>
 
                 <!-- LEFT COLUMN: FOLGAS SOLICITADAS & DATAS IMPORTANTES -->
-                <div class="lg:col-span-4 space-y-6">
+                <div class="lg:col-span-4 space-y-3">
 
                   <!-- SECTION: FOLGAS SOLICITADAS -->
-                <div class="bg-[#030a14] border border-[#10213b] rounded-lg p-5 shadow-xl space-y-3">
+                <div class="rounded-lg p-3.5 space-y-2 transition-colors"
+                     [class]="isLightTheme() ? 'bg-slate-50 border border-slate-200 shadow-sm' : 'bg-[#030a14] border border-[#10213b] shadow-xl'">
                   <div class="flex items-center justify-between pb-1 border-b border-[#10213b]/40">
-                    <h4 class="font-black text-[11px] text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                    <h4 class="font-black text-[11px] uppercase tracking-wider flex items-center gap-1.5"
+                        [class]="isLightTheme() ? 'text-slate-800' : 'text-slate-100'">
                       <span class="material-icons text-[#10b981] text-[13px]">nights_stay</span>
                       Folgas Solicitadas
                     </h4>
@@ -2834,7 +2834,8 @@
                           <span class="text-[10px] font-black text-slate-500 uppercase tracking-wide leading-none">
                             {{ getDayOfWeekLabel(item.day) }} -
                           </span>
-                          <span class="text-[12px] font-black text-slate-900 uppercase tracking-wide leading-none">
+                          <span class="text-[12px] font-black uppercase tracking-wide leading-none"
+                                [class]="isLightTheme() ? 'text-slate-900' : 'text-slate-100'">
                             {{ item.formattedDate }}
                           </span>
                         </div>
@@ -2853,11 +2854,14 @@
                 </div>
 
                 <!-- SECTION: MINHAS DATAS IMPORTANTES -->
-                <div (click)="openEditSpecialDates()" class="bg-[#030a14] border border-[#10213b] rounded-lg p-5 shadow-xl space-y-3 cursor-pointer select-none hover:border-rose-500/30 transition-colors relative group" title="Clique para editar suas datas importantes">
+                <div (click)="openEditSpecialDates()"
+                     class="rounded-lg p-3.5 space-y-2 cursor-pointer select-none hover:border-rose-500/30 transition-colors relative group"
+                     [class]="isLightTheme() ? 'bg-slate-50 border border-slate-200 shadow-sm' : 'bg-[#030a14] border border-[#10213b] shadow-xl'"
+                     title="Clique para editar suas datas importantes">
                   <div class="absolute inset-0 bg-rose-500/0 group-active:bg-rose-500/5 transition-colors duration-300 rounded-lg pointer-events-none"></div>
                   <div class="flex items-center justify-between pb-1 border-b border-[#10213b]/40">
-                    <h4 class="font-black text-xs text-slate-900 uppercase tracking-wider flex items-center gap-1.5"
-                        [class.text-slate-800]="isLightTheme()">
+                    <h4 class="font-black text-xs uppercase tracking-wider flex items-center gap-1.5"
+                        [class]="isLightTheme() ? 'text-slate-800' : 'text-slate-100'">
                       <span class="material-icons text-rose-500 text-sm">favorite</span>
                       Minhas Datas Importantes
                     </h4>
@@ -2872,33 +2876,55 @@
 
                   <div class="grid grid-cols-1 gap-2">
                     @for (item of getImportantDatesForCollab(logged); track item.rawDate) {
-                      <div class="p-2 border border-[#10213b]/60 rounded-lg bg-[#030a14]/60 flex flex-col justify-between gap-2 transition-all duration-200"
+                      <div class="pl-3 border rounded-lg flex items-stretch justify-between transition-all duration-200 overflow-hidden"
+                           [class]="isLightTheme() ? 'border-slate-200 bg-white' : 'border-[#10213b]/60 bg-[#030a14]/60'"
                            [class.border-rose-500/30]="item.isBirthday"
-                           [class.bg-rose-950/10]="item.isBirthday"
+                           [class.bg-rose-950/10]="item.isBirthday && !isLightTheme()"
+                           [class.bg-rose-50/60]="item.isBirthday && isLightTheme()"
                            [class.shadow-[inset_0_0_15px_rgba(244,63,94,0.05)]]="item.isBirthday">
                         
-                        <div class="flex items-start justify-between">
-                          <div class="w-7 h-7 rounded flex items-center justify-center shrink-0 border" [class]="item.color">
+                        <!-- Left Part (~70% width): Icon and text labels -->
+                        <div class="flex items-center gap-2.5 flex-1 min-w-0 py-2.5 pr-3">
+                          <div class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 border" [class]="item.color">
                             <span class="material-icons text-[14px]">{{ item.icon }}</span>
                           </div>
-                          <div class="flex items-center shrink-0 h-7">
-                            <span class="text-[9px] font-black font-mono text-emerald-400 bg-emerald-950/40 border border-emerald-500/20 px-1.5 h-full rounded flex items-center justify-center leading-none">
-                              {{ item.dateLabel }}
+                          
+                          <div class="flex-1 min-w-0 flex flex-col justify-center text-left">
+                            <div class="flex items-center justify-between gap-1.5 mb-0.5 w-full">
+                              <span class="text-[10px] font-black truncate leading-none uppercase tracking-wide"
+                                    [class]="isLightTheme() ? 'text-slate-900' : 'text-slate-100'">
+                                {{ item.label }}
+                              </span>
+                              @if (item.priorityLabel) {
+                                <span class="px-1.5 py-0.5 rounded-md text-[8px] font-black font-mono leading-none tracking-wide shrink-0 shadow-sm border"
+                                      [class]="isLightTheme() ? 'bg-slate-100 text-slate-800 border-slate-200/80' : 'bg-[#1e293b]/80 text-[#F8FAFC] border-[#334155]/60'">
+                                  {{ item.priorityLabel }}
+                                </span>
+                              }
+                            </div>
+                            <span class="text-[7.5px] block truncate leading-none mt-1"
+                                  [class]="isLightTheme() ? 'text-slate-500' : 'text-slate-400'">
+                              {{ item.details }}
                             </span>
                           </div>
                         </div>
                         
-                        <div>
-                          <div class="flex items-center gap-1 mb-0.5">
-                            <span class="text-[9px] font-black text-slate-900 truncate leading-none uppercase tracking-wide">
-                              {{ item.label }}
-                            </span>
-                            @if (item.priorityLabel) {
-                              <span class="text-[6px] font-mono bg-slate-800 text-slate-300 px-1 py-0.5 rounded leading-none">{{ item.priorityLabel }}</span>
-                            }
-                          </div>
-                          <span class="text-[7px] text-slate-500 block truncate leading-none mt-1">
-                            {{ item.details }}
+                        <!-- Right Part (~30% width): Day on top, Month name below with custom styling -->
+                        <div class="w-[30%] max-w-[62px] flex flex-col items-center justify-center shrink-0 py-2 px-1 text-center"
+                             [class]="item.isBirthday ? 
+                                      (isLightTheme() ? 'bg-rose-50/60 border-l border-rose-100' : 'bg-rose-500/10 border-l border-rose-500/10') : 
+                                      (isLightTheme() ? 'bg-slate-50/60 border-l border-slate-200/60' : 'bg-[#10213b]/30 border-l border-[#10213b]/20')">
+                          <span class="text-[14px] font-black tracking-tighter leading-none"
+                                [class]="item.isBirthday ? 
+                                         (isLightTheme() ? 'text-rose-600' : 'text-rose-400') : 
+                                         (isLightTheme() ? 'text-slate-800' : 'text-white')">
+                            {{ item.day }}
+                          </span>
+                          <span class="text-[8px] font-black uppercase tracking-wider mt-1 leading-none"
+                                [class]="item.isBirthday ? 
+                                         (isLightTheme() ? 'text-rose-600' : 'text-rose-400') : 
+                                         (isLightTheme() ? 'text-emerald-600' : 'text-emerald-400')">
+                            {{ item.monthLabel }}
                           </span>
                         </div>
                         
@@ -2915,10 +2941,10 @@
               </div>
 
               <!-- RIGHT CONTENT: UNIFIED CALENDAR & AGENDA command center -->
-              <div class="lg:col-span-8 space-y-6">
+              <div class="lg:col-span-8 space-y-3">
 
                 <!-- PORTAL COLLABORATOR OFFICIAL REPORT & MONTHLY SCALE (Prontuário) -->
-                <div class="bg-[#030a14] border border-[#10213b] rounded-xl p-3 sm:p-5 shadow-xl space-y-4 sm:space-y-5">
+                <div class="bg-[#030a14] border border-[#10213b] rounded-xl p-2 sm:p-3.5 shadow-md space-y-3 sm:space-y-3.5">
 
                   <!-- Calendário de Escala de Folgas -->
                   <div class="space-y-4">
@@ -2982,25 +3008,22 @@
                         <div [class]="getCollaboratorCalendarDayStaticClass(logged, day, count)"
                              [class.opacity-45]="isPastDay(day)"
                              [class.saturate-[0.45]]="isPastDay(day)"
-                             class="transition-all duration-300"
-                             [class.ring-2]="isToday(day)"
-                             [class.ring-emerald-400]="isToday(day)"
-                             [class.ring-offset-2]="isToday(day)"
-                             [class.ring-offset-[#020813]]="isToday(day) && !isLightTheme()"
-                             [class.ring-offset-white]="isToday(day) && isLightTheme()">
+                             class="transition-all duration-300">
                           
                           <div class="flex items-center justify-between w-full shrink-0">
                             <span class="font-extrabold font-mono text-[10px] sm:text-[12px] h-5 w-5 sm:h-6 sm:w-6 flex items-center justify-center rounded-full"
-                                  [class.bg-emerald-500/20]="dayInfo.status === 'folga'"
-                                  [class.text-emerald-400]="dayInfo.status === 'folga' && !isLightTheme()"
-                                  [class.text-emerald-800]="dayInfo.status === 'folga' && isLightTheme()"
-                                  [class.bg-rose-500/20]="dayInfo.status === 'licenca'"
-                                  [class.text-rose-400]="dayInfo.status === 'licenca' && !isLightTheme()"
-                                  [class.text-rose-800]="dayInfo.status === 'licenca' && isLightTheme()"
-                                  [class.bg-slate-700/30]="dayInfo.status === 'trabalho' && !isLightTheme()"
-                                  [class.bg-slate-200/50]="dayInfo.status === 'trabalho' && isLightTheme()"
-                                  [class.text-slate-300]="dayInfo.status === 'trabalho' && !isLightTheme()"
-                                  [class.text-slate-700]="dayInfo.status === 'trabalho' && isLightTheme()">
+                                  [class.bg-emerald-500]="isToday(day)"
+                                  [class.text-white]="isToday(day)"
+                                  [class.bg-emerald-500/20]="dayInfo.status === 'folga' && !isToday(day)"
+                                  [class.text-emerald-400]="dayInfo.status === 'folga' && !isLightTheme() && !isToday(day)"
+                                  [class.text-emerald-800]="dayInfo.status === 'folga' && isLightTheme() && !isToday(day)"
+                                  [class.bg-rose-500/20]="dayInfo.status === 'licenca' && !isToday(day)"
+                                  [class.text-rose-400]="dayInfo.status === 'licenca' && !isLightTheme() && !isToday(day)"
+                                  [class.text-rose-800]="dayInfo.status === 'licenca' && isLightTheme() && !isToday(day)"
+                                  [class.bg-slate-700/30]="dayInfo.status === 'trabalho' && !isLightTheme() && !isToday(day)"
+                                  [class.bg-slate-200/50]="dayInfo.status === 'trabalho' && isLightTheme() && !isToday(day)"
+                                  [class.text-slate-300]="dayInfo.status === 'trabalho' && !isLightTheme() && !isToday(day)"
+                                  [class.text-slate-700]="dayInfo.status === 'trabalho' && isLightTheme() && !isToday(day)">
                               {{ day }}
                             </span>
                             @if (events.length > 0) {
@@ -3014,17 +3037,25 @@
 
                           <div class="flex flex-col items-start w-full gap-0.5 shrink-0 select-none mt-0.5 sm:mt-1 leading-none">
                             <span class="text-[7.5px] sm:text-[8.5px] font-black uppercase tracking-tight block max-w-full truncate leading-none"
-                                  [class.text-emerald-400]="dayInfo.status === 'folga'"
-                                  [class.text-rose-400]="dayInfo.status === 'licenca'"
-                                  [class.text-slate-300]="dayInfo.status === 'trabalho' && !isLightTheme()"
-                                  [class.text-slate-700]="dayInfo.status === 'trabalho' && isLightTheme()">
+                                  [class.text-emerald-300]="isToday(day) && !isLightTheme()"
+                                  [class.text-emerald-950]="isToday(day) && isLightTheme()"
+                                  [class.text-emerald-400]="dayInfo.status === 'folga' && !isToday(day)"
+                                  [class.text-rose-400]="dayInfo.status === 'licenca' && !isToday(day)"
+                                  [class.text-slate-300]="dayInfo.status === 'trabalho' && !isLightTheme() && !isToday(day)"
+                                  [class.text-slate-700]="dayInfo.status === 'trabalho' && isLightTheme() && !isToday(day)">
                               <span class="hidden sm:inline">{{ dayInfo.status === 'folga' ? 'FOLGA' : (dayInfo.status === 'licenca' || dayInfo.status === 'afastamento' ? 'AUSENTE' : 'TRABALHO') }}</span>
                               <span class="inline sm:hidden">{{ dayInfo.status === 'folga' ? 'FOLGA' : (dayInfo.status === 'licenca' || dayInfo.status === 'afastamento' ? 'AUSENTE' : 'TRABALHO') }}</span>
                             </span>
                           </div>
 
-                          <div class="w-full text-left pt-1 border-t border-[#10213b]/20 shrink-0 select-none mt-1 leading-none hidden sm:flex items-center justify-between">
-                            <span class="text-[8.5px] font-bold text-slate-400 font-mono">{{ dayInfo.subLabel }}</span>
+                          <div class="w-full text-left pt-1 border-t shrink-0 select-none mt-1 leading-none hidden sm:flex items-center justify-between"
+                               [class.border-[#10213b]/20]="!isToday(day)"
+                               [class.border-emerald-500/30]="isToday(day) && !isLightTheme()"
+                               [class.border-emerald-300/40]="isToday(day) && isLightTheme()">
+                            <span class="text-[8.5px] font-bold font-mono"
+                                  [class.text-slate-400]="!isToday(day)"
+                                  [class.text-emerald-300/85]="isToday(day) && !isLightTheme()"
+                                  [class.text-emerald-900/90]="isToday(day) && isLightTheme()">{{ dayInfo.subLabel }}</span>
                           </div>
                         </div>
                       }
