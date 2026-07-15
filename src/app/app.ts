@@ -40,6 +40,38 @@ function safeRemoveLocalStorage(key: string): void {
   }
 }
 
+// Safe sessionStorage helpers
+function safeGetSessionStorage(key: string): string | null {
+  try {
+    if (typeof window !== 'undefined' && typeof sessionStorage !== 'undefined') {
+      return sessionStorage.getItem(key);
+    }
+  } catch (e) {
+    console.warn(`sessionStorage.getItem blocked for ${key}:`, e);
+  }
+  return null;
+}
+
+function safeSetSessionStorage(key: string, value: string): void {
+  try {
+    if (typeof window !== 'undefined' && typeof sessionStorage !== 'undefined') {
+      sessionStorage.setItem(key, value);
+    }
+  } catch (e) {
+    console.warn(`sessionStorage.setItem blocked for ${key}:`, e);
+  }
+}
+
+function safeRemoveSessionStorage(key: string): void {
+  try {
+    if (typeof window !== 'undefined' && typeof sessionStorage !== 'undefined') {
+      sessionStorage.removeItem(key);
+    }
+  } catch (e) {
+    console.warn(`sessionStorage.removeItem blocked for ${key}:`, e);
+  }
+}
+
 interface AppNotification {
   id: string;
   type: 'publish' | 'alert' | 'trade';
@@ -1289,15 +1321,58 @@ export class App {
       const collabs = this.scaleService.collaborators();
       if (collabs.length > 0 && !this.selectedSimulatedCollabId() && !this.hasInitiallyLogged()) {
         this.hasInitiallyLogged.set(true); // Ensure this block runs only once
+        
+        // Detect if running in development mode (AI Studio or localhost)
+        const isDevelopment = typeof window !== 'undefined' && (
+          window.location.hostname === 'localhost' ||
+          window.location.hostname.includes('127.0.0.1') ||
+          window.location.hostname.includes('ais-dev') ||
+          (window.location.hostname.includes('run.app') && window.location.hostname.includes('-dev-'))
+        );
+        
+        const devLoggedOut = safeGetSessionStorage('dev_logged_out') === 'true';
+
+        if (isDevelopment && !devLoggedOut) {
+          // Dev Mode Auto-Login: Find first administrator/supervisor or fall back to first collaborator
+          const devCollab = collabs.find(c => this.isAdmin(c)) || collabs[0];
+          if (devCollab) {
+            this.selectedSimulatedCollabId.set(devCollab.id);
+            this.scaleService.selectedCollabName.set(devCollab.name);
+            this.scaleService.currentRole.set(devCollab.role);
+            safeSetLocalStorage('selectedSimulatedCollabId', devCollab.id);
+            safeSetLocalStorage('lastActivityTime', Date.now().toString());
+            safeSetSessionStorage('session_active', 'true');
+            this.resetInactivityTimer();
+            if (this.isAdmin(devCollab)) {
+              this.activeSubTab.set('matrix');
+            } else {
+              this.activeSubTab.set('portal');
+            }
+            this.showToast(`Modo Desenvolvimento: Auto-login como ${devCollab.name} (${devCollab.role})`);
+            return;
+          }
+        }
+
         const restoredId = safeGetLocalStorage('selectedSimulatedCollabId');
         const lastActivity = safeGetLocalStorage('lastActivityTime');
+        const sessionActive = safeGetSessionStorage('session_active');
         
+        // Browser tab / window close check:
+        // if sessionStorage has no 'session_active' marker, but we have a restoredId from localStorage,
+        // it means the browser or tab was closed and reopened. Therefore, we clear the session.
+        if (restoredId && !sessionActive) {
+          safeRemoveLocalStorage('selectedSimulatedCollabId');
+          safeRemoveLocalStorage('lastActivityTime');
+          return;
+        }
+
         if (restoredId && lastActivity) {
           const elapsed = Date.now() - parseInt(lastActivity, 10);
           if (elapsed > 5 * 60 * 1000) {
-            // Expired (5 minutes)
+            // Expired (5 minutes of inactivity)
             safeRemoveLocalStorage('selectedSimulatedCollabId');
             safeRemoveLocalStorage('lastActivityTime');
+            safeRemoveSessionStorage('session_active');
           } else {
             const collab = collabs.find(c => c.id === restoredId);
             if (collab) {
@@ -2643,6 +2718,7 @@ export class App {
       
       safeSetLocalStorage('selectedSimulatedCollabId', collab.id);
       safeSetLocalStorage('lastActivityTime', Date.now().toString());
+      safeSetSessionStorage('session_active', 'true');
       this.resetInactivityTimer();
 
       this.showToast(`Senha de 4 dígitos cadastrada com sucesso! Bem-vindo, ${collab.name}.`);
@@ -2663,6 +2739,7 @@ export class App {
         
         safeSetLocalStorage('selectedSimulatedCollabId', collab.id);
         safeSetLocalStorage('lastActivityTime', Date.now().toString());
+        safeSetSessionStorage('session_active', 'true');
         this.resetInactivityTimer();
 
         this.showToast(`Bem-vindo de volta, ${collab.name}!`);
@@ -2706,6 +2783,8 @@ export class App {
     this.selectedSimulatedCollabId.set(null);
     safeRemoveLocalStorage('selectedSimulatedCollabId');
     safeRemoveLocalStorage('lastActivityTime');
+    safeRemoveSessionStorage('session_active');
+    safeSetSessionStorage('dev_logged_out', 'true');
     if (this.inactivityTimeoutId) {
       clearTimeout(this.inactivityTimeoutId);
     }
@@ -2722,6 +2801,7 @@ export class App {
       
       safeSetLocalStorage('selectedSimulatedCollabId', collab.id);
       safeSetLocalStorage('lastActivityTime', Date.now().toString());
+      safeSetSessionStorage('session_active', 'true');
       this.resetInactivityTimer();
 
       this.showToast(`Sessão simulada como ${collab.name}!`);
@@ -2736,6 +2816,7 @@ export class App {
       this.scaleService.currentRole.set('SUPERVISOR');
       safeRemoveLocalStorage('selectedSimulatedCollabId');
       safeRemoveLocalStorage('lastActivityTime');
+      safeRemoveSessionStorage('session_active');
     }
   }
 

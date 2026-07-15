@@ -2840,79 +2840,79 @@
                               </div>
                             }
                           </div>
+                        </div>
 
-                          <!-- Equipe do Dia Compact Integration -->
-                          <div class="mt-4 pt-3 border-t border-dashed"
-                               [class.border-[#10213b]/60]="!isLightTheme()"
-                               [class.border-slate-200]="isLightTheme()">
-                            
-                            <div class="flex items-center justify-between mb-2">
-                              <span class="text-[8px] font-black uppercase tracking-wider flex items-center gap-1 text-slate-400"
-                                    [class.text-slate-500]="isLightTheme()">
-                                <span class="material-icons text-[10px] text-emerald-400">group</span>
-                                Equipe em {{ selectedCalendarDay() }}/{{ selectedMonthIndex() + 1 }} &mdash; {{ getTodayTeamShiftLabel() }}
-                              </span>
-                              <span class="text-[7px] font-black font-mono text-emerald-400 bg-emerald-500/10 px-1.5 py-0.2 rounded shrink-0">
-                                {{ getTodayTeamCollaborators().length }} Membros
-                              </span>
-                            </div>
+                      </div>
 
-                            @let team = getTodayTeamCollaborators();
-                            @if (team.length > 0) {
-                              <div class="flex flex-wrap gap-1.5 justify-start">
-                                @for (collab of team; track collab.id) {
-                                  <!-- Compact Avatar Card -->
-                                  <div (click)="navigateToCollabPortal(collab.id)"
-                                       class="flex items-center gap-1.5 p-1 rounded-md border transition-all duration-200 select-none cursor-pointer max-w-[130px] shrink-0 hover:scale-[1.03]"
-                                       title="Ir para o Portal do Colaborador"
-                                       [class.bg-emerald-950/15]="!isLightTheme() && collab.id === logged.id"
-                                       [class.border-emerald-500/30]="!isLightTheme() && collab.id === logged.id"
-                                       [class.bg-emerald-50/50]="isLightTheme() && collab.id === logged.id"
-                                       [class.border-emerald-300]="isLightTheme() && collab.id === logged.id"
-                                       [class.bg-[#030a14]/60]="!isLightTheme() && collab.id !== logged.id"
-                                       [class.border-[#10213b]]="!isLightTheme() && collab.id !== logged.id"
-                                       [class.bg-white]="isLightTheme() && collab.id !== logged.id"
-                                       [class.border-slate-200]="isLightTheme() && collab.id !== logged.id"
-                                       [class.hover:border-emerald-500/50]="true">
-                                    
-                                    <!-- Avatar Photo -->
-                                    <div class="w-6 h-6 rounded-full overflow-hidden shrink-0 border relative"
-                                         [class.border-emerald-500]="collab.id === logged.id"
-                                         [class.border-slate-700]="!isLightTheme() && collab.id !== logged.id"
-                                         [class.border-slate-300]="isLightTheme() && collab.id !== logged.id">
-                                      <img [src]="getCollabPhoto(collab)" [alt]="collab.name" referrerpolicy="no-referrer"
-                                           class="w-full h-full object-cover">
-                                      @if (collab.id === logged.id) {
-                                        <div class="absolute inset-0 bg-emerald-500/10 flex items-center justify-center"></div>
-                                      }
-                                    </div>
+                      <!-- Equipe do Dia Compact Integration -->
+                      <div class="mt-4 pt-3 border-t border-dashed"
+                           [class.border-[#10213b]/60]="!isLightTheme()"
+                           [class.border-slate-200]="isLightTheme()">
+                        
+                        <div class="flex items-center justify-between mb-2">
+                          <span class="text-[8px] font-black uppercase tracking-wider flex items-center gap-1 text-slate-400"
+                                [class.text-slate-500]="isLightTheme()">
+                            <span class="material-icons text-[10px] text-emerald-400">group</span>
+                            Equipe em {{ selectedCalendarDay() }}/{{ selectedMonthIndex() + 1 }} &mdash; {{ getTodayTeamShiftLabel() }}
+                          </span>
+                          <span class="text-[7px] font-black font-mono text-emerald-400 bg-emerald-500/10 px-1.5 py-0.2 rounded shrink-0">
+                            {{ getTodayTeamCollaborators().length }} Membros
+                          </span>
+                        </div>
 
-                                    <!-- Collab Name / Role -->
-                                    <div class="min-w-0 leading-none">
-                                      <div class="text-[8.5px] font-black truncate text-slate-200 max-w-[85px] leading-tight"
-                                           [class.text-slate-800]="isLightTheme()"
-                                           [class.text-emerald-400]="!isLightTheme() && collab.id === logged.id"
-                                           [class.text-emerald-800]="isLightTheme() && collab.id === logged.id">
-                                        {{ collab.name }}
-                                      </div>
-                                      <div class="text-[6.5px] font-mono text-slate-500 truncate leading-none uppercase tracking-wider">
-                                        {{ collab.role }}
-                                      </div>
-                                    </div>
-                                    
+                        @let team = getTodayTeamCollaborators();
+                        @if (team.length > 0) {
+                          <div class="flex flex-wrap gap-1.5 justify-start">
+                            @for (collab of team; track collab.id) {
+                              <!-- Compact Avatar Card -->
+                              <div (click)="navigateToCollabPortal(collab.id)"
+                                   class="flex items-center gap-1.5 p-1 rounded-md border transition-all duration-200 select-none cursor-pointer max-w-[130px] shrink-0 hover:scale-[1.03]"
+                                   title="Ir para o Portal do Colaborador"
+                                   [class.bg-emerald-950/15]="!isLightTheme() && collab.id === logged.id"
+                                   [class.border-emerald-500/30]="!isLightTheme() && collab.id === logged.id"
+                                   [class.bg-emerald-50/50]="isLightTheme() && collab.id === logged.id"
+                                   [class.border-emerald-300]="isLightTheme() && collab.id === logged.id"
+                                   [class.bg-[#030a14]/60]="!isLightTheme() && collab.id !== logged.id"
+                                   [class.border-[#10213b]]="!isLightTheme() && collab.id !== logged.id"
+                                   [class.bg-white]="isLightTheme() && collab.id !== logged.id"
+                                   [class.border-slate-200]="isLightTheme() && collab.id !== logged.id"
+                                   [class.hover:border-emerald-500/50]="true">
+                                
+                                <!-- Avatar Photo -->
+                                <div class="w-6 h-6 rounded-full overflow-hidden shrink-0 border relative"
+                                     [class.border-emerald-500]="collab.id === logged.id"
+                                     [class.border-slate-700]="!isLightTheme() && collab.id !== logged.id"
+                                     [class.border-slate-300]="isLightTheme() && collab.id !== logged.id">
+                                  <img [src]="getCollabPhoto(collab)" [alt]="collab.name" referrerpolicy="no-referrer"
+                                       class="w-full h-full object-cover">
+                                  @if (collab.id === logged.id) {
+                                    <div class="absolute inset-0 bg-emerald-500/10 flex items-center justify-center"></div>
+                                  }
+                                </div>
+
+                                <!-- Collab Name / Role -->
+                                <div class="min-w-0 leading-none">
+                                  <div class="text-[8.5px] font-black truncate text-slate-200 max-w-[85px] leading-tight"
+                                       [class.text-slate-800]="isLightTheme()"
+                                       [class.text-emerald-400]="!isLightTheme() && collab.id === logged.id"
+                                       [class.text-emerald-800]="isLightTheme() && collab.id === logged.id">
+                                    {{ collab.name }}
                                   </div>
-                                }
-                              </div>
-                            } @else {
-                              <div class="p-2 border border-dashed rounded-lg text-center flex flex-col items-center justify-center"
-                                   [class.border-[#10213b]]="!isLightTheme()"
-                                   [class.border-slate-200]="isLightTheme()">
-                                <span class="text-[7.5px] font-bold text-slate-500 uppercase">Nenhum membro trabalhando neste dia</span>
+                                  <div class="text-[6.5px] font-mono text-slate-500 truncate leading-none uppercase tracking-wider">
+                                    {{ collab.role }}
+                                  </div>
+                                </div>
+                                
                               </div>
                             }
                           </div>
-                        </div>
-
+                        } @else {
+                          <div class="p-2 border border-dashed rounded-lg text-center flex flex-col items-center justify-center"
+                               [class.border-[#10213b]]="!isLightTheme()"
+                               [class.border-slate-200]="isLightTheme()">
+                            <span class="text-[7.5px] font-bold text-slate-500 uppercase">Nenhum membro trabalhando neste dia</span>
+                          </div>
+                        }
                       </div>
 
                     </div>
