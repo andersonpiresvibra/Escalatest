@@ -45,14 +45,22 @@
 <body class="bg-[#020813] light-theme">
   <app-root></app-root>
   <script>
+    // Clean up service workers and local caches to prevent blank screen due to stale cached index.html referencing deleted bundles
     if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js').then(registration => {
-          console.log('ServiceWorker registration successful with scope: ', registration.scope);
-        }, err => {
-          console.log('ServiceWorker registration failed: ', err);
-        });
-      });
+      navigator.serviceWorker.getRegistrations().then(registrations => {
+        for (const registration of registrations) {
+          registration.unregister().then(unregistered => {
+            if (unregistered) console.log('Stale ServiceWorker successfully unregistered.');
+          });
+        }
+      }).catch(err => console.warn('Error fetching service worker registrations:', err));
+    }
+    if ('caches' in window) {
+      caches.keys().then(keys => {
+        return Promise.all(keys.map(key => caches.delete(key)));
+      }).then(() => {
+        console.log('All application caches cleared successfully.');
+      }).catch(err => console.warn('Error clearing caches:', err));
     }
   </script>
 </body>

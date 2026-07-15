@@ -1,25 +1,16 @@
-const CACHE_NAME = 'escala-easy-v1';
-const urlsToCache = [
-  '/',
-  '/index.html',
-  '/manifest.json'
-];
-
+// Self-destroying service worker to clear out stale caches and restore standard network routing
 self.addEventListener('install', event => {
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(urlsToCache))
+    caches.keys().then(keys => Promise.all(
+      keys.map(key => caches.delete(key))
+    )).then(() => self.clients.claim())
   );
 });
 
 self.addEventListener('fetch', event => {
-  event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        // Fall back to network
-        return response || fetch(event.request).catch(() => {
-            return caches.match('/index.html');
-        });
-      })
-  );
+  // Pass through straight to network, do not cache anything
 });

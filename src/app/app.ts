@@ -11,8 +11,8 @@ if (typeof window !== 'undefined' && pdfjsLib.GlobalWorkerOptions) {
 // Safe localStorage helper to prevent SecurityError/DOMException crashes in iframe/webview environments
 function safeGetLocalStorage(key: string): string | null {
   try {
-    if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
-      return localStorage.getItem(key);
+    if (typeof window !== 'undefined' && 'localStorage' in window && window.localStorage !== null) {
+      return window.localStorage.getItem(key);
     }
   } catch (e) {
     console.warn(`localStorage.getItem blocked for ${key}:`, e);
@@ -22,18 +22,19 @@ function safeGetLocalStorage(key: string): string | null {
 
 function safeSetLocalStorage(key: string, value: string): void {
   try {
-    if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
-      localStorage.setItem(key, value);
+    if (typeof window !== 'undefined' && 'localStorage' in window && window.localStorage !== null) {
+      window.localStorage.setItem(key, value);
     }
   } catch (e) {
     console.warn(`localStorage.setItem blocked for ${key}:`, e);
   }
 }
 
+// Safe localStorage helper to prevent SecurityError/DOMException crashes in iframe/webview environments
 function safeRemoveLocalStorage(key: string): void {
   try {
-    if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
-      localStorage.removeItem(key);
+    if (typeof window !== 'undefined' && 'localStorage' in window && window.localStorage !== null) {
+      window.localStorage.removeItem(key);
     }
   } catch (e) {
     console.warn(`localStorage.removeItem blocked for ${key}:`, e);
@@ -43,8 +44,8 @@ function safeRemoveLocalStorage(key: string): void {
 // Safe sessionStorage helpers
 function safeGetSessionStorage(key: string): string | null {
   try {
-    if (typeof window !== 'undefined' && typeof sessionStorage !== 'undefined') {
-      return sessionStorage.getItem(key);
+    if (typeof window !== 'undefined' && 'sessionStorage' in window && window.sessionStorage !== null) {
+      return window.sessionStorage.getItem(key);
     }
   } catch (e) {
     console.warn(`sessionStorage.getItem blocked for ${key}:`, e);
@@ -54,8 +55,8 @@ function safeGetSessionStorage(key: string): string | null {
 
 function safeSetSessionStorage(key: string, value: string): void {
   try {
-    if (typeof window !== 'undefined' && typeof sessionStorage !== 'undefined') {
-      sessionStorage.setItem(key, value);
+    if (typeof window !== 'undefined' && 'sessionStorage' in window && window.sessionStorage !== null) {
+      window.sessionStorage.setItem(key, value);
     }
   } catch (e) {
     console.warn(`sessionStorage.setItem blocked for ${key}:`, e);
@@ -64,8 +65,8 @@ function safeSetSessionStorage(key: string, value: string): void {
 
 function safeRemoveSessionStorage(key: string): void {
   try {
-    if (typeof window !== 'undefined' && typeof sessionStorage !== 'undefined') {
-      sessionStorage.removeItem(key);
+    if (typeof window !== 'undefined' && 'sessionStorage' in window && window.sessionStorage !== null) {
+      window.sessionStorage.removeItem(key);
     }
   } catch (e) {
     console.warn(`sessionStorage.removeItem blocked for ${key}:`, e);
