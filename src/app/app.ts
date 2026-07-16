@@ -299,6 +299,7 @@ export class App {
   public dayDetailsActiveTab = signal<'seu_turno' | 'turno_posterior' | 'geral'>('seu_turno');
   public selectedCalendarDay = signal<number>(new Date().getDate());
   public hidePastDays = signal<boolean>(false);
+  public coworkersFilter = signal<'MEU_TURNO' | 'OUTROS' | 'MANHA_TARDE' | 'TODOS'>('MEU_TURNO');
 
   public openCollabProfile(id: string): void {
     this.selectedProfileCollabId.set(id);
@@ -3364,11 +3365,24 @@ export class App {
     
     const day = this.selectedCalendarDay();
     const myShiftCode = this.getCollabEffectiveShiftForDay(logged, day);
+    const filter = this.coworkersFilter();
     
     const filtered = this.scaleService.collaborators().filter(c => {
       // Must be scheduled to work on that day
       if (!this.isWorkDay(c, day)) return false;
-      // Must match the same shift code
+      
+      const cBaseShift = (c.shift || '').trim().toUpperCase();
+      const loggedBaseShift = (logged.shift || '').trim().toUpperCase();
+
+      if (filter === 'MEU_TURNO') {
+        return cBaseShift === loggedBaseShift;
+      } else if (filter === 'OUTROS') {
+        return cBaseShift !== loggedBaseShift;
+      } else if (filter === 'MANHA_TARDE') {
+        return cBaseShift === 'MANHÃ' || cBaseShift === 'MANHA' || cBaseShift === 'TARDE';
+      }
+
+      // 'TODOS'
       return this.getCollabEffectiveShiftForDay(c, day) === myShiftCode;
     });
 
@@ -3376,8 +3390,28 @@ export class App {
   }
 
   getCollaboratorsOnVacationForDay(day: number): any[] {
+    const logged = this.getLoggedCollab();
+    if (!logged) return [];
+    
+    const filter = this.coworkersFilter();
+    
     const filtered = this.scaleService.collaborators().filter(c => {
-      return !this.isWorkDay(c, day);
+      // Must not be scheduled to work on that day
+      if (this.isWorkDay(c, day)) return false;
+
+      const cBaseShift = (c.shift || '').trim().toUpperCase();
+      const loggedBaseShift = (logged.shift || '').trim().toUpperCase();
+
+      if (filter === 'MEU_TURNO') {
+        return cBaseShift === loggedBaseShift;
+      } else if (filter === 'OUTROS') {
+        return cBaseShift !== loggedBaseShift;
+      } else if (filter === 'MANHA_TARDE') {
+        return cBaseShift === 'MANHÃ' || cBaseShift === 'MANHA' || cBaseShift === 'TARDE';
+      }
+
+      // 'TODOS'
+      return true;
     });
     return this.sortCollaboratorsWithLoggedFirst(filtered);
   }

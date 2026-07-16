@@ -2662,6 +2662,39 @@
                           <span class="text-[10px] font-black uppercase tracking-wider text-slate-400">Colegas de Trabalho Hoje / Dia {{ selectedCalendarDay() }} &mdash; {{ getTodayTeamShiftLabel() }}</span>
                           <span class="text-[9px] font-mono text-emerald-400 bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-500/20">{{ getTodayTeamCollaborators().length }} Membros</span>
                         </div>
+
+                        <!-- FILTER SELECTOR PILLS -->
+                        <div class="flex flex-wrap items-center gap-1.5 mb-3.5">
+                          <button (click)="coworkersFilter.set('MEU_TURNO')"
+                                  class="px-2.5 py-1 rounded border text-[8.5px] font-black uppercase tracking-wider transition-all duration-300 cursor-pointer shadow-sm select-none"
+                                  [class]="coworkersFilter() === 'MEU_TURNO' ? 
+                                           (isLightTheme() ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-emerald-500 text-emerald-950 border-emerald-500 font-black') : 
+                                           (isLightTheme() ? 'bg-white border-slate-200 text-slate-500 hover:text-slate-800' : 'bg-[#0b1329]/40 border-[#10213b] text-slate-400 hover:text-white')">
+                            Meu Turno ({{ logged.shift || 'N/A' }})
+                          </button>
+                          <button (click)="coworkersFilter.set('OUTROS')"
+                                  class="px-2.5 py-1 rounded border text-[8.5px] font-black uppercase tracking-wider transition-all duration-300 cursor-pointer shadow-sm select-none"
+                                  [class]="coworkersFilter() === 'OUTROS' ? 
+                                           (isLightTheme() ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-emerald-500 text-emerald-950 border-emerald-500 font-black') : 
+                                           (isLightTheme() ? 'bg-white border-slate-200 text-slate-500 hover:text-slate-800' : 'bg-[#0b1329]/40 border-[#10213b] text-slate-400 hover:text-white')">
+                            Outros Turnos
+                          </button>
+                          <button (click)="coworkersFilter.set('MANHA_TARDE')"
+                                  class="px-2.5 py-1 rounded border text-[8.5px] font-black uppercase tracking-wider transition-all duration-300 cursor-pointer shadow-sm select-none"
+                                  [class]="coworkersFilter() === 'MANHA_TARDE' ? 
+                                           (isLightTheme() ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-emerald-500 text-emerald-950 border-emerald-500 font-black') : 
+                                           (isLightTheme() ? 'bg-white border-slate-200 text-slate-500 hover:text-slate-800' : 'bg-[#0b1329]/40 border-[#10213b] text-slate-400 hover:text-white')">
+                            Manhã e Tarde
+                          </button>
+                          <button (click)="coworkersFilter.set('TODOS')"
+                                  class="px-2.5 py-1 rounded border text-[8.5px] font-black uppercase tracking-wider transition-all duration-300 cursor-pointer shadow-sm select-none"
+                                  [class]="coworkersFilter() === 'TODOS' ? 
+                                           (isLightTheme() ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-emerald-500 text-emerald-950 border-emerald-500 font-black') : 
+                                           (isLightTheme() ? 'bg-white border-slate-200 text-slate-500 hover:text-slate-800' : 'bg-[#0b1329]/40 border-[#10213b] text-slate-400 hover:text-white')">
+                            Todos
+                          </button>
+                        </div>
+
                         @let team = getTodayTeamCollaborators();
                         @if (team.length > 0) {
                           <div class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-7 lg:grid-cols-8 xl:grid-cols-9 gap-2">
@@ -2745,6 +2778,39 @@
                           <span class="text-[10px] font-black uppercase tracking-wider text-slate-400">Colegas de Folga Hoje / Dia {{ selectedCalendarDay() }}</span>
                           <span class="text-[9px] font-mono text-amber-400 bg-amber-950/40 px-2 py-0.5 rounded border border-amber-500/20">{{ getCollaboratorsOnVacationForDay(selectedCalendarDay()).length }} Folgas</span>
                         </div>
+
+                        <!-- FILTER SELECTOR PILLS -->
+                        <div class="flex flex-wrap items-center gap-1.5 mb-3.5">
+                          <button (click)="coworkersFilter.set('MEU_TURNO')"
+                                  class="px-2.5 py-1 rounded border text-[8.5px] font-black uppercase tracking-wider transition-all duration-300 cursor-pointer shadow-sm select-none"
+                                  [class]="coworkersFilter() === 'MEU_TURNO' ? 
+                                           (isLightTheme() ? 'bg-amber-600 text-white border-amber-600' : 'bg-amber-500 text-amber-950 border-amber-500 font-black') : 
+                                           (isLightTheme() ? 'bg-white border-slate-200 text-slate-500 hover:text-slate-800' : 'bg-[#0b1329]/40 border-[#10213b] text-slate-400 hover:text-white')">
+                            Meu Turno ({{ logged.shift || 'N/A' }})
+                          </button>
+                          <button (click)="coworkersFilter.set('OUTROS')"
+                                  class="px-2.5 py-1 rounded border text-[8.5px] font-black uppercase tracking-wider transition-all duration-300 cursor-pointer shadow-sm select-none"
+                                  [class]="coworkersFilter() === 'OUTROS' ? 
+                                           (isLightTheme() ? 'bg-amber-600 text-white border-amber-600' : 'bg-amber-500 text-amber-950 border-amber-500 font-black') : 
+                                           (isLightTheme() ? 'bg-white border-slate-200 text-slate-500 hover:text-slate-800' : 'bg-[#0b1329]/40 border-[#10213b] text-slate-400 hover:text-white')">
+                            Outros Turnos
+                          </button>
+                          <button (click)="coworkersFilter.set('MANHA_TARDE')"
+                                  class="px-2.5 py-1 rounded border text-[8.5px] font-black uppercase tracking-wider transition-all duration-300 cursor-pointer shadow-sm select-none"
+                                  [class]="coworkersFilter() === 'MANHA_TARDE' ? 
+                                           (isLightTheme() ? 'bg-amber-600 text-white border-amber-600' : 'bg-amber-500 text-amber-950 border-amber-500 font-black') : 
+                                           (isLightTheme() ? 'bg-white border-slate-200 text-slate-500 hover:text-slate-800' : 'bg-[#0b1329]/40 border-[#10213b] text-slate-400 hover:text-white')">
+                            Manhã e Tarde
+                          </button>
+                          <button (click)="coworkersFilter.set('TODOS')"
+                                  class="px-2.5 py-1 rounded border text-[8.5px] font-black uppercase tracking-wider transition-all duration-300 cursor-pointer shadow-sm select-none"
+                                  [class]="coworkersFilter() === 'TODOS' ? 
+                                           (isLightTheme() ? 'bg-amber-600 text-white border-amber-600' : 'bg-amber-500 text-amber-950 border-amber-500 font-black') : 
+                                           (isLightTheme() ? 'bg-white border-slate-200 text-slate-500 hover:text-slate-800' : 'bg-[#0b1329]/40 border-[#10213b] text-slate-400 hover:text-white')">
+                            Todos
+                          </button>
+                        </div>
+
                         @let vacs = getCollaboratorsOnVacationForDay(selectedCalendarDay());
                         @if (vacs.length > 0) {
                           <div class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-7 lg:grid-cols-8 xl:grid-cols-9 gap-2">
