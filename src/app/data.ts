@@ -66,6 +66,7 @@ export interface ShiftType {
   category?: 'FOLGAS' | 'FERIAS' | 'CURSOS_TREINAMENTO' | 'REUNIOES' | 'AFASTAMENTO_SAUDE' | 'AUSENCIA_INJUSTIFICADA' | 'TURNO';
   cannotDelete?: boolean;
   colorName?: string;
+  transparentBg?: boolean;
 }
 
 export function getSiglaColor(code: string, siglaTypes: ShiftType[] = []): string {

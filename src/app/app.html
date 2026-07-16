@@ -752,9 +752,11 @@
                 @if (activePaintbrush()) {
                   <div class="flex items-center gap-1.5 bg-[#0b1a30] border border-[#10213b] px-2 py-1 rounded">
                     <span class="text-[8px] font-bold text-slate-400 uppercase">Ativo:</span>
-                    <span class="text-[9px] font-black px-1.5 py-0.5 rounded transition-colors"
+                    <span class="text-[9px] font-black px-1.5 py-0.5 rounded transition-colors border"
                           [style.background-color]="activePaintbrush() === '-' ? '#b91c1c' : getShiftOrSiglaColor(activePaintbrush() || '')"
-                          [style.color]="activePaintbrush() === '-' ? '#ffffff' : getShiftOrSiglaTextColor(activePaintbrush() || '')">
+                          [style.color]="activePaintbrush() === '-' ? '#ffffff' : getShiftOrSiglaTextColor(activePaintbrush() || '')"
+                          [style.border-color]="isShiftOrSiglaTransparent(activePaintbrush() || '') ? getShiftOrSiglaBorderColor(activePaintbrush() || '') : 'transparent'"
+                          [style.border-width]="isShiftOrSiglaTransparent(activePaintbrush() || '') ? '1.5px' : '0px'">
                       {{ activePaintbrush() === '-' ? 'LIMPAR' : activePaintbrush() }}
                     </span>
                   </div>
@@ -902,9 +904,11 @@
                           }
 
                           <!-- Render dynamic cell colors based on values (either draft or saved) -->
-                          <div class="w-full h-full flex items-center justify-center font-bold text-[9px] transition-transform border border-black/10 dark:border-white/10"
+                          <div class="w-full h-full flex items-center justify-center font-bold text-[9px] transition-transform border"
                                [style.background-color]="getShiftOrSiglaColor(cellVal, day)"
-                               [style.color]="getShiftOrSiglaTextColor(cellVal)">
+                               [style.color]="getShiftOrSiglaTextColor(cellVal)"
+                               [style.border-color]="isShiftOrSiglaTransparent(cellVal) ? getShiftOrSiglaBorderColor(cellVal) : (isLightTheme() ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)')"
+                               [style.border-width]="isShiftOrSiglaTransparent(cellVal) ? '1.5px' : '1px'">
                             @if (cellVal === 'X') {
                               <span class="material-icons text-[12px] font-black flex items-center justify-center select-none" 
                                     [style.color]="isLightTheme() ? '#059669' : '#10b981'" 
@@ -1557,6 +1561,23 @@
                         </label>
                         <span class="text-[8px] text-slate-400 leading-tight">
                           Se ativado, esta sigla contará como dia de ausência (não computa presença).
+                        </span>
+                      </div>
+                    </div>
+
+                    <!-- Fundo Transparente Toggle -->
+                    <div class="flex items-center gap-3 bg-[#071426] px-3 rounded border border-[#10213b]" style="height: 45px;">
+                      <input id="sigla_transparent_bg_input"
+                             type="checkbox"
+                             [checked]="newSiglaTransparentBg()"
+                             (change)="newSiglaTransparentBg.set($any($event.target).checked)"
+                             class="w-4 h-4 rounded text-blue-500 focus:ring-blue-500 bg-[#030a14] border-[#10213b] cursor-pointer">
+                      <div class="flex flex-col">
+                        <label for="sigla_transparent_bg_input" class="font-black text-[10px] uppercase tracking-wider text-white cursor-pointer select-none">
+                          Fundo Transparente
+                        </label>
+                        <span class="text-[8px] text-slate-400 leading-tight">
+                          Se ativado, exibe fundo transparente com borda e fonte coloridas.
                         </span>
                       </div>
                     </div>
@@ -3790,9 +3811,11 @@ CREATE TABLE IF NOT EXISTS public.audit_history (
 
                 <!-- Schedule Details -->
                 <div class="mt-3 flex items-center gap-2">
-                  <span class="text-[9px] font-black uppercase px-2 py-0.5 rounded tracking-widest font-mono"
+                  <span class="text-[9px] font-black uppercase px-2 py-0.5 rounded tracking-widest font-mono border"
                         [style.background-color]="getShiftOrSiglaColor(dayInfo.label, detailDay)"
-                        [style.color]="getShiftOrSiglaTextColor(dayInfo.label)">
+                        [style.color]="getShiftOrSiglaTextColor(dayInfo.label)"
+                        [style.border-color]="isShiftOrSiglaTransparent(dayInfo.label) ? getShiftOrSiglaBorderColor(dayInfo.label) : 'transparent'"
+                        [style.border-width]="isShiftOrSiglaTransparent(dayInfo.label) ? '1.5px' : '0px'">
                     {{ dayInfo.label || 'N/A' }}
                   </span>
                   <div class="flex flex-col">
@@ -3899,9 +3922,11 @@ CREATE TABLE IF NOT EXISTS public.audit_history (
                   </div>
                   
                   <!-- Shift Badge -->
-                  <span class="text-[8px] font-black uppercase px-2 py-0.5 rounded tracking-widest font-mono"
+                  <span class="text-[8px] font-black uppercase px-2 py-0.5 rounded tracking-widest font-mono border"
                         [style.background-color]="getShiftOrSiglaColor(shiftCode, detailDay)"
-                        [style.color]="getShiftOrSiglaTextColor(shiftCode)">
+                        [style.color]="getShiftOrSiglaTextColor(shiftCode)"
+                        [style.border-color]="isShiftOrSiglaTransparent(shiftCode) ? getShiftOrSiglaBorderColor(shiftCode) : 'transparent'"
+                        [style.border-width]="isShiftOrSiglaTransparent(shiftCode) ? '1.5px' : '0px'">
                     {{ shiftCode }}
                   </span>
                 </div>

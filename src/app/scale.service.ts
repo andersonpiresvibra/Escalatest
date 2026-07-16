@@ -89,6 +89,7 @@ export interface ShiftType {
   textColor?: string;
   startTime?: string;
   endTime?: string;
+  transparentBg?: boolean;
 }
 
 export interface SiglaType {
@@ -98,6 +99,7 @@ export interface SiglaType {
   description?: string;
   textColor?: string;
   computaAusencia?: boolean;
+  transparentBg?: boolean;
 }
 
 export interface BackupHistory {
@@ -389,9 +391,20 @@ export class ScaleService {
         const parsedSiglas = (siglasData || []).map((s: any) => {
           let desc = s.description || '';
           let computaAusencia = false;
-          if (desc.startsWith('#COMPUTA_AUSENCIA#')) {
-            computaAusencia = true;
-            desc = desc.substring('#COMPUTA_AUSENCIA#'.length);
+          let transparentBg = false;
+
+          // Parse flags from description prefix in any order
+          let hasFlag = true;
+          while (hasFlag) {
+            if (desc.startsWith('#COMPUTA_AUSENCIA#')) {
+              computaAusencia = true;
+              desc = desc.substring('#COMPUTA_AUSENCIA#'.length);
+            } else if (desc.startsWith('#TRANSPARENT_BG#')) {
+              transparentBg = true;
+              desc = desc.substring('#TRANSPARENT_BG#'.length);
+            } else {
+              hasFlag = false;
+            }
           }
           
           let bg = s.color || '#64748b';
@@ -400,6 +413,9 @@ export class ScaleService {
             const parts = bg.split('|');
             bg = parts[0];
             fg = parts[1] || fg;
+            if (parts[2] === 'transparent') {
+              transparentBg = true;
+            }
           }
 
           return {
@@ -408,7 +424,8 @@ export class ScaleService {
             color: bg,
             textColor: fg,
             description: desc,
-            computaAusencia
+            computaAusencia,
+            transparentBg
           };
         });
         this.siglaTypes.set(parsedSiglas);
@@ -424,10 +441,14 @@ export class ScaleService {
         const parsedShifts = (shiftsData || []).map((s: any) => {
           let bg = s.color || '#3b82f6';
           let fg = s.textColor || s.textcolor || s.text_color || '#ffffff';
+          let transparentBg = false;
           if (bg.includes('|')) {
             const parts = bg.split('|');
             bg = parts[0];
             fg = parts[1] || fg;
+            if (parts[2] === 'transparent') {
+              transparentBg = true;
+            }
           }
 
           return {
@@ -437,7 +458,8 @@ export class ScaleService {
             color: bg,
             textColor: fg,
             startTime: s.startTime || s.starttime || s.start_time,
-            endTime: s.endTime || s.endtime || s.end_time
+            endTime: s.endTime || s.endtime || s.end_time,
+            transparentBg
           };
         });
         this.shiftTypes.set(parsedShifts);
@@ -593,14 +615,40 @@ export class ScaleService {
         const s = doc.data() as any;
         let desc = s.description || '';
         let computaAusencia = s.computaAusencia || false;
-        if (desc.startsWith('#COMPUTA_AUSENCIA#')) {
-          computaAusencia = true;
-          desc = desc.substring('#COMPUTA_AUSENCIA#'.length);
+        let transparentBg = s.transparentBg || false;
+
+        // Parse flags from description prefix in any order
+        let hasFlag = true;
+        while (hasFlag) {
+          if (desc.startsWith('#COMPUTA_AUSENCIA#')) {
+            computaAusencia = true;
+            desc = desc.substring('#COMPUTA_AUSENCIA#'.length);
+          } else if (desc.startsWith('#TRANSPARENT_BG#')) {
+            transparentBg = true;
+            desc = desc.substring('#TRANSPARENT_BG#'.length);
+          } else {
+            hasFlag = false;
+          }
         }
+
+        let bg = s.color || '#64748b';
+        let fg = s.textColor || '#ffffff';
+        if (bg.includes('|')) {
+          const parts = bg.split('|');
+          bg = parts[0];
+          fg = parts[1] || fg;
+          if (parts[2] === 'transparent') {
+            transparentBg = true;
+          }
+        }
+
         list.push({
           ...s,
+          color: bg,
+          textColor: fg,
           description: desc,
-          computaAusencia
+          computaAusencia,
+          transparentBg
         });
       });
       this.siglaTypes.set(list);
@@ -1699,19 +1747,24 @@ export class ScaleService {
     return collabsWithEnergy;
   }
 
-  async addSiglaType(code: string, label: string, color: string, description: string, textColor?: string, computaAusencia?: boolean) {
+  async addSiglaType(code: string, label: string, color: string, description: string, textColor?: string, computaAusencia?: boolean, transparentBg?: boolean) {
     if (!code || !label) return;
     const upperCode = code.toUpperCase().trim();
     let finalDesc = description || '';
     if (computaAusencia) {
       finalDesc = '#COMPUTA_AUSENCIA#' + finalDesc;
     }
+    if (transparentBg) {
+      finalDesc = '#TRANSPARENT_BG#' + finalDesc;
+    }
+    const finalColor = transparentBg ? `${color}|${textColor || '#ffffff'}|transparent` : color;
     const newSigla: SiglaType = {
       code: upperCode,
       label,
-      color,
+      color: finalColor,
       description: finalDesc,
-      ...(textColor ? { textColor } : {})
+      ...(textColor ? { textColor } : {}),
+      transparentBg
     };
 
     if (this.activeDb() === 'supabase' && this.supabase) {
@@ -1727,7 +1780,7 @@ export class ScaleService {
         if (res.error) {
           const errMsg = res.error.message || '';
           if (errMsg.toLowerCase().includes('textcolor') || res.error.code === 'PGRST204' || res.error.code === '42703') {
-            const packedColor = `${newSigla.color}|${newSigla.textColor || '#ffffff'}`;
+            const packedColor = `${color}|${textColor || '#ffffff'}${transparentBg ? '|transparent' : ''}`;
             const fallbackPayload = {
               code: newSigla.code,
               label: newSigla.label,
@@ -1746,7 +1799,10 @@ export class ScaleService {
         console.error(err);
       }
     } else {
-      setDoc(doc(this.db, 'siglaTypes', upperCode), newSigla).catch((err) => {
+      setDoc(doc(this.db, 'siglaTypes', upperCode), {
+        ...newSigla,
+        transparentBg: !!transparentBg
+      }).catch((err) => {
         handleFirestoreError(err, OperationType.WRITE, `siglaTypes/${upperCode}`);
       });
       this.addAuditHistory('CADASTRO_SIGLA', `Nova sigla ${upperCode} cadastrada no Firebase.`);
@@ -1809,10 +1865,14 @@ export class ScaleService {
     if (sigla.computaAusencia) {
       finalDesc = '#COMPUTA_AUSENCIA#' + finalDesc;
     }
+    if (sigla.transparentBg) {
+      finalDesc = '#TRANSPARENT_BG#' + finalDesc;
+    }
+    const finalColor = sigla.transparentBg ? `${sigla.color}|${sigla.textColor || '#ffffff'}|transparent` : sigla.color;
     const dbSigla: any = {
       code: sigla.code,
       label: sigla.label,
-      color: sigla.color,
+      color: finalColor,
       description: finalDesc,
       textColor: sigla.textColor
     };
@@ -1823,7 +1883,7 @@ export class ScaleService {
         if (res.error) {
           const errMsg = res.error.message || '';
           if (errMsg.toLowerCase().includes('textcolor') || res.error.code === 'PGRST204' || res.error.code === '42703') {
-            const packedColor = `${sigla.color}|${sigla.textColor || '#ffffff'}`;
+            const packedColor = `${sigla.color}|${sigla.textColor || '#ffffff'}${sigla.transparentBg ? '|transparent' : ''}`;
             const fallbackSigla = {
               code: sigla.code,
               label: sigla.label,
@@ -1844,7 +1904,10 @@ export class ScaleService {
       }
     } else {
       try {
-        await setDoc(doc(this.db, 'siglaTypes', sigla.code), dbSigla);
+        await setDoc(doc(this.db, 'siglaTypes', sigla.code), {
+          ...dbSigla,
+          transparentBg: !!sigla.transparentBg
+        });
         this.addAuditHistory('ATUALIZACAO_SIGLA', `Sigla ${sigla.code} (${sigla.label}) atualizada no Firebase.`);
       } catch (err: any) {
         handleFirestoreError(err, OperationType.WRITE, `siglaTypes/${sigla.code}`);
@@ -1859,10 +1922,14 @@ export class ScaleService {
     if (newSigla.computaAusencia) {
       finalDesc = '#COMPUTA_AUSENCIA#' + finalDesc;
     }
+    if (newSigla.transparentBg) {
+      finalDesc = '#TRANSPARENT_BG#' + finalDesc;
+    }
+    const finalColor = newSigla.transparentBg ? `${newSigla.color}|${newSigla.textColor || '#ffffff'}|transparent` : newSigla.color;
     const dbSigla: any = {
       code: newSigla.code,
       label: newSigla.label,
-      color: newSigla.color,
+      color: finalColor,
       description: finalDesc,
       textColor: newSigla.textColor
     };
@@ -1873,7 +1940,7 @@ export class ScaleService {
         if (insRes.error) {
           const errMsg = insRes.error.message || '';
           if (errMsg.toLowerCase().includes('textcolor') || insRes.error.code === 'PGRST204' || insRes.error.code === '42703') {
-            const packedColor = `${newSigla.color}|${newSigla.textColor || '#ffffff'}`;
+            const packedColor = `${newSigla.color}|${newSigla.textColor || '#ffffff'}${newSigla.transparentBg ? '|transparent' : ''}`;
             const fallbackSigla = {
               code: newSigla.code,
               label: newSigla.label,
@@ -1920,7 +1987,10 @@ export class ScaleService {
       }
     } else {
       try {
-        await setDoc(doc(this.db, 'siglaTypes', newCode), dbSigla);
+        await setDoc(doc(this.db, 'siglaTypes', newCode), {
+          ...dbSigla,
+          transparentBg: !!newSigla.transparentBg
+        });
 
         const updatedCollabs = this.collaborators().map(collab => {
           const updatedScale = { ...collab.scale };

@@ -1214,6 +1214,7 @@ export class App {
   newSiglaTextColor = signal<string>('#ffffff');
   newSiglaDescription = signal<string>('');
   newSiglaComputaAusencia = signal<boolean>(false);
+  newSiglaTransparentBg = signal<boolean>(false);
   editingSiglaCode = signal<string | null>(null);
 
   // Lists for hour and minute dropdowns
@@ -2443,6 +2444,7 @@ export class App {
     this.newSiglaTextColor.set(sigla.textColor || '#ffffff');
     this.newSiglaDescription.set(sigla.description || '');
     this.newSiglaComputaAusencia.set(!!sigla.computaAusencia);
+    this.newSiglaTransparentBg.set(!!sigla.transparentBg);
     this.showToast(`Editando a sigla "${sigla.code}". Modifique os campos desejados.`);
   }
 
@@ -2454,6 +2456,7 @@ export class App {
     this.newSiglaTextColor.set('#ffffff');
     this.newSiglaDescription.set('');
     this.newSiglaComputaAusencia.set(false);
+    this.newSiglaTransparentBg.set(false);
   }
 
   async saveSiglaType() {
@@ -2463,6 +2466,7 @@ export class App {
     const textColor = this.newSiglaTextColor();
     const desc = this.newSiglaDescription().trim();
     const computaAusencia = this.newSiglaComputaAusencia();
+    const transparentBg = this.newSiglaTransparentBg();
 
     if (!code || !label) {
       this.showToast('Erro: Código e Nome da sigla são obrigatórios.');
@@ -2485,7 +2489,7 @@ export class App {
 
           this.scaleService.isProcessing.set(true);
           // Call service to rename the code and update all reference scales
-          await this.scaleService.updateSiglaTypeCode(oldCode, { code, label, color, description: desc, textColor, computaAusencia });
+          await this.scaleService.updateSiglaTypeCode(oldCode, { code, label, color, description: desc, textColor, computaAusencia, transparentBg });
           this.scaleService.addAuditHistory('EDICAO_SIGLA_CODIGO', `Sigla "${oldCode}" renomeada para "${code}" pelo gestor.`);
           this.showToast(`Sigla "${oldCode}" alterada para "${code}" com sucesso.`);
         } else {
@@ -2496,7 +2500,8 @@ export class App {
             color: color,
             description: desc,
             textColor: textColor,
-            computaAusencia: computaAusencia
+            computaAusencia: computaAusencia,
+            transparentBg: transparentBg
           };
           this.scaleService.isProcessing.set(true);
           await this.scaleService.saveSiglaType(updatedSigla);
@@ -2513,7 +2518,7 @@ export class App {
           return;
         }
         this.scaleService.isProcessing.set(true);
-        await this.scaleService.addSiglaType(code, label, color, desc, textColor, computaAusencia);
+        await this.scaleService.addSiglaType(code, label, color, desc, textColor, computaAusencia, transparentBg);
         this.scaleService.addAuditHistory('CADASTRO_SIGLA', `Nova sigla "${code}" cadastrada.`);
         this.cancelEditingSigla();
         this.showToast(`Sigla "${code}" criada com sucesso.`);
@@ -2588,9 +2593,43 @@ export class App {
     }
   }
 
+  isShiftOrSiglaTransparent(code: string): boolean {
+    const upperCode = (code || '-').toUpperCase().trim();
+    if (upperCode === '-' || upperCode === '?') return false;
+
+    const sigla = this.scaleService.siglaTypes().find(s => s.code.trim().toUpperCase() === upperCode);
+    if (sigla && sigla.transparentBg) return true;
+
+    const shift = this.scaleService.shiftTypes().find(s => s.code.trim().toUpperCase() === upperCode || s.label.trim().toUpperCase() === upperCode);
+    if (shift && shift.transparentBg) return true;
+
+    return false;
+  }
+
+  getShiftOrSiglaBorderColor(code: string): string {
+    const upperCode = (code || '-').toUpperCase().trim();
+    if (upperCode === '-' || upperCode === '?') return 'rgba(0, 0, 0, 0.1)';
+
+    const sigla = this.scaleService.siglaTypes().find(s => s.code.trim().toUpperCase() === upperCode);
+    if (sigla) {
+      return sigla.color;
+    }
+
+    const shift = this.scaleService.shiftTypes().find(s => s.code.trim().toUpperCase() === upperCode || s.label.trim().toUpperCase() === upperCode);
+    if (shift) {
+      return shift.color;
+    }
+
+    return this.isLightTheme() ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)';
+  }
+
   // Dynamic colors for matrix rendering
   getShiftOrSiglaColor(code: string, day?: number): string {
     const upperCode = (code || '-').toUpperCase().trim();
+    if (this.isShiftOrSiglaTransparent(upperCode)) {
+      return 'transparent';
+    }
+
     if (upperCode === '-' || upperCode === '?') {
       if (this.isLightTheme()) {
         return 'transparent';
@@ -2669,6 +2708,17 @@ export class App {
     }
     if (upperCode === '?') {
       return '#ef4444';
+    }
+
+    if (this.isShiftOrSiglaTransparent(upperCode)) {
+      const sigla = this.scaleService.siglaTypes().find(s => s.code.trim().toUpperCase() === upperCode);
+      if (sigla) {
+        return sigla.textColor || sigla.color || '#ffffff';
+      }
+      const shift = this.scaleService.shiftTypes().find(s => s.code.trim().toUpperCase() === upperCode || s.label.trim().toUpperCase() === upperCode);
+      if (shift) {
+        return shift.textColor || shift.color || '#ffffff';
+      }
     }
 
     // Try finding in shiftTypes first
