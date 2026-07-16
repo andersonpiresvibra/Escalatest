@@ -2489,14 +2489,18 @@ export class App {
           this.showToast(`Sigla "${oldCode}" alterada para "${code}" com sucesso.`);
         } else {
           // Standard edit of existing sigla
-          const sigla = this.scaleService.siglaTypes().find(s => s.code.trim().toUpperCase() === oldCode);
-          if (sigla) {
-            const updatedSigla = { ...sigla, label, color, description: desc, textColor, computaAusencia };
-            this.scaleService.isProcessing.set(true);
-            await this.scaleService.saveSiglaType(updatedSigla);
-            this.scaleService.addAuditHistory('EDICAO_SIGLA', `Sigla "${code}" editada pelo gestor.`);
-            this.showToast(`Sigla "${code}" atualizada com sucesso.`);
-          }
+          const updatedSigla = {
+            code: code,
+            label: label,
+            color: color,
+            description: desc,
+            textColor: textColor,
+            computaAusencia: computaAusencia
+          };
+          this.scaleService.isProcessing.set(true);
+          await this.scaleService.saveSiglaType(updatedSigla);
+          this.scaleService.addAuditHistory('EDICAO_SIGLA', `Sigla "${code}" editada pelo gestor.`);
+          this.showToast(`Sigla "${code}" atualizada com sucesso.`);
         }
         this.cancelEditingSigla();
       } else {

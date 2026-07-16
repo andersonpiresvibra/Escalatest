@@ -961,6 +961,15 @@ export class ScaleService {
         const upRes = await this.supabase.from('colaboradores').upsert(dbRow);
         if (upRes.error) throw upRes.error;
 
+        // First delete any existing scale rows for this collaborator in this month/year to prevent duplicates
+        const { error: delScaleRes } = await this.supabase
+          .from('escala_diaria')
+          .delete()
+          .eq('collaborator_id', refreshedCol.id)
+          .eq('month', this.activeMonth())
+          .eq('year', this.activeYear());
+        if (delScaleRes) throw delScaleRes;
+
         const scaleRows = [];
         for (let d = 1; d <= 31; d++) {
           scaleRows.push({
@@ -971,7 +980,7 @@ export class ScaleService {
             value: refreshedCol.scale[d] || 'X'
           });
         }
-        const upScaleRes = await this.supabase.from('escala_diaria').upsert(scaleRows);
+        const upScaleRes = await this.supabase.from('escala_diaria').insert(scaleRows);
         if (upScaleRes.error) throw upScaleRes.error;
 
         this.syncSupabase();
@@ -1036,6 +1045,16 @@ export class ScaleService {
           if (upErr) throw upErr;
         }
 
+        // Delete all existing scale rows for these collaborators first to prevent duplication
+        const collabIds = updatedList.map(c => c.id);
+        const { error: delScaleRes } = await this.supabase
+          .from('escala_diaria')
+          .delete()
+          .eq('month', this.activeMonth())
+          .eq('year', this.activeYear())
+          .in('collaborator_id', collabIds);
+        if (delScaleRes) throw delScaleRes;
+
         const scaleRows: any[] = [];
         updatedList.forEach(refreshed => {
           for (let d = 1; d <= 31; d++) {
@@ -1052,7 +1071,7 @@ export class ScaleService {
         const SCALE_CHUNK_SIZE = 400;
         for (let i = 0; i < scaleRows.length; i += SCALE_CHUNK_SIZE) {
           const chunk = scaleRows.slice(i, i + SCALE_CHUNK_SIZE);
-          const { error: scaleErr } = await this.supabase.from('escala_diaria').upsert(chunk);
+          const { error: scaleErr } = await this.supabase.from('escala_diaria').insert(chunk);
           if (scaleErr) throw scaleErr;
         }
 
@@ -1126,11 +1145,21 @@ export class ScaleService {
           if (collabErr) throw collabErr;
         }
 
+        // First delete any existing scale rows for these collaborators to avoid duplicates
+        const collabIds = updatedList.map(c => c.id);
+        const { error: delScaleRes } = await this.supabase
+          .from('escala_diaria')
+          .delete()
+          .eq('month', this.activeMonth())
+          .eq('year', this.activeYear())
+          .in('collaborator_id', collabIds);
+        if (delScaleRes) throw delScaleRes;
+
         // 2. Chunked saving of scale rows (400 in each chunk)
         const SCALE_CHUNK_SIZE = 400;
         for (let i = 0; i < scaleRows.length; i += SCALE_CHUNK_SIZE) {
           const chunk = scaleRows.slice(i, i + SCALE_CHUNK_SIZE);
-          const { error: scaleErr } = await this.supabase.from('escala_diaria').upsert(chunk);
+          const { error: scaleErr } = await this.supabase.from('escala_diaria').insert(chunk);
           if (scaleErr) throw scaleErr;
         }
 
@@ -1696,7 +1725,8 @@ export class ScaleService {
         };
         const res = await this.supabase.from('sigla_types').upsert(payload);
         if (res.error) {
-          if (res.error.message?.includes("textColor' column") || res.error.code === 'PGRST204') {
+          const errMsg = res.error.message || '';
+          if (errMsg.toLowerCase().includes('textcolor') || res.error.code === 'PGRST204' || res.error.code === '42703') {
             const packedColor = `${newSigla.color}|${newSigla.textColor || '#ffffff'}`;
             const fallbackPayload = {
               code: newSigla.code,
@@ -1791,7 +1821,8 @@ export class ScaleService {
       try {
         const res = await this.supabase.from('sigla_types').upsert(dbSigla);
         if (res.error) {
-          if (res.error.message?.includes("textColor' column") || res.error.code === 'PGRST204') {
+          const errMsg = res.error.message || '';
+          if (errMsg.toLowerCase().includes('textcolor') || res.error.code === 'PGRST204' || res.error.code === '42703') {
             const packedColor = `${sigla.color}|${sigla.textColor || '#ffffff'}`;
             const fallbackSigla = {
               code: sigla.code,
@@ -1840,7 +1871,8 @@ export class ScaleService {
       try {
         const insRes = await this.supabase.from('sigla_types').insert(dbSigla);
         if (insRes.error) {
-          if (insRes.error.message?.includes("textColor' column") || insRes.error.code === 'PGRST204') {
+          const errMsg = insRes.error.message || '';
+          if (errMsg.toLowerCase().includes('textcolor') || insRes.error.code === 'PGRST204' || insRes.error.code === '42703') {
             const packedColor = `${newSigla.color}|${newSigla.textColor || '#ffffff'}`;
             const fallbackSigla = {
               code: newSigla.code,
@@ -1932,7 +1964,8 @@ export class ScaleService {
         };
         const res = await this.supabase.from('shift_types').upsert(payload);
         if (res.error) {
-          if (res.error.message?.includes("textColor' column") || res.error.code === 'PGRST204') {
+          const errMsg = res.error.message || '';
+          if (errMsg.toLowerCase().includes('textcolor') || res.error.code === 'PGRST204' || res.error.code === '42703') {
             const packedColor = `${shift.color}|${shift.textColor || '#ffffff'}`;
             const fallbackShift = {
               code: shift.code,

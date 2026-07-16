@@ -707,7 +707,7 @@
                 <!-- Shift types -->
                 @for (shift of scaleService.shiftTypes(); track shift.code) {
                   <button (click)="selectPaintbrush(shift.code)"
-                          class="px-2 py-1 rounded text-[9px] font-black cursor-pointer transition-all hover:scale-105 shrink-0 flex items-center gap-0.5"
+                          class="px-2 py-1 rounded text-[9px] font-black cursor-pointer transition-all hover:scale-105 shrink-0 flex items-center gap-0.5 border border-black/15 dark:border-white/15"
                           [style.background-color]="shift.color"
                           [style.outline]="activePaintbrush() === shift.code ? '2px solid #ffffff' : 'none'"
                           [style.outline-offset]="activePaintbrush() === shift.code ? '1px' : '0px'"
@@ -724,7 +724,7 @@
                 <!-- Siglas/Afastamentos -->
                 @for (sigla of scaleService.siglaTypes(); track sigla.code) {
                   <button (click)="selectPaintbrush(sigla.code)"
-                          class="px-2 py-1 rounded text-[9px] font-black cursor-pointer transition-all hover:scale-105 shrink-0"
+                          class="px-2 py-1 rounded text-[9px] font-black cursor-pointer transition-all hover:scale-105 shrink-0 border border-black/15 dark:border-white/15"
                           [style.background-color]="sigla.color"
                           [style.color]="sigla.textColor || '#ffffff'"
                           [style.outline]="activePaintbrush() === sigla.code ? '2px solid #ffffff' : 'none'"
@@ -739,8 +739,7 @@
 
                 <!-- Botão de Apagar/Limpar (Vassourinha) -->
                 <button (click)="selectPaintbrush('-')"
-                        class="px-2 py-1 cursor-pointer transition-all hover:scale-105 shrink-0 flex items-center justify-center text-red-400 bg-transparent border-none"
-                        style="border: 1px solid #bababa; border-radius: 2px;"
+                        class="px-2 py-1 cursor-pointer transition-all hover:scale-105 shrink-0 flex items-center justify-center text-red-400 bg-transparent rounded border border-black/15 dark:border-white/15"
                         [style.outline]="activePaintbrush() === '-' ? '2px solid #ffffff' : 'none'"
                         [style.outline-offset]="activePaintbrush() === '-' ? '1px' : '0px'"
                         title="Limpar Célula (Define como '-')">
@@ -903,7 +902,7 @@
                           }
 
                           <!-- Render dynamic cell colors based on values (either draft or saved) -->
-                          <div class="w-full h-full flex items-center justify-center font-bold text-[9px] transition-transform"
+                          <div class="w-full h-full flex items-center justify-center font-bold text-[9px] transition-transform border border-black/10 dark:border-white/10"
                                [style.background-color]="getShiftOrSiglaColor(cellVal, day)"
                                [style.color]="getShiftOrSiglaTextColor(cellVal)">
                             @if (cellVal === 'X') {
@@ -1086,7 +1085,7 @@
                         @for (shift of scaleService.shiftTypes(); track shift.code) {
                           <tr class="hover:bg-emerald-950/40 transition-colors">
                             <td class="py-3 px-4 font-mono">
-                              <span class="inline-flex items-center justify-center w-11 py-1 rounded font-black text-xs shadow-md border border-white/5"
+                              <span class="inline-flex items-center justify-center w-11 py-1 rounded font-black text-xs shadow-md border border-black/15 dark:border-white/15"
                                     [style.background-color]="shift.color"
                                     [style.color]="shift.textColor || '#ffffff'">
                                 {{ shift.code }}
@@ -1433,7 +1432,7 @@
                         @for (sigla of scaleService.siglaTypes(); track sigla.code) {
                           <tr class="hover:bg-emerald-950/40 transition-colors">
                             <td class="py-3 px-4 font-mono">
-                              <span class="inline-flex items-center justify-center w-11 py-1 rounded font-black text-xs shadow-md border border-white/5"
+                              <span class="inline-flex items-center justify-center w-11 py-1 rounded font-black text-xs shadow-md border border-black/15 dark:border-white/15"
                                     [style.background-color]="sigla.color"
                                     [style.color]="sigla.textColor || '#ffffff'">
                                 {{ sigla.code }}
