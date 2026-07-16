@@ -1205,7 +1205,12 @@ export class App {
   newShiftHours = signal<string>('7h20');
   newShiftColor = signal<string>('#3b82f6');
   newShiftTextColor = signal<string>('#ffffff');
+  newShiftTransparentBg = signal<boolean>(false);
+  newShiftDarkColor = signal<string>('#3b82f6');
+  newShiftDarkTextColor = signal<string>('#ffffff');
+  newShiftDarkTransparentBg = signal<boolean>(false);
   editingShiftCode = signal<string | null>(null);
+  activeShiftThemeTab = signal<'light' | 'dark'>('light');
 
   // Sigla manager editing state
   newSiglaCode = signal<string>('');
@@ -1215,7 +1220,11 @@ export class App {
   newSiglaDescription = signal<string>('');
   newSiglaComputaAusencia = signal<boolean>(false);
   newSiglaTransparentBg = signal<boolean>(false);
+  newSiglaDarkColor = signal<string>('#64748b');
+  newSiglaDarkTextColor = signal<string>('#ffffff');
+  newSiglaDarkTransparentBg = signal<boolean>(false);
   editingSiglaCode = signal<string | null>(null);
+  activeSiglaThemeTab = signal<'light' | 'dark'>('light');
 
   // Lists for hour and minute dropdowns
   hoursList = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0'));
@@ -2305,6 +2314,11 @@ export class App {
     this.newShiftHours.set(shift.hours);
     this.newShiftColor.set(shift.color);
     this.newShiftTextColor.set(shift.textColor || '#ffffff');
+    this.newShiftTransparentBg.set(!!shift.transparentBg);
+    this.newShiftDarkColor.set(shift.darkColor || shift.color);
+    this.newShiftDarkTextColor.set(shift.darkTextColor || shift.textColor || '#ffffff');
+    this.newShiftDarkTransparentBg.set(shift.darkTransparentBg !== undefined ? !!shift.darkTransparentBg : !!shift.transparentBg);
+    this.activeShiftThemeTab.set('light');
     
     // Parse startTime & endTime
     if (shift.startTime) {
@@ -2339,6 +2353,11 @@ export class App {
     this.newShiftHours.set('7h20');
     this.newShiftColor.set('#3b82f6');
     this.newShiftTextColor.set('#ffffff');
+    this.newShiftTransparentBg.set(false);
+    this.newShiftDarkColor.set('#3b82f6');
+    this.newShiftDarkTextColor.set('#ffffff');
+    this.newShiftDarkTransparentBg.set(false);
+    this.activeShiftThemeTab.set('light');
     this.startHour.set('07');
     this.startMinute.set('00');
     this.endHour.set('16');
@@ -2368,6 +2387,10 @@ export class App {
           hours: calculatedHours,
           color: this.newShiftColor(),
           textColor: this.newShiftTextColor(),
+          transparentBg: this.newShiftTransparentBg(),
+          darkColor: this.newShiftDarkColor(),
+          darkTextColor: this.newShiftDarkTextColor(),
+          darkTransparentBg: this.newShiftDarkTransparentBg(),
           startTime: sTime,
           endTime: eTime
         };
@@ -2390,6 +2413,10 @@ export class App {
         hours: calculatedHours,
         color: this.newShiftColor(),
         textColor: this.newShiftTextColor(),
+        transparentBg: this.newShiftTransparentBg(),
+        darkColor: this.newShiftDarkColor(),
+        darkTextColor: this.newShiftDarkTextColor(),
+        darkTransparentBg: this.newShiftDarkTransparentBg(),
         startTime: sTime,
         endTime: eTime
       };
@@ -2445,6 +2472,10 @@ export class App {
     this.newSiglaDescription.set(sigla.description || '');
     this.newSiglaComputaAusencia.set(!!sigla.computaAusencia);
     this.newSiglaTransparentBg.set(!!sigla.transparentBg);
+    this.newSiglaDarkColor.set(sigla.darkColor || sigla.color);
+    this.newSiglaDarkTextColor.set(sigla.darkTextColor || sigla.textColor || '#ffffff');
+    this.newSiglaDarkTransparentBg.set(sigla.darkTransparentBg !== undefined ? !!sigla.darkTransparentBg : !!sigla.transparentBg);
+    this.activeSiglaThemeTab.set('light');
     this.showToast(`Editando a sigla "${sigla.code}". Modifique os campos desejados.`);
   }
 
@@ -2457,6 +2488,10 @@ export class App {
     this.newSiglaDescription.set('');
     this.newSiglaComputaAusencia.set(false);
     this.newSiglaTransparentBg.set(false);
+    this.newSiglaDarkColor.set('#64748b');
+    this.newSiglaDarkTextColor.set('#ffffff');
+    this.newSiglaDarkTransparentBg.set(false);
+    this.activeSiglaThemeTab.set('light');
   }
 
   async saveSiglaType() {
@@ -2467,6 +2502,9 @@ export class App {
     const desc = this.newSiglaDescription().trim();
     const computaAusencia = this.newSiglaComputaAusencia();
     const transparentBg = this.newSiglaTransparentBg();
+    const darkColor = this.newSiglaDarkColor();
+    const darkTextColor = this.newSiglaDarkTextColor();
+    const darkTransparentBg = this.newSiglaDarkTransparentBg();
 
     if (!code || !label) {
       this.showToast('Erro: Código e Nome da sigla são obrigatórios.');
@@ -2489,7 +2527,18 @@ export class App {
 
           this.scaleService.isProcessing.set(true);
           // Call service to rename the code and update all reference scales
-          await this.scaleService.updateSiglaTypeCode(oldCode, { code, label, color, description: desc, textColor, computaAusencia, transparentBg });
+          await this.scaleService.updateSiglaTypeCode(oldCode, { 
+            code, 
+            label, 
+            color, 
+            description: desc, 
+            textColor, 
+            computaAusencia, 
+            transparentBg,
+            darkColor,
+            darkTextColor,
+            darkTransparentBg
+          });
           this.scaleService.addAuditHistory('EDICAO_SIGLA_CODIGO', `Sigla "${oldCode}" renomeada para "${code}" pelo gestor.`);
           this.showToast(`Sigla "${oldCode}" alterada para "${code}" com sucesso.`);
         } else {
@@ -2501,12 +2550,15 @@ export class App {
             description: desc,
             textColor: textColor,
             computaAusencia: computaAusencia,
-            transparentBg: transparentBg
+            transparentBg: transparentBg,
+            darkColor: darkColor,
+            darkTextColor: darkTextColor,
+            darkTransparentBg: darkTransparentBg
           };
           this.scaleService.isProcessing.set(true);
           await this.scaleService.saveSiglaType(updatedSigla);
           this.scaleService.addAuditHistory('EDICAO_SIGLA', `Sigla "${code}" editada pelo gestor.`);
-          this.showToast(`Sigla "${code}" atualizada com sucesso.`);
+          this.showToast(`Sigla "${code}" actualizada com sucesso.`);
         }
         this.cancelEditingSigla();
       } else {
@@ -2517,8 +2569,20 @@ export class App {
           this.showToast('Erro: Código de sigla já cadastrado ou em uso por um turno.');
           return;
         }
+        const newSigla = {
+          code: code,
+          label: label,
+          color: color,
+          description: desc,
+          textColor: textColor,
+          computaAusencia: computaAusencia,
+          transparentBg: transparentBg,
+          darkColor: darkColor,
+          darkTextColor: darkTextColor,
+          darkTransparentBg: darkTransparentBg
+        };
         this.scaleService.isProcessing.set(true);
-        await this.scaleService.addSiglaType(code, label, color, desc, textColor, computaAusencia, transparentBg);
+        await this.scaleService.saveSiglaType(newSigla);
         this.scaleService.addAuditHistory('CADASTRO_SIGLA', `Nova sigla "${code}" cadastrada.`);
         this.cancelEditingSigla();
         this.showToast(`Sigla "${code}" criada com sucesso.`);
@@ -2598,10 +2662,22 @@ export class App {
     if (upperCode === '-' || upperCode === '?') return false;
 
     const sigla = this.scaleService.siglaTypes().find(s => s.code.trim().toUpperCase() === upperCode);
-    if (sigla && sigla.transparentBg) return true;
+    if (sigla) {
+      if (this.isLightTheme()) {
+        return !!sigla.transparentBg;
+      } else {
+        return sigla.darkTransparentBg !== undefined ? !!sigla.darkTransparentBg : !!sigla.transparentBg;
+      }
+    }
 
     const shift = this.scaleService.shiftTypes().find(s => s.code.trim().toUpperCase() === upperCode || s.label.trim().toUpperCase() === upperCode);
-    if (shift && shift.transparentBg) return true;
+    if (shift) {
+      if (this.isLightTheme()) {
+        return !!shift.transparentBg;
+      } else {
+        return shift.darkTransparentBg !== undefined ? !!shift.darkTransparentBg : !!shift.transparentBg;
+      }
+    }
 
     return false;
   }
@@ -2612,12 +2688,20 @@ export class App {
 
     const sigla = this.scaleService.siglaTypes().find(s => s.code.trim().toUpperCase() === upperCode);
     if (sigla) {
-      return sigla.color;
+      if (this.isLightTheme()) {
+        return sigla.color;
+      } else {
+        return sigla.darkColor || sigla.color;
+      }
     }
 
     const shift = this.scaleService.shiftTypes().find(s => s.code.trim().toUpperCase() === upperCode || s.label.trim().toUpperCase() === upperCode);
     if (shift) {
-      return shift.color;
+      if (this.isLightTheme()) {
+        return shift.color;
+      } else {
+        return shift.darkColor || shift.color;
+      }
     }
 
     return this.isLightTheme() ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)';
@@ -2643,13 +2727,16 @@ export class App {
       if (this.isLightTheme()) {
         return this.getLightVibrantColor(shift.color, upperCode);
       }
-      return shift.color;
+      return shift.darkColor || shift.color;
     }
 
     // Try finding in siglaTypes
     const sigla = this.scaleService.siglaTypes().find(s => s.code.trim().toUpperCase() === upperCode);
     if (sigla) {
-      return sigla.color;
+      if (this.isLightTheme()) {
+        return sigla.color;
+      }
+      return sigla.darkColor || sigla.color;
     }
 
     // Is it a numeric code like "7", "2", etc?
@@ -2713,24 +2800,38 @@ export class App {
     if (this.isShiftOrSiglaTransparent(upperCode)) {
       const sigla = this.scaleService.siglaTypes().find(s => s.code.trim().toUpperCase() === upperCode);
       if (sigla) {
-        return sigla.textColor || sigla.color || '#ffffff';
+        if (this.isLightTheme()) {
+          return sigla.textColor || sigla.color || '#ffffff';
+        } else {
+          return sigla.darkTextColor || sigla.darkColor || sigla.textColor || sigla.color || '#ffffff';
+        }
       }
       const shift = this.scaleService.shiftTypes().find(s => s.code.trim().toUpperCase() === upperCode || s.label.trim().toUpperCase() === upperCode);
       if (shift) {
-        return shift.textColor || shift.color || '#ffffff';
+        if (this.isLightTheme()) {
+          return shift.textColor || shift.color || '#ffffff';
+        } else {
+          return shift.darkTextColor || shift.darkColor || shift.textColor || shift.color || '#ffffff';
+        }
       }
     }
 
     // Try finding in shiftTypes first
     const shift = this.scaleService.shiftTypes().find(s => s.code.trim().toUpperCase() === upperCode || s.label.trim().toUpperCase() === upperCode);
-    if (shift && shift.textColor) {
-      return shift.textColor;
+    if (shift) {
+      if (this.isLightTheme()) {
+        return shift.textColor || '#ffffff';
+      }
+      return shift.darkTextColor || shift.textColor || '#ffffff';
     }
 
     // Try finding in siglaTypes
     const sigla = this.scaleService.siglaTypes().find(s => s.code.trim().toUpperCase() === upperCode);
-    if (sigla && sigla.textColor) {
-      return sigla.textColor;
+    if (sigla) {
+      if (this.isLightTheme()) {
+        return sigla.textColor || '#ffffff';
+      }
+      return sigla.darkTextColor || sigla.textColor || '#ffffff';
     }
 
     // Is it a numeric code?

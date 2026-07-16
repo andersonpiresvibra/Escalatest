@@ -1185,7 +1185,7 @@
                       <span class="material-icons text-blue-500 text-sm">
                         {{ editingShiftCode() ? 'edit_note' : 'library_add' }}
                       </span>
-                      {{ editingShiftCode() ? 'Editar Turno' : 'Criar Novo Turno' }}
+                      {{ editingShiftCode() ? 'Editor de Siglas de Turno' : 'Criar Novo Turno' }}
                     </h4>
                     @if (editingShiftCode()) {
                       <span class="text-[8px] bg-amber-500/10 text-amber-400 border border-amber-500/25 px-1.5 py-0.5 rounded font-mono font-black uppercase">
@@ -1297,67 +1297,193 @@
                       </div>
                     </div>
 
-                    <!-- Color Pickers (Fundo & Fonte) -->
-                    <div class="grid grid-cols-2 gap-4">
-                      <div class="flex flex-col gap-1">
-                        <label for="shift_color_input" class="font-black text-[9px] uppercase tracking-wider text-slate-400">Cor Fundo</label>
-                        <div class="flex gap-2 items-center h-9">
-                          <input id="shift_color_input"
-                                 type="color"
-                                 [value]="newShiftColor()"
-                                 (input)="newShiftColor.set($any($event.target).value)"
-                                 class="bg-transparent border-none w-8 h-8 rounded cursor-pointer outline-none">
-                          <span class="text-[9px] font-mono text-slate-400 font-bold">{{ newShiftColor() }}</span>
-                        </div>
-                      </div>
-                      
-                      <div class="flex flex-col gap-1">
-                        <label for="shift_text_color_input" class="font-black text-[9px] uppercase tracking-wider text-slate-400">Cor Fonte</label>
-                        <div class="flex gap-2 items-center h-9">
-                          <input id="shift_text_color_input"
-                                 type="color"
-                                 [value]="newShiftTextColor()"
-                                 (input)="newShiftTextColor.set($any($event.target).value)"
-                                 class="bg-transparent border-none w-8 h-8 rounded cursor-pointer outline-none">
-                          <span class="text-[9px] font-mono text-slate-400 font-bold">{{ newShiftTextColor() }}</span>
-                        </div>
-                      </div>
+                    <!-- Division of Theme Tabs -->
+                    <div class="flex border-b border-[#10213b] mb-4 gap-1 select-none">
+                      <button type="button" 
+                              (click)="activeShiftThemeTab.set('light')"
+                              class="flex-1 py-1.5 px-3 text-center text-[10px] font-black uppercase tracking-wider transition-all border-b-2 cursor-pointer outline-none flex items-center justify-center gap-1.5"
+                              [class.border-emerald-500]="activeShiftThemeTab() === 'light'"
+                              [class.text-emerald-400]="activeShiftThemeTab() === 'light'"
+                              [class.border-transparent]="activeShiftThemeTab() !== 'light'"
+                              [class.text-slate-400]="activeShiftThemeTab() !== 'light'"
+                              [class.hover:text-white]="activeShiftThemeTab() !== 'light'">
+                        <span class="material-icons text-xs">light_mode</span>
+                        Tema Claro
+                      </button>
+                      <button type="button" 
+                              (click)="activeShiftThemeTab.set('dark')"
+                              class="flex-1 py-1.5 px-3 text-center text-[10px] font-black uppercase tracking-wider transition-all border-b-2 cursor-pointer outline-none flex items-center justify-center gap-1.5"
+                              [class.border-emerald-500]="activeShiftThemeTab() === 'dark'"
+                              [class.text-emerald-400]="activeShiftThemeTab() === 'dark'"
+                              [class.border-transparent]="activeShiftThemeTab() !== 'dark'"
+                              [class.text-slate-400]="activeShiftThemeTab() !== 'dark'"
+                              [class.hover:text-white]="activeShiftThemeTab() !== 'dark'">
+                        <span class="material-icons text-xs">dark_mode</span>
+                        Tema Escuro
+                      </button>
                     </div>
 
-                    <!-- REAL-TIME PREVIEW OF THE SHIFT -->
-                    <div class="bg-[#071426] border border-[#10213b] rounded-lg p-2 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3" style="height: 75px;">
-                      <div class="flex flex-col gap-0.5">
+                    <!-- TAB CONTENTS: LIGHT THEME -->
+                    @if (activeShiftThemeTab() === 'light') {
+                      <div class="space-y-4 animate-fade-in">
+                        <!-- Fundo Transparente Toggle (Light) -->
+                        <div class="flex items-center gap-3 bg-[#071426] px-3 rounded border border-[#10213b]" style="height: 45px;">
+                          <input id="shift_transparent_bg_input"
+                                 type="checkbox"
+                                 [checked]="newShiftTransparentBg()"
+                                 (change)="newShiftTransparentBg.set($any($event.target).checked)"
+                                 class="w-4 h-4 rounded text-blue-500 focus:ring-blue-500 bg-[#030a14] border-[#10213b] cursor-pointer">
+                          <div class="flex flex-col">
+                            <label for="shift_transparent_bg_input" class="font-black text-[10px] uppercase tracking-wider text-white cursor-pointer select-none">
+                              Fundo Transparente (Claro)
+                            </label>
+                            <span class="text-[8px] text-slate-400 leading-tight">
+                              Se ativado, exibe fundo transparente com borda e fonte coloridas no tema claro.
+                            </span>
+                          </div>
+                        </div>
+
+                        <!-- Color pickers (Light) -->
+                        <div class="grid grid-cols-2 gap-4">
+                          <div class="flex flex-col gap-1">
+                            <label for="shift_color_input" class="font-black text-[9px] uppercase tracking-wider text-slate-400">Cor Fundo (Claro)</label>
+                            <div class="flex gap-2 items-center h-9">
+                              <input id="shift_color_input"
+                                     type="color"
+                                     [value]="newShiftColor()"
+                                     (input)="newShiftColor.set($any($event.target).value)"
+                                     class="bg-transparent border-none w-8 h-8 rounded cursor-pointer outline-none">
+                              <span class="text-[9px] font-mono text-slate-400 font-bold">{{ newShiftColor() }}</span>
+                            </div>
+                          </div>
+                          
+                          <div class="flex flex-col gap-1">
+                            <label for="shift_text_color_input" class="font-black text-[9px] uppercase tracking-wider text-slate-400">Cor Fonte (Claro)</label>
+                            <div class="flex gap-2 items-center h-9">
+                              <input id="shift_text_color_input"
+                                     type="color"
+                                     [value]="newShiftTextColor()"
+                                     (input)="newShiftTextColor.set($any($event.target).value)"
+                                     class="bg-transparent border-none w-8 h-8 rounded cursor-pointer outline-none">
+                              <span class="text-[9px] font-mono text-slate-400 font-bold">{{ newShiftTextColor() }}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    }
+
+                    <!-- TAB CONTENTS: DARK THEME -->
+                    @if (activeShiftThemeTab() === 'dark') {
+                      <div class="space-y-4 animate-fade-in">
+                        <!-- Fundo Transparente Toggle (Dark) -->
+                        <div class="flex items-center gap-3 bg-[#071426] px-3 rounded border border-[#10213b]" style="height: 45px;">
+                          <input id="shift_dark_transparent_bg_input"
+                                 type="checkbox"
+                                 [checked]="newShiftDarkTransparentBg()"
+                                 (change)="newShiftDarkTransparentBg.set($any($event.target).checked)"
+                                 class="w-4 h-4 rounded text-blue-500 focus:ring-blue-500 bg-[#030a14] border-[#10213b] cursor-pointer">
+                          <div class="flex flex-col">
+                            <label for="shift_dark_transparent_bg_input" class="font-black text-[10px] uppercase tracking-wider text-white cursor-pointer select-none">
+                              Fundo Transparente (Escuro)
+                            </label>
+                            <span class="text-[8px] text-slate-400 leading-tight">
+                              Se ativado, exibe fundo transparente com borda e fonte coloridas no tema escuro.
+                            </span>
+                          </div>
+                        </div>
+
+                        <!-- Color pickers (Dark) -->
+                        <div class="grid grid-cols-2 gap-4">
+                          <div class="flex flex-col gap-1">
+                            <label for="shift_dark_color_input" class="font-black text-[9px] uppercase tracking-wider text-slate-400">Cor Fundo (Escuro)</label>
+                            <div class="flex gap-2 items-center h-9">
+                              <input id="shift_dark_color_input"
+                                     type="color"
+                                     [value]="newShiftDarkColor()"
+                                     (input)="newShiftDarkColor.set($any($event.target).value)"
+                                     class="bg-transparent border-none w-8 h-8 rounded cursor-pointer outline-none">
+                              <span class="text-[9px] font-mono text-slate-400 font-bold">{{ newShiftDarkColor() }}</span>
+                            </div>
+                          </div>
+                          
+                          <div class="flex flex-col gap-1">
+                            <label for="shift_dark_text_color_input" class="font-black text-[9px] uppercase tracking-wider text-slate-400">Cor Fonte (Escuro)</label>
+                            <div class="flex gap-2 items-center h-9">
+                              <input id="shift_dark_text_color_input"
+                                     type="color"
+                                     [value]="newShiftDarkTextColor()"
+                                     (input)="newShiftDarkTextColor.set($any($event.target).value)"
+                                     class="bg-transparent border-none w-8 h-8 rounded cursor-pointer outline-none">
+                              <span class="text-[9px] font-mono text-slate-400 font-bold">{{ newShiftDarkTextColor() }}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    }
+
+                    <!-- REAL-TIME PARITY PREVIEW -->
+                    <div class="bg-[#071426] border border-[#10213b] rounded-lg p-3 flex flex-col gap-3 min-h-[140px]">
+                      <div class="flex flex-col gap-0.5 pb-2 border-b border-[#10213b]/50">
                         <span class="font-black text-[9px] uppercase tracking-wider text-slate-300 flex items-center gap-1">
                           <span class="material-icons text-[10px] text-emerald-400">visibility</span>
-                          Visualização em Tempo Real
+                          Visualização em Tempo Real (Paridade de Temas)
                         </span>
-                        <span class="text-[8px] text-slate-400 font-medium">Veja como o turno aparecerá na escala</span>
+                        <span class="text-[8px] text-slate-400 font-medium">Veja o comportamento da sigla do turno em ambos os ambientes</span>
                       </div>
-                      <div class="flex items-center gap-3 shrink-0">
-                        <!-- Preview Badge on Scale Matrix -->
-                        <div class="flex flex-col items-center gap-1">
-                          <div class="w-8 h-8 rounded flex items-center justify-center font-bold font-mono text-[11px] shadow-lg transition-all border border-black/20"
-                               [style.backgroundColor]="newShiftColor()"
-                               [style.color]="newShiftTextColor()">
+                      
+                      <div class="grid grid-cols-2 gap-3">
+                        <!-- LIGHT THEME PREVIEW COLUMN -->
+                        <div class="bg-[#0c192d] p-2 rounded border border-[#10213b] flex flex-col items-center gap-2">
+                          <span class="text-[7px] text-emerald-400 font-black uppercase tracking-wider flex items-center gap-0.5">
+                            <span class="material-icons text-[8px]">light_mode</span> Tema Claro
+                          </span>
+                          <!-- Preview Badge -->
+                          <div class="w-8 h-8 rounded flex items-center justify-center font-bold font-mono text-[11px] shadow border"
+                               [style.backgroundColor]="newShiftTransparentBg() ? 'transparent' : newShiftColor()"
+                               [style.borderColor]="newShiftColor()"
+                               [style.color]="newShiftTransparentBg() ? (newShiftTextColor() || newShiftColor()) : newShiftTextColor()">
                             {{ (newShiftCode() || '?').substring(0, 3).toUpperCase() }}
                           </div>
-                          <span class="text-[7px] text-slate-500 font-bold uppercase tracking-wider">Na Grade</span>
-                        </div>
-                        
-                        <!-- Larger Row Preview -->
-                        <div class="flex flex-col items-center gap-1">
-                          <div class="px-3 py-1 rounded flex items-center gap-2 text-[10px] font-bold border border-black/20 shadow-md h-8 transition-all"
-                               [style.backgroundColor]="newShiftColor() + '15'"
+                          <!-- Full panel preview -->
+                          <div class="px-2 py-0.5 rounded flex items-center gap-1 text-[9px] font-bold border"
+                               [style.backgroundColor]="newShiftTransparentBg() ? 'transparent' : newShiftColor() + '15'"
                                [style.borderColor]="newShiftColor() + '30'"
-                               [style.color]="newShiftTextColor()">
-                            <span class="w-5 h-5 rounded flex items-center justify-center font-bold font-mono text-[9px] border border-black/10"
-                                  [style.backgroundColor]="newShiftColor()"
-                                  [style.color]="newShiftTextColor()">
+                               [style.color]="newShiftTransparentBg() ? (newShiftTextColor() || newShiftColor()) : newShiftTextColor()">
+                            <span class="w-4 h-4 rounded flex items-center justify-center font-bold font-mono text-[8px] border"
+                                  [style.backgroundColor]="newShiftTransparentBg() ? 'transparent' : newShiftColor()"
+                                  [style.borderColor]="newShiftColor()"
+                                  [style.color]="newShiftTransparentBg() ? (newShiftTextColor() || newShiftColor()) : newShiftTextColor()">
                               {{ (newShiftCode() || '?').substring(0, 3).toUpperCase() }}
                             </span>
-                            <span class="max-w-[80px] truncate text-white">{{ newShiftLabel() || 'Sem Identificação' }}</span>
+                            <span class="max-w-[50px] truncate text-slate-200 text-[8px]">{{ newShiftLabel() || 'Turno' }}</span>
                           </div>
-                          <span class="text-[7px] text-slate-500 font-bold uppercase tracking-wider">No Painel</span>
+                        </div>
+
+                        <!-- DARK THEME PREVIEW COLUMN -->
+                        <div class="bg-[#050d18] p-2 rounded border border-[#10213b] flex flex-col items-center gap-2">
+                          <span class="text-[7px] text-purple-400 font-black uppercase tracking-wider flex items-center gap-0.5">
+                            <span class="material-icons text-[8px]">dark_mode</span> Tema Escuro
+                          </span>
+                          <!-- Preview Badge -->
+                          <div class="w-8 h-8 rounded flex items-center justify-center font-bold font-mono text-[11px] shadow border"
+                               [style.backgroundColor]="newShiftDarkTransparentBg() ? 'transparent' : newShiftDarkColor()"
+                               [style.borderColor]="newShiftDarkColor()"
+                               [style.color]="newShiftDarkTransparentBg() ? (newShiftDarkTextColor() || newShiftDarkColor()) : newShiftDarkTextColor()">
+                            {{ (newShiftCode() || '?').substring(0, 3).toUpperCase() }}
+                          </div>
+                          <!-- Full panel preview -->
+                          <div class="px-2 py-0.5 rounded flex items-center gap-1 text-[9px] font-bold border"
+                               [style.backgroundColor]="newShiftDarkTransparentBg() ? 'transparent' : newShiftDarkColor() + '15'"
+                               [style.borderColor]="newShiftDarkColor() + '30'"
+                               [style.color]="newShiftDarkTransparentBg() ? (newShiftDarkTextColor() || newShiftDarkColor()) : newShiftDarkTextColor()">
+                            <span class="w-4 h-4 rounded flex items-center justify-center font-bold font-mono text-[8px] border"
+                                  [style.backgroundColor]="newShiftDarkTransparentBg() ? 'transparent' : newShiftDarkColor()"
+                                  [style.borderColor]="newShiftDarkColor()"
+                                  [style.color]="newShiftDarkTransparentBg() ? (newShiftDarkTextColor() || newShiftDarkColor()) : newShiftDarkTextColor()">
+                              {{ (newShiftCode() || '?').substring(0, 3).toUpperCase() }}
+                            </span>
+                            <span class="max-w-[50px] truncate text-slate-400 text-[8px]">{{ newShiftLabel() || 'Turno' }}</span>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -1400,7 +1526,7 @@
             <div>
               <h3 class="font-black text-sm uppercase tracking-tight text-white flex items-center gap-1.5">
                 <span class="material-icons text-blue-400" style="color: #ffffff;">label</span>
-                Gerenciamento de Siglas
+                Gerenciamento de Siglas da Escala
               </h3>
             </div>
             <div class="flex items-center gap-2 text-xs bg-blue-500/10 border border-blue-500/25 px-3 py-1.5 rounded-lg font-mono font-bold" style="color: #ffffff;">
@@ -1493,7 +1619,7 @@
                       <span class="material-icons text-blue-500 text-sm">
                         {{ editingSiglaCode() ? 'edit_note' : 'library_add' }}
                       </span>
-                      {{ editingSiglaCode() ? 'Editar Sigla' : 'Criar Nova Sigla' }}
+                      {{ editingSiglaCode() ? 'Editor de Siglas de Escala' : 'Criar Nova Sigla' }}
                     </h4>
                     @if (editingSiglaCode()) {
                       <span class="text-[8px] bg-amber-500/10 text-amber-400 border border-amber-500/25 px-1.5 py-0.5 rounded font-mono font-black uppercase">
@@ -1565,84 +1691,193 @@
                       </div>
                     </div>
 
-                    <!-- Fundo Transparente Toggle -->
-                    <div class="flex items-center gap-3 bg-[#071426] px-3 rounded border border-[#10213b]" style="height: 45px;">
-                      <input id="sigla_transparent_bg_input"
-                             type="checkbox"
-                             [checked]="newSiglaTransparentBg()"
-                             (change)="newSiglaTransparentBg.set($any($event.target).checked)"
-                             class="w-4 h-4 rounded text-blue-500 focus:ring-blue-500 bg-[#030a14] border-[#10213b] cursor-pointer">
-                      <div class="flex flex-col">
-                        <label for="sigla_transparent_bg_input" class="font-black text-[10px] uppercase tracking-wider text-white cursor-pointer select-none">
-                          Fundo Transparente
-                        </label>
-                        <span class="text-[8px] text-slate-400 leading-tight">
-                          Se ativado, exibe fundo transparente com borda e fonte coloridas.
-                        </span>
-                      </div>
+                    <!-- Division of Theme Tabs -->
+                    <div class="flex border-b border-[#10213b] mb-4 gap-1 select-none">
+                      <button type="button" 
+                              (click)="activeSiglaThemeTab.set('light')"
+                              class="flex-1 py-1.5 px-3 text-center text-[10px] font-black uppercase tracking-wider transition-all border-b-2 cursor-pointer outline-none flex items-center justify-center gap-1.5"
+                              [class.border-emerald-500]="activeSiglaThemeTab() === 'light'"
+                              [class.text-emerald-400]="activeSiglaThemeTab() === 'light'"
+                              [class.border-transparent]="activeSiglaThemeTab() !== 'light'"
+                              [class.text-slate-400]="activeSiglaThemeTab() !== 'light'"
+                              [class.hover:text-white]="activeSiglaThemeTab() !== 'light'">
+                        <span class="material-icons text-xs">light_mode</span>
+                        Tema Claro
+                      </button>
+                      <button type="button" 
+                              (click)="activeSiglaThemeTab.set('dark')"
+                              class="flex-1 py-1.5 px-3 text-center text-[10px] font-black uppercase tracking-wider transition-all border-b-2 cursor-pointer outline-none flex items-center justify-center gap-1.5"
+                              [class.border-emerald-500]="activeSiglaThemeTab() === 'dark'"
+                              [class.text-emerald-400]="activeSiglaThemeTab() === 'dark'"
+                              [class.border-transparent]="activeSiglaThemeTab() !== 'dark'"
+                              [class.text-slate-400]="activeSiglaThemeTab() !== 'dark'"
+                              [class.hover:text-white]="activeSiglaThemeTab() !== 'dark'">
+                        <span class="material-icons text-xs">dark_mode</span>
+                        Tema Escuro
+                      </button>
                     </div>
 
-                    <!-- Color picker -->
-                    <div class="grid grid-cols-2 gap-4">
-                      <div class="flex flex-col gap-1">
-                        <label for="sigla_color_input" class="font-black text-[9px] uppercase tracking-wider text-slate-400">Cor Fundo</label>
-                        <div class="flex gap-2 items-center h-9">
-                          <input id="sigla_color_input"
-                                 type="color"
-                                 [value]="newSiglaColor()"
-                                 (input)="newSiglaColor.set($any($event.target).value)"
-                                 class="bg-transparent border-none w-8 h-8 rounded cursor-pointer outline-none">
-                          <span class="text-[9px] font-mono text-slate-400 font-bold">{{ newSiglaColor() }}</span>
+                    <!-- TAB CONTENTS: LIGHT THEME -->
+                    @if (activeSiglaThemeTab() === 'light') {
+                      <div class="space-y-4 animate-fade-in">
+                        <!-- Fundo Transparente Toggle (Light) -->
+                        <div class="flex items-center gap-3 bg-[#071426] px-3 rounded border border-[#10213b]" style="height: 45px;">
+                          <input id="sigla_transparent_bg_input"
+                                 type="checkbox"
+                                 [checked]="newSiglaTransparentBg()"
+                                 (change)="newSiglaTransparentBg.set($any($event.target).checked)"
+                                 class="w-4 h-4 rounded text-blue-500 focus:ring-blue-500 bg-[#030a14] border-[#10213b] cursor-pointer">
+                          <div class="flex flex-col">
+                            <label for="sigla_transparent_bg_input" class="font-black text-[10px] uppercase tracking-wider text-white cursor-pointer select-none">
+                              Fundo Transparente (Claro)
+                            </label>
+                            <span class="text-[8px] text-slate-400 leading-tight">
+                              Se ativado, exibe fundo transparente com borda e fonte coloridas no tema claro.
+                            </span>
+                          </div>
                         </div>
-                      </div>
-                      
-                      <div class="flex flex-col gap-1">
-                        <label for="sigla_text_color_input" class="font-black text-[9px] uppercase tracking-wider text-slate-400">Cor Fonte</label>
-                        <div class="flex gap-2 items-center h-9">
-                          <input id="sigla_text_color_input"
-                                 type="color"
-                                 [value]="newSiglaTextColor()"
-                                 (input)="newSiglaTextColor.set($any($event.target).value)"
-                                 class="bg-transparent border-none w-8 h-8 rounded cursor-pointer outline-none">
-                          <span class="text-[9px] font-mono text-slate-400 font-bold">{{ newSiglaTextColor() }}</span>
-                        </div>
-                      </div>
-                    </div>
 
-                    <!-- REAL-TIME PREVIEW OF THE ACRONYM -->
-                    <div class="bg-[#071426] border border-[#10213b] rounded-lg p-2 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3" style="height: 75px;">
-                      <div class="flex flex-col gap-0.5">
+                        <!-- Color pickers (Light) -->
+                        <div class="grid grid-cols-2 gap-4">
+                          <div class="flex flex-col gap-1">
+                            <label for="sigla_color_input" class="font-black text-[9px] uppercase tracking-wider text-slate-400">Cor Fundo (Claro)</label>
+                            <div class="flex gap-2 items-center h-9">
+                              <input id="sigla_color_input"
+                                     type="color"
+                                     [value]="newSiglaColor()"
+                                     (input)="newSiglaColor.set($any($event.target).value)"
+                                     class="bg-transparent border-none w-8 h-8 rounded cursor-pointer outline-none">
+                              <span class="text-[9px] font-mono text-slate-400 font-bold">{{ newSiglaColor() }}</span>
+                            </div>
+                          </div>
+                          
+                          <div class="flex flex-col gap-1">
+                            <label for="sigla_text_color_input" class="font-black text-[9px] uppercase tracking-wider text-slate-400">Cor Fonte (Claro)</label>
+                            <div class="flex gap-2 items-center h-9">
+                              <input id="sigla_text_color_input"
+                                     type="color"
+                                     [value]="newSiglaTextColor()"
+                                     (input)="newSiglaTextColor.set($any($event.target).value)"
+                                     class="bg-transparent border-none w-8 h-8 rounded cursor-pointer outline-none">
+                              <span class="text-[9px] font-mono text-slate-400 font-bold">{{ newSiglaTextColor() }}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    }
+
+                    <!-- TAB CONTENTS: DARK THEME -->
+                    @if (activeSiglaThemeTab() === 'dark') {
+                      <div class="space-y-4 animate-fade-in">
+                        <!-- Fundo Transparente Toggle (Dark) -->
+                        <div class="flex items-center gap-3 bg-[#071426] px-3 rounded border border-[#10213b]" style="height: 45px;">
+                          <input id="sigla_dark_transparent_bg_input"
+                                 type="checkbox"
+                                 [checked]="newSiglaDarkTransparentBg()"
+                                 (change)="newSiglaDarkTransparentBg.set($any($event.target).checked)"
+                                 class="w-4 h-4 rounded text-blue-500 focus:ring-blue-500 bg-[#030a14] border-[#10213b] cursor-pointer">
+                          <div class="flex flex-col">
+                            <label for="sigla_dark_transparent_bg_input" class="font-black text-[10px] uppercase tracking-wider text-white cursor-pointer select-none">
+                              Fundo Transparente (Escuro)
+                            </label>
+                            <span class="text-[8px] text-slate-400 leading-tight">
+                              Se ativado, exibe fundo transparente com borda e fonte coloridas no tema escuro.
+                            </span>
+                          </div>
+                        </div>
+
+                        <!-- Color pickers (Dark) -->
+                        <div class="grid grid-cols-2 gap-4">
+                          <div class="flex flex-col gap-1">
+                            <label for="sigla_dark_color_input" class="font-black text-[9px] uppercase tracking-wider text-slate-400">Cor Fundo (Escuro)</label>
+                            <div class="flex gap-2 items-center h-9">
+                              <input id="sigla_dark_color_input"
+                                     type="color"
+                                     [value]="newSiglaDarkColor()"
+                                     (input)="newSiglaDarkColor.set($any($event.target).value)"
+                                     class="bg-transparent border-none w-8 h-8 rounded cursor-pointer outline-none">
+                              <span class="text-[9px] font-mono text-slate-400 font-bold">{{ newSiglaDarkColor() }}</span>
+                            </div>
+                          </div>
+                          
+                          <div class="flex flex-col gap-1">
+                            <label for="sigla_dark_text_color_input" class="font-black text-[9px] uppercase tracking-wider text-slate-400">Cor Fonte (Escuro)</label>
+                            <div class="flex gap-2 items-center h-9">
+                              <input id="sigla_dark_text_color_input"
+                                     type="color"
+                                     [value]="newSiglaDarkTextColor()"
+                                     (input)="newSiglaDarkTextColor.set($any($event.target).value)"
+                                     class="bg-transparent border-none w-8 h-8 rounded cursor-pointer outline-none">
+                              <span class="text-[9px] font-mono text-slate-400 font-bold">{{ newSiglaDarkTextColor() }}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    }
+
+                    <!-- REAL-TIME PARITY PREVIEW -->
+                    <div class="bg-[#071426] border border-[#10213b] rounded-lg p-3 flex flex-col gap-3 min-h-[140px]">
+                      <div class="flex flex-col gap-0.5 pb-2 border-b border-[#10213b]/50">
                         <span class="font-black text-[9px] uppercase tracking-wider text-slate-300 flex items-center gap-1">
                           <span class="material-icons text-[10px] text-emerald-400">visibility</span>
-                          Visualização em Tempo Real
+                          Visualização em Tempo Real (Paridade de Temas)
                         </span>
-                        <span class="text-[8px] text-slate-400 font-medium">Veja como a sigla aparecerá na escala</span>
+                        <span class="text-[8px] text-slate-400 font-medium">Veja o comportamento da sigla em ambos os ambientes</span>
                       </div>
-                      <div class="flex items-center gap-3 shrink-0">
-                        <!-- Preview Badge on Scale Matrix -->
-                        <div class="flex flex-col items-center gap-1">
-                          <div class="w-8 h-8 rounded flex items-center justify-center font-bold font-mono text-[11px] shadow-lg transition-all border border-black/20"
-                               [style.backgroundColor]="newSiglaColor()"
-                               [style.color]="newSiglaTextColor()">
+                      
+                      <div class="grid grid-cols-2 gap-3">
+                        <!-- LIGHT THEME PREVIEW COLUMN -->
+                        <div class="bg-[#0c192d] p-2 rounded border border-[#10213b] flex flex-col items-center gap-2">
+                          <span class="text-[7px] text-emerald-400 font-black uppercase tracking-wider flex items-center gap-0.5">
+                            <span class="material-icons text-[8px]">light_mode</span> Tema Claro
+                          </span>
+                          <!-- Preview Badge -->
+                          <div class="w-8 h-8 rounded flex items-center justify-center font-bold font-mono text-[11px] shadow border"
+                               [style.backgroundColor]="newSiglaTransparentBg() ? 'transparent' : newSiglaColor()"
+                               [style.borderColor]="newSiglaColor()"
+                               [style.color]="newSiglaTransparentBg() ? (newSiglaTextColor() || newSiglaColor()) : newSiglaTextColor()">
                             {{ (newSiglaCode() || '?').substring(0, 3).toUpperCase() }}
                           </div>
-                          <span class="text-[7px] text-slate-500 font-bold uppercase tracking-wider">Na Grade</span>
-                        </div>
-                        
-                        <!-- Larger Row Preview -->
-                        <div class="flex flex-col items-center gap-1">
-                          <div class="px-3 py-1 rounded flex items-center gap-2 text-[10px] font-bold border border-black/20 shadow-md h-8 transition-all"
-                               [style.backgroundColor]="newSiglaColor() + '15'"
+                          <!-- Full panel preview -->
+                          <div class="px-2 py-0.5 rounded flex items-center gap-1 text-[9px] font-bold border"
+                               [style.backgroundColor]="newSiglaTransparentBg() ? 'transparent' : newSiglaColor() + '15'"
                                [style.borderColor]="newSiglaColor() + '30'"
-                               [style.color]="newSiglaTextColor()">
-                            <span class="w-5 h-5 rounded flex items-center justify-center font-bold font-mono text-[9px] border border-black/10"
-                                  [style.backgroundColor]="newSiglaColor()"
-                                  [style.color]="newSiglaTextColor()">
+                               [style.color]="newSiglaTransparentBg() ? (newSiglaTextColor() || newSiglaColor()) : newSiglaTextColor()">
+                            <span class="w-4 h-4 rounded flex items-center justify-center font-bold font-mono text-[8px] border"
+                                  [style.backgroundColor]="newSiglaTransparentBg() ? 'transparent' : newSiglaColor()"
+                                  [style.borderColor]="newSiglaColor()"
+                                  [style.color]="newSiglaTransparentBg() ? (newSiglaTextColor() || newSiglaColor()) : newSiglaTextColor()">
                               {{ (newSiglaCode() || '?').substring(0, 3).toUpperCase() }}
                             </span>
-                            <span class="max-w-[80px] truncate text-white">{{ newSiglaLabel() || 'Sem Identificação' }}</span>
+                            <span class="max-w-[50px] truncate text-slate-200 text-[8px]">{{ newSiglaLabel() || 'Sigla' }}</span>
                           </div>
-                          <span class="text-[7px] text-slate-500 font-bold uppercase tracking-wider">No Painel</span>
+                        </div>
+
+                        <!-- DARK THEME PREVIEW COLUMN -->
+                        <div class="bg-[#050d18] p-2 rounded border border-[#10213b] flex flex-col items-center gap-2">
+                          <span class="text-[7px] text-purple-400 font-black uppercase tracking-wider flex items-center gap-0.5">
+                            <span class="material-icons text-[8px]">dark_mode</span> Tema Escuro
+                          </span>
+                          <!-- Preview Badge -->
+                          <div class="w-8 h-8 rounded flex items-center justify-center font-bold font-mono text-[11px] shadow border"
+                               [style.backgroundColor]="newSiglaDarkTransparentBg() ? 'transparent' : newSiglaDarkColor()"
+                               [style.borderColor]="newSiglaDarkColor()"
+                               [style.color]="newSiglaDarkTransparentBg() ? (newSiglaDarkTextColor() || newSiglaDarkColor()) : newSiglaDarkTextColor()">
+                            {{ (newSiglaCode() || '?').substring(0, 3).toUpperCase() }}
+                          </div>
+                          <!-- Full panel preview -->
+                          <div class="px-2 py-0.5 rounded flex items-center gap-1 text-[9px] font-bold border"
+                               [style.backgroundColor]="newSiglaDarkTransparentBg() ? 'transparent' : newSiglaDarkColor() + '15'"
+                               [style.borderColor]="newSiglaDarkColor() + '30'"
+                               [style.color]="newSiglaDarkTransparentBg() ? (newSiglaDarkTextColor() || newSiglaDarkColor()) : newSiglaDarkTextColor()">
+                            <span class="w-4 h-4 rounded flex items-center justify-center font-bold font-mono text-[8px] border"
+                                  [style.backgroundColor]="newSiglaDarkTransparentBg() ? 'transparent' : newSiglaDarkColor()"
+                                  [style.borderColor]="newSiglaDarkColor()"
+                                  [style.color]="newSiglaDarkTransparentBg() ? (newSiglaDarkTextColor() || newSiglaDarkColor()) : newSiglaDarkTextColor()">
+                              {{ (newSiglaCode() || '?').substring(0, 3).toUpperCase() }}
+                            </span>
+                            <span class="max-w-[50px] truncate text-slate-400 text-[8px]">{{ newSiglaLabel() || 'Sigla' }}</span>
+                          </div>
                         </div>
                       </div>
                     </div>

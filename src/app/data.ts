@@ -67,6 +67,9 @@ export interface ShiftType {
   cannotDelete?: boolean;
   colorName?: string;
   transparentBg?: boolean;
+  darkColor?: string;
+  darkTextColor?: string;
+  darkTransparentBg?: boolean;
 }
 
 export function getSiglaColor(code: string, siglaTypes: ShiftType[] = []): string {

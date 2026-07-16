@@ -90,6 +90,9 @@ export interface ShiftType {
   startTime?: string;
   endTime?: string;
   transparentBg?: boolean;
+  darkColor?: string;
+  darkTextColor?: string;
+  darkTransparentBg?: boolean;
 }
 
 export interface SiglaType {
@@ -100,6 +103,9 @@ export interface SiglaType {
   textColor?: string;
   computaAusencia?: boolean;
   transparentBg?: boolean;
+  darkColor?: string;
+  darkTextColor?: string;
+  darkTransparentBg?: boolean;
 }
 
 export interface BackupHistory {
@@ -130,6 +136,57 @@ function safeSetLocalStorageItem(key: string, value: string): void {
   } catch (e) {
     console.warn(`localStorage.setItem blocked for key ${key}:`, e);
   }
+}
+
+function parsePackedColor(colorString: string, defaultBg: string, defaultFg: string) {
+  let bg = defaultBg;
+  let fg = defaultFg;
+  let transparentBg = false;
+  let darkColor = defaultBg;
+  let darkTextColor = defaultFg;
+  let darkTransparentBg = false;
+
+  const rawColor = colorString || defaultBg;
+  if (rawColor.includes('|')) {
+    const parts = rawColor.split('|');
+    bg = parts[0] || defaultBg;
+    fg = parts[1] || defaultFg;
+    transparentBg = parts[2] === 'transparent';
+    darkColor = parts[3] || bg;
+    darkTextColor = parts[4] || fg;
+    if (parts[5] === 'transparent') {
+      darkTransparentBg = true;
+    } else if (parts[3]) {
+      darkTransparentBg = false;
+    } else {
+      darkTransparentBg = transparentBg;
+    }
+  } else {
+    bg = rawColor;
+    darkColor = bg;
+    darkTextColor = fg;
+    darkTransparentBg = transparentBg;
+  }
+
+  return { bg, fg, transparentBg, darkColor, darkTextColor, darkTransparentBg };
+}
+
+function packColors(
+  color: string,
+  textColor: string | undefined,
+  transparentBg: boolean,
+  darkColor: string | undefined,
+  darkTextColor: string | undefined,
+  darkTransparentBg: boolean
+): string {
+  const lightBg = color || '#3b82f6';
+  const lightFg = textColor || '#ffffff';
+  const lightTrans = transparentBg ? 'transparent' : 'normal';
+  const dColor = darkColor || lightBg;
+  const dTextColor = darkTextColor || lightFg;
+  const dTrans = darkTransparentBg ? 'transparent' : 'normal';
+
+  return `${lightBg}|${lightFg}|${lightTrans}|${dColor}|${dTextColor}|${dTrans}`;
 }
 
 @Injectable({
@@ -407,25 +464,19 @@ export class ScaleService {
             }
           }
           
-          let bg = s.color || '#64748b';
-          let fg = s.textColor || s.textcolor || s.text_color || '#ffffff';
-          if (bg.includes('|')) {
-            const parts = bg.split('|');
-            bg = parts[0];
-            fg = parts[1] || fg;
-            if (parts[2] === 'transparent') {
-              transparentBg = true;
-            }
-          }
+          const unpacked = parsePackedColor(s.color || '', '#64748b', s.textColor || s.textcolor || s.text_color || '#ffffff');
 
           return {
             code: s.code,
             label: s.label,
-            color: bg,
-            textColor: fg,
+            color: unpacked.bg,
+            textColor: unpacked.fg,
+            transparentBg: unpacked.transparentBg || transparentBg,
+            darkColor: unpacked.darkColor,
+            darkTextColor: unpacked.darkTextColor,
+            darkTransparentBg: unpacked.darkTransparentBg,
             description: desc,
-            computaAusencia,
-            transparentBg
+            computaAusencia
           };
         });
         this.siglaTypes.set(parsedSiglas);
@@ -439,27 +490,20 @@ export class ScaleService {
         this.shiftTypes.set([]);
       } else {
         const parsedShifts = (shiftsData || []).map((s: any) => {
-          let bg = s.color || '#3b82f6';
-          let fg = s.textColor || s.textcolor || s.text_color || '#ffffff';
-          let transparentBg = false;
-          if (bg.includes('|')) {
-            const parts = bg.split('|');
-            bg = parts[0];
-            fg = parts[1] || fg;
-            if (parts[2] === 'transparent') {
-              transparentBg = true;
-            }
-          }
+          const unpacked = parsePackedColor(s.color || '', '#3b82f6', s.textColor || s.textcolor || s.text_color || '#ffffff');
 
           return {
             code: s.code,
             label: s.label,
             hours: s.hours,
-            color: bg,
-            textColor: fg,
+            color: unpacked.bg,
+            textColor: unpacked.fg,
+            transparentBg: unpacked.transparentBg,
+            darkColor: unpacked.darkColor,
+            darkTextColor: unpacked.darkTextColor,
+            darkTransparentBg: unpacked.darkTransparentBg,
             startTime: s.startTime || s.starttime || s.start_time,
-            endTime: s.endTime || s.endtime || s.end_time,
-            transparentBg
+            endTime: s.endTime || s.endtime || s.end_time
           };
         });
         this.shiftTypes.set(parsedShifts);
@@ -596,7 +640,17 @@ export class ScaleService {
       if (this.activeDb() !== 'firebase') return;
       const list: ShiftType[] = [];
       snapshot.forEach((doc) => {
-        list.push(doc.data() as ShiftType);
+        const s = doc.data() as any;
+        const unpacked = parsePackedColor(s.color || '', '#3b82f6', s.textColor || '#ffffff');
+        list.push({
+          ...s,
+          color: unpacked.bg,
+          textColor: unpacked.fg,
+          transparentBg: unpacked.transparentBg,
+          darkColor: unpacked.darkColor,
+          darkTextColor: unpacked.darkTextColor,
+          darkTransparentBg: unpacked.darkTransparentBg
+        });
       });
       this.shiftTypes.set(list);
     }, (error) => {
@@ -631,24 +685,18 @@ export class ScaleService {
           }
         }
 
-        let bg = s.color || '#64748b';
-        let fg = s.textColor || '#ffffff';
-        if (bg.includes('|')) {
-          const parts = bg.split('|');
-          bg = parts[0];
-          fg = parts[1] || fg;
-          if (parts[2] === 'transparent') {
-            transparentBg = true;
-          }
-        }
+        const unpacked = parsePackedColor(s.color || '', '#64748b', s.textColor || '#ffffff');
 
         list.push({
           ...s,
-          color: bg,
-          textColor: fg,
+          color: unpacked.bg,
+          textColor: unpacked.fg,
+          transparentBg: unpacked.transparentBg || transparentBg,
+          darkColor: unpacked.darkColor,
+          darkTextColor: unpacked.darkTextColor,
+          darkTransparentBg: unpacked.darkTransparentBg,
           description: desc,
-          computaAusencia,
-          transparentBg
+          computaAusencia
         });
       });
       this.siglaTypes.set(list);
@@ -1868,7 +1916,14 @@ export class ScaleService {
     if (sigla.transparentBg) {
       finalDesc = '#TRANSPARENT_BG#' + finalDesc;
     }
-    const finalColor = sigla.transparentBg ? `${sigla.color}|${sigla.textColor || '#ffffff'}|transparent` : sigla.color;
+    const finalColor = packColors(
+      sigla.color,
+      sigla.textColor,
+      !!sigla.transparentBg,
+      sigla.darkColor,
+      sigla.darkTextColor,
+      !!sigla.darkTransparentBg
+    );
     const dbSigla: any = {
       code: sigla.code,
       label: sigla.label,
@@ -1883,11 +1938,10 @@ export class ScaleService {
         if (res.error) {
           const errMsg = res.error.message || '';
           if (errMsg.toLowerCase().includes('textcolor') || res.error.code === 'PGRST204' || res.error.code === '42703') {
-            const packedColor = `${sigla.color}|${sigla.textColor || '#ffffff'}${sigla.transparentBg ? '|transparent' : ''}`;
             const fallbackSigla = {
               code: sigla.code,
               label: sigla.label,
-              color: packedColor,
+              color: finalColor,
               description: finalDesc
             };
             const resFallback = await this.supabase.from('sigla_types').upsert(fallbackSigla);
@@ -1906,7 +1960,10 @@ export class ScaleService {
       try {
         await setDoc(doc(this.db, 'siglaTypes', sigla.code), {
           ...dbSigla,
-          transparentBg: !!sigla.transparentBg
+          transparentBg: !!sigla.transparentBg,
+          darkColor: sigla.darkColor || null,
+          darkTextColor: sigla.darkTextColor || null,
+          darkTransparentBg: !!sigla.darkTransparentBg
         });
         this.addAuditHistory('ATUALIZACAO_SIGLA', `Sigla ${sigla.code} (${sigla.label}) atualizada no Firebase.`);
       } catch (err: any) {
@@ -1925,7 +1982,14 @@ export class ScaleService {
     if (newSigla.transparentBg) {
       finalDesc = '#TRANSPARENT_BG#' + finalDesc;
     }
-    const finalColor = newSigla.transparentBg ? `${newSigla.color}|${newSigla.textColor || '#ffffff'}|transparent` : newSigla.color;
+    const finalColor = packColors(
+      newSigla.color,
+      newSigla.textColor,
+      !!newSigla.transparentBg,
+      newSigla.darkColor,
+      newSigla.darkTextColor,
+      !!newSigla.darkTransparentBg
+    );
     const dbSigla: any = {
       code: newSigla.code,
       label: newSigla.label,
@@ -1940,11 +2004,10 @@ export class ScaleService {
         if (insRes.error) {
           const errMsg = insRes.error.message || '';
           if (errMsg.toLowerCase().includes('textcolor') || insRes.error.code === 'PGRST204' || insRes.error.code === '42703') {
-            const packedColor = `${newSigla.color}|${newSigla.textColor || '#ffffff'}${newSigla.transparentBg ? '|transparent' : ''}`;
             const fallbackSigla = {
               code: newSigla.code,
               label: newSigla.label,
-              color: packedColor,
+              color: finalColor,
               description: finalDesc
             };
             const insResFallback = await this.supabase.from('sigla_types').insert(fallbackSigla);
@@ -1989,7 +2052,10 @@ export class ScaleService {
       try {
         await setDoc(doc(this.db, 'siglaTypes', newCode), {
           ...dbSigla,
-          transparentBg: !!newSigla.transparentBg
+          transparentBg: !!newSigla.transparentBg,
+          darkColor: newSigla.darkColor || null,
+          darkTextColor: newSigla.darkTextColor || null,
+          darkTransparentBg: !!newSigla.darkTransparentBg
         });
 
         const updatedCollabs = this.collaborators().map(collab => {
@@ -2021,13 +2087,22 @@ export class ScaleService {
   }
 
   async saveShiftType(shift: ShiftType) {
+    const finalColor = packColors(
+      shift.color,
+      shift.textColor,
+      !!shift.transparentBg,
+      shift.darkColor,
+      shift.darkTextColor,
+      !!shift.darkTransparentBg
+    );
+
     if (this.activeDb() === 'supabase' && this.supabase) {
       try {
         const payload: any = {
           code: shift.code,
           label: shift.label,
           hours: shift.hours,
-          color: shift.color,
+          color: finalColor,
           textColor: shift.textColor,
           startTime: shift.startTime,
           endTime: shift.endTime
@@ -2036,12 +2111,11 @@ export class ScaleService {
         if (res.error) {
           const errMsg = res.error.message || '';
           if (errMsg.toLowerCase().includes('textcolor') || res.error.code === 'PGRST204' || res.error.code === '42703') {
-            const packedColor = `${shift.color}|${shift.textColor || '#ffffff'}`;
             const fallbackShift = {
               code: shift.code,
               label: shift.label,
               hours: shift.hours,
-              color: packedColor,
+              color: finalColor,
               startTime: shift.startTime,
               endTime: shift.endTime
             };
@@ -2057,7 +2131,10 @@ export class ScaleService {
         console.error('Error in saveShiftType (Supabase):', err);
       }
     } else {
-      setDoc(doc(this.db, 'shiftTypes', shift.code), shift)
+      setDoc(doc(this.db, 'shiftTypes', shift.code), {
+        ...shift,
+        color: finalColor
+      })
         .then(() => {
           this.addAuditHistory('ATUALIZACAO_TURNO', `Turno ${shift.code} (${shift.label}) salvo/atualizado no Firebase.`);
         })
