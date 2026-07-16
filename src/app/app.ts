@@ -1375,7 +1375,8 @@ export class App {
             safeSetLocalStorage('lastActivityTime', Date.now().toString());
             safeSetSessionStorage('session_active', 'true');
             this.resetInactivityTimer();
-            if (this.isAdmin(devCollab)) {
+            const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+            if (this.isAdmin(devCollab) && !isMobile) {
               this.activeSubTab.set('matrix');
             } else {
               this.activeSubTab.set('portal');
@@ -1421,7 +1422,8 @@ export class App {
               this.scaleService.selectedCollabName.set(collab.name);
               this.scaleService.currentRole.set(collab.role);
               this.resetInactivityTimer();
-              if (this.isAdmin(collab)) {
+              const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+              if (this.isAdmin(collab) && !isMobile) {
                 this.activeSubTab.set('matrix');
               } else {
                 this.activeSubTab.set('portal');
@@ -2806,10 +2808,12 @@ export class App {
       this.clearLoginInputs();
       
       // Redirecionar dependendo de quem logou (Administradores para grid, restante para portal)
-      if (this.isAdmin(collab)) {
+      const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+      if (this.isAdmin(collab) && !isMobile) {
         this.activeSubTab.set('matrix');
       } else {
         this.activeSubTab.set('portal');
+        this.autoSelectTodayTabForLoggedCollab(collab);
       }
     } else {
       // Login com senha existente
@@ -2826,10 +2830,12 @@ export class App {
         this.showToast(`Bem-vindo de volta, ${collab.name}!`);
         this.clearLoginInputs();
         
-        if (this.isAdmin(collab)) {
+        const isMobileLogin = typeof window !== 'undefined' && window.innerWidth < 768;
+        if (this.isAdmin(collab) && !isMobileLogin) {
           this.activeSubTab.set('matrix');
         } else {
           this.activeSubTab.set('portal');
+          this.autoSelectTodayTabForLoggedCollab(collab);
         }
       } else {
         this.loginError.set('Senha incorreta de 4 dígitos. Por favor, tente novamente.');

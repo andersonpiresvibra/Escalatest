@@ -2349,6 +2349,7 @@
             @let loggedStats = calculateStatsForCollab(logged);
             @let seqStats = getConsecutiveWorkStats(logged);
             @let offStats = getDaysUntilNextOff(logged);
+            @let cdState = getFolgaCountdownState(logged);
             
             <div class="space-y-3 w-full">
               <!-- PORTAL GRID -->
@@ -2547,7 +2548,13 @@
                     <div class="grid grid-cols-2 gap-3 w-full">
                       <!-- LADO ESQUERDO: RADAR DE FOLGAS -->
                       <div [class]="'rounded-[12px] p-3 flex flex-col items-center justify-center text-center gap-1 border transition-all duration-300 ' + (isLightTheme() ? 'bg-slate-50 border-slate-200' : 'bg-[#1E293B] border-[#334155]')">
-                        @if (offStats.isOffToday) {
+                        @if (cdState.showCountdown) {
+                          <span class="text-[9px] font-bold tracking-wider uppercase text-amber-500 font-sans">Folga em</span>
+                          <span class="text-[14px] font-black text-amber-500 tracking-tight leading-none font-mono my-0.5 animate-pulse">
+                            {{ cdState.countdownText }}
+                          </span>
+                          <span class="text-[8px] text-slate-500 font-bold tracking-wider uppercase leading-none">Resta no turno</span>
+                        } @else if (offStats.isOffToday) {
                           <span class="text-[9px] font-bold tracking-wider uppercase text-emerald-500/70 font-sans">Hoje é</span>
                           <span class="text-[14px] font-black text-emerald-500 tracking-tight leading-none my-0.5 animate-pulse">FOLGA!</span>
                           <span class="text-[8px] text-slate-500 font-bold tracking-wider uppercase leading-none">Aproveite!</span>
@@ -2617,40 +2624,6 @@
                   @if (turnVacationTab() === 'work') {
                     <div class="space-y-5">
                       
-                      <!-- CONTADOR REGRESSIVO / MENSAGEM "BOA FOLGA" -->
-                      @let cdState = getFolgaCountdownState(logged);
-                      @if (cdState.showCountdown || cdState.isReady) {
-                        <div id="countdown-banner" class="p-4 rounded-xl border transition-all duration-300 flex flex-col md:flex-row items-center justify-between gap-3 shadow-md"
-                             [class]="cdState.isReady ? 
-                                      (isLightTheme() ? 'bg-emerald-50 border-emerald-200 text-emerald-950' : 'bg-emerald-950/20 border-emerald-500/20 text-emerald-300') :
-                                      (isLightTheme() ? 'bg-amber-50 border-amber-200 text-amber-950' : 'bg-amber-950/20 border-amber-500/20 text-amber-300')">
-                          <div class="flex items-center gap-3">
-                            <span class="material-icons text-xl" [class]="cdState.isReady ? 'text-emerald-500 animate-bounce' : 'text-amber-500 animate-pulse'">
-                              {{ cdState.isReady ? 'celebration' : 'hourglass_top' }}
-                            </span>
-                            <div class="text-left">
-                              <h5 class="text-[12px] font-black uppercase tracking-wider leading-none">
-                                {{ cdState.isReady ? 'Jornada Concluída' : 'Contagem Regressiva para a Folga' }}
-                              </h5>
-                              <p class="text-[10px] opacity-80 mt-1 font-sans">
-                                {{ cdState.isReady ? 'Sua jornada terminou! Aproveite seu descanso.' : 'Tempo restante de turno até iniciar sua folga:' }}
-                              </p>
-                            </div>
-                          </div>
-                          @if (cdState.showCountdown) {
-                            <div id="countdown-timer-display" class="flex items-center gap-1.5 px-4 py-2 rounded-xl font-mono text-base font-black tracking-tight"
-                                 [class]="isLightTheme() ? 'bg-amber-100 text-amber-950' : 'bg-[#78350F]/20 text-amber-400 border border-amber-500/15'">
-                              {{ cdState.countdownText }}
-                            </div>
-                          } @else if (cdState.isReady) {
-                            <div id="countdown-finished-display" class="flex items-center gap-1.5 px-4 py-2 rounded-xl font-sans text-xs font-black uppercase tracking-wider"
-                                 [class]="isLightTheme() ? 'bg-emerald-100 text-emerald-950' : 'bg-emerald-950/40 text-emerald-400 border border-emerald-500/15'">
-                              Boa Folga! 🎉
-                            </div>
-                          }
-                        </div>
-                      }
-
                       <!-- GRID OF WORK DAYS -->
                       <div id="section-calendar-work" class="p-4 border rounded-xl transition-all duration-300" [class]="isLightTheme() ? 'bg-slate-50 border-slate-200' : 'bg-[#071426]/40 border-[#10213b]'">
                         <div class="flex items-center justify-between pb-2.5 border-b border-slate-100/10 mb-3" [class.border-slate-200]="isLightTheme()">
