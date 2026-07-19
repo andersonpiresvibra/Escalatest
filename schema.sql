@@ -14,6 +14,8 @@ ALTER TABLE public.colaboradores ADD COLUMN IF NOT EXISTS schedule VARCHAR(50);
 ALTER TABLE public.colaboradores ADD COLUMN IF NOT EXISTS grupo VARCHAR(100);
 ALTER TABLE public.colaboradores ADD COLUMN IF NOT EXISTS shift VARCHAR(100);
 ALTER TABLE public.colaboradores ADD COLUMN IF NOT EXISTS sector VARCHAR(100);
+ALTER TABLE public.colaboradores ADD COLUMN IF NOT EXISTS nickname VARCHAR(100);
+ALTER TABLE public.colaboradores ADD COLUMN IF NOT EXISTS gafes JSONB DEFAULT '[]'::jsonb;
 
 -- ADICIONA COLUNAS DE COR DA FONTE NAS TABELAS DE TURNOS E SIGLAS SE NÃO EXISTIREM
 ALTER TABLE public.sigla_types ADD COLUMN IF NOT EXISTS "textColor" VARCHAR(50) DEFAULT '#ffffff';
@@ -32,7 +34,9 @@ CREATE TABLE IF NOT EXISTS public.colaboradores (
   score INT DEFAULT 90,
   birthday DATE,
   special_dates JSONB DEFAULT '[]'::jsonb,
-  folga_requests JSONB DEFAULT '[]'::jsonb
+  folga_requests JSONB DEFAULT '[]'::jsonb,
+  nickname VARCHAR(100),
+  gafes JSONB DEFAULT '[]'::jsonb
 );
 
 CREATE TABLE IF NOT EXISTS public.escala_diaria (

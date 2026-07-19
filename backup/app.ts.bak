@@ -276,8 +276,8 @@ export class App {
     this.isNewRoleMode.set(false);
   }
 
-  // Simulated Day of Month (1 to 31) for Folga request window check. Defaults to today's date.
-  simulatedDayOfMonth = signal<number>(new Date().getDate());
+  // Simulated Day of Month (1 to 30) for Folga request window check
+  simulatedDayOfMonth = signal<number>(5);
 
   // New Collaborator Registration Fields
   newCollabBirthday = signal<string>('');
@@ -300,122 +300,6 @@ export class App {
   public selectedCalendarDay = signal<number>(new Date().getDate());
   public hidePastDays = signal<boolean>(false);
   public coworkersFilter = signal<'MEU_TURNO' | 'OUTROS' | 'MANHA_TARDE' | 'TODOS'>('MEU_TURNO');
-
-  // Chatbot Bob Signals & Methods
-  public isBobChatOpen = signal<boolean>(false);
-  public bobChatMessages = signal<Array<{ sender: 'user' | 'bob'; text: string; timestamp: Date }>>([]);
-  public bobChatInput = signal<string>('');
-  public isBobTyping = signal<boolean>(false);
-
-  public scrollBobChatToBottom() {
-    const scroll = () => {
-      const chatEl = document.getElementById('bob_chat_body');
-      if (chatEl) {
-        chatEl.scrollTop = chatEl.scrollHeight;
-        const lastMsg = chatEl.lastElementChild;
-        if (lastMsg) {
-          lastMsg.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        }
-      }
-    };
-    scroll();
-    setTimeout(scroll, 30);
-    setTimeout(scroll, 100);
-    setTimeout(scroll, 250);
-    setTimeout(scroll, 500);
-  }
-
-  public toggleBobChat() {
-    const nextVal = !this.isBobChatOpen();
-    this.isBobChatOpen.set(nextVal);
-    if (nextVal) {
-      if (this.bobChatMessages().length === 0) {
-        const logged = this.getLoggedCollab();
-        const welcomeText = logged
-          ? `Olá, **${logged.name}**! Eu sou o **Bob**, o seu assistente de escala inteligente do Escala Easy VIBRA. 🤖🗓️\n\nComo posso te ajudar hoje? Você pode me perguntar sobre as suas folgas, com quem você trabalha hoje, ou pedir folga para o próximo mês!`
-          : `Olá! Eu sou o **Bob**, o assistente de escala do Escala Easy VIBRA. Por favor, faça login para conversarmos!`;
-        this.bobChatMessages.set([{ sender: 'bob', text: welcomeText, timestamp: new Date() }]);
-      }
-      this.scrollBobChatToBottom();
-    }
-  }
-
-  async sendChatMessageToBob() {
-    const text = this.bobChatInput().trim();
-    if (!text) return;
-
-    this.bobChatInput.set('');
-
-    const timestamp = new Date();
-    this.bobChatMessages.update(msgs => [...msgs, { sender: 'user', text, timestamp }]);
-    this.scrollBobChatToBottom();
-    
-    this.isBobTyping.set(true);
-    this.scrollBobChatToBottom();
-
-    try {
-      const logged = this.getLoggedCollab();
-      const payload = {
-        message: text,
-        collabId: logged ? logged.id : null,
-        simulatedDay: this.simulatedDayOfMonth(),
-        activeMonth: this.scaleService.activeMonth(),
-        activeYear: this.scaleService.activeYear()
-      };
-
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-
-      if (!response.ok) {
-        throw new Error('Falha na comunicação com o Bob.');
-      }
-
-      const data = await response.json();
-      
-      this.bobChatMessages.update(msgs => [...msgs, { 
-        sender: 'bob', 
-        text: data.reply || 'Desculpe, tive um probleminha para processar sua mensagem.', 
-        timestamp: new Date() 
-      }]);
-      this.scrollBobChatToBottom();
-
-      if (data.action) {
-        console.log('Bob executed an action on Supabase:', data.action);
-        this.showToast(`Bob: Ação executada com sucesso!`);
-        await this.scaleService.syncSupabase();
-      }
-
-    } catch (error) {
-      console.error(error);
-      this.bobChatMessages.update(msgs => [...msgs, { 
-        sender: 'bob', 
-        text: 'Ocorreu um erro ao falar com o Bob. Por favor, verifique sua conexão ou a chave de API.', 
-        timestamp: new Date() 
-      }]);
-      this.scrollBobChatToBottom();
-    } finally {
-      this.isBobTyping.set(false);
-      this.scrollBobChatToBottom();
-    }
-  }
-
-  formatMarkdown(text: string): string {
-    if (!text) return '';
-    let html = text
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#039;');
-
-    html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-    html = html.replace(/^\s*-\s+(.*?)$/gm, '<li class="ml-4 list-disc">$1</li>');
-    html = html.replace(/\n/g, '<br>');
-    return html;
-  }
 
   public openCollabProfile(id: string): void {
     this.selectedProfileCollabId.set(id);
@@ -1060,7 +944,7 @@ export class App {
     // Special dates
     if (collab.specialDates && Array.isArray(collab.specialDates)) {
       for (const sd of collab.specialDates) {
-        if (!sd.date || !sd.description || sd.description.startsWith('BOB_METADATA:')) continue;
+        if (!sd.date || !sd.description) continue;
         const parts = sd.date.split('-');
         if (parts.length === 3) {
           const m = parseInt(parts[1], 10);
@@ -3201,9 +3085,7 @@ export class App {
     sd3Desc?: string, sd3Date?: string,
     sd4Desc?: string, sd4Date?: string,
     sd5Desc?: string, sd5Date?: string,
-    isAdmin?: boolean,
-    nickname?: string,
-    gafesStr?: string
+    isAdmin?: boolean
   ) {
     const specialDates: SpecialDate[] = [];
     if (sd1Desc && sd1Date) specialDates.push({ description: sd1Desc, date: sd1Date, priority: 1 });
@@ -3222,8 +3104,6 @@ export class App {
     const shiftType = this.scaleService.shiftTypes().find(s => s.code.trim().toUpperCase() === newShiftCode);
     const newHours = shiftType ? shiftType.hours : (newShiftCode === 'ADM' ? '8h00' : '7h20');
 
-    const parsedGafes = gafesStr ? gafesStr.split('\n').map(g => g.trim()).filter(g => g.length > 0) : [];
-
     this.scaleService.addCollaborator(
       name,
       role,
@@ -3237,9 +3117,7 @@ export class App {
       birthday,
       specialDates,
       undefined,
-      isAdmin,
-      nickname,
-      parsedGafes
+      isAdmin
     );
     this.isCollabModalOpen.set(false);
     this.isNewSectorMode.set(false);
@@ -3291,7 +3169,7 @@ export class App {
     // 2. Check Special Dates
     if (collab.specialDates && Array.isArray(collab.specialDates)) {
       for (const sd of collab.specialDates) {
-        if (!sd.date || !sd.description || sd.description.startsWith('BOB_METADATA:')) continue;
+        if (!sd.date || !sd.description) continue;
         const parts = sd.date.split('-');
         if (parts.length === 3) {
           const m = parseInt(parts[1], 10);
@@ -4474,9 +4352,7 @@ Verifique se os nomes no PDF correspondem aos nomes no sistema.`;
     sd3Desc?: string, sd3Date?: string,
     sd4Desc?: string, sd4Date?: string,
     sd5Desc?: string, sd5Date?: string,
-    isAdmin?: boolean,
-    nickname?: string,
-    gafesStr?: string
+    isAdmin?: boolean
   ) {
     if (!name.trim()) {
       this.showToast('O nome completo do colaborador é obrigatório.');
@@ -4519,8 +4395,6 @@ Verifique se os nomes no PDF correspondem aos nomes no sistema.`;
       }
     }
 
-    const parsedGafes = gafesStr ? gafesStr.split('\n').map(g => g.trim()).filter(g => g.length > 0) : [];
-
     const updatedCollab: Collaborator = {
       ...target,
       name,
@@ -4535,9 +4409,7 @@ Verifique se os nomes no PDF correspondem aos nomes no sistema.`;
       birthday: birthday || '',
       specialDates,
       scale: updatedScale,
-      isAdmin: isAdmin !== undefined ? isAdmin : target.isAdmin,
-      nickname: nickname !== undefined ? nickname : target.nickname,
-      gafes: gafesStr !== undefined ? parsedGafes : target.gafes
+      isAdmin: isAdmin !== undefined ? isAdmin : target.isAdmin
     };
 
     this.scaleService.updateCollaborator(updatedCollab);

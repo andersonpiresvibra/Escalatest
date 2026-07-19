@@ -79,6 +79,8 @@ export interface Collaborator {
   folgaRequests?: FolgaRequest[];
   password?: string;
   isAdmin?: boolean;
+  nickname?: string;
+  gafes?: string[];
 }
 
 export interface ShiftType {
@@ -568,10 +570,12 @@ export class ScaleService {
             photoUrl: row.photo_url || row.photo || '',
             photo: row.photo_url || row.photo || '',
             birthday: row.birthday || '',
-            specialDates: typeof row.special_dates === 'string' ? JSON.parse(row.special_dates) : (row.special_dates || []),
-            folgaRequests: typeof row.folga_requests === 'string' ? JSON.parse(row.folga_requests) : (row.folga_requests || []),
+            specialDates: typeof row['special_dates'] === 'string' ? JSON.parse(row['special_dates']) : (row['special_dates'] || []),
+            folgaRequests: typeof row['folga_requests'] === 'string' ? JSON.parse(row['folga_requests']) : (row['folga_requests'] || []),
             password: row.password || '',
-            isAdmin: row.is_admin === true || row.is_admin === 'true' || row.is_admin === 1
+            isAdmin: row.is_admin === true || row.is_admin === 'true' || row.is_admin === 1,
+            nickname: row.nickname || '',
+            gafes: row.gafes ? (Array.isArray(row.gafes) ? row.gafes : (typeof row.gafes === 'string' ? JSON.parse(row.gafes) : [])) : []
           };
         });
 
@@ -757,7 +761,7 @@ export class ScaleService {
     if (collab.specialDates && Array.isArray(collab.specialDates)) {
       const sorted = [...collab.specialDates].sort((a, b) => a.priority - b.priority);
       for (const sd of sorted) {
-        if (!sd.date) continue;
+        if (!sd.date || (sd.description && sd.description.startsWith('BOB_METADATA:'))) continue;
         const parts = sd.date.split('-');
         if (parts.length === 3) {
           const m = parseInt(parts[1], 10);
@@ -902,7 +906,9 @@ export class ScaleService {
     birthday?: string,
     specialDates?: SpecialDate[],
     folgaRequests?: FolgaRequest[],
-    isAdmin = false
+    isAdmin = false,
+    nickname?: string,
+    gafes?: string[]
   ) {
     if (!name.trim()) return;
     const id = 'collab_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
@@ -934,7 +940,9 @@ export class ScaleService {
       birthday: birthday || '',
       specialDates: specialDates || [],
       folgaRequests: folgaRequests || [],
-      isAdmin: isAdmin
+      isAdmin: isAdmin,
+      nickname: nickname || '',
+      gafes: gafes || []
     };
 
     newCollab = this.refreshPreSelectedFolgas(newCollab, true);
@@ -955,7 +963,9 @@ export class ScaleService {
           special_dates: newCollab.specialDates || null,
           folga_requests: newCollab.folgaRequests || null,
           password: newCollab.password || null,
-          is_admin: newCollab.isAdmin
+          is_admin: newCollab.isAdmin,
+          nickname: newCollab.nickname || null,
+          gafes: newCollab.gafes || null
         };
         const upRes = await this.supabase.from('colaboradores').upsert(dbRow);
         if (upRes.error) throw upRes.error;
@@ -1052,7 +1062,9 @@ export class ScaleService {
           special_dates: refreshedCol.specialDates || null,
           folga_requests: refreshedCol.folgaRequests || null,
           password: refreshedCol.password || null,
-          is_admin: refreshedCol.isAdmin
+          is_admin: refreshedCol.isAdmin,
+          nickname: refreshedCol.nickname || null,
+          gafes: refreshedCol.gafes || null
         };
         const upRes = await this.supabase.from('colaboradores').upsert(dbRow);
         if (upRes.error) throw upRes.error;
@@ -2189,6 +2201,132 @@ export class ScaleService {
       setDoc(doc(this.db, 'auditHistory', id), newHistory).catch((err) => {
         handleFirestoreError(err, OperationType.WRITE, `auditHistory/${id}`);
       });
+    }
+  }
+
+  async getCollaboratorsWorkingOnDate(dateStr: string): Promise<Collaborator[]> {
+    try {
+      const parts = dateStr.split('-');
+      const year = parseInt(parts[0], 10) || 2026;
+      const month = parseInt(parts[1], 10) || 7;
+      const day = parseInt(parts[2], 10) || 1;
+
+      interface SimpleCollab {
+        id: string;
+        shift: string;
+      }
+
+      if (this.activeDb() === 'supabase' && this.supabase) {
+        // Try querying using scale->>day JSONB first as requested by the prompt (for the hypothetical collaborators/colaboradores JSONB column)
+        try {
+          const offCodes = ['F', 'FF', 'FE', 'FM', 'FT', 'FN', 'X', 'LM', 'LMT', 'LA', 'FJ', 'FO'];
+          const { data: testData, error: testErr } = await this.supabase
+            .from('colaboradores')
+            .select('*')
+            .not(`scale->>${day}`, 'in', `(${offCodes.map(c => `"${c}"`).join(',')})`);
+          
+          if (!testErr && testData && testData.length > 0) {
+            const list = this.collaborators();
+            const typedData = testData as { id: string }[];
+            return list.filter(c => typedData.some((row) => row.id === c.id));
+          }
+        } catch (jsonbErr) {
+          console.warn('JSONB scale column query failed, falling back to standard relational schema:', jsonbErr);
+        }
+
+        // Standard relational schema query fallback
+        const { data: shiftData } = await this.supabase.from('shift_types').select('code, label');
+        const { data: siglaData } = await this.supabase.from('sigla_types').select('code, label');
+        const shiftTypes = (shiftData || []) as { code: string; label: string }[];
+        const siglaTypes = (siglaData || []) as { code: string; label: string }[];
+
+        const { data: collabsData, error: collabsError } = await this.supabase
+          .from('colaboradores')
+          .select('*');
+
+        if (collabsError) {
+          throw collabsError;
+        }
+
+        const { data: escalaData } = await this.supabase
+          .from('escala_diaria')
+          .select('collaborator_id, value')
+          .eq('day', day)
+          .eq('month', month)
+          .eq('year', year);
+
+        const scaleMap = new Map<string, string>();
+        if (escalaData) {
+          (escalaData as { collaborator_id: string; value: string }[]).forEach((row) => {
+            scaleMap.set(row.collaborator_id, row.value);
+          });
+        }
+
+        const offCodes = ['F', 'FF', 'FE', 'FM', 'FT', 'FN', 'X', 'LM', 'LMT', 'LA', 'FJ', 'FO'];
+        const siglaCodes = siglaTypes.map((s) => (s.code || '').toUpperCase().trim());
+
+        const getShiftCode = (s: string): string => {
+          const norm = (s || '').toUpperCase().trim();
+          const foundByCode = shiftTypes.find((st) => (st.code || '').toUpperCase().trim() === norm);
+          if (foundByCode) return foundByCode.code;
+
+          const foundByLabel = shiftTypes.find((st) => (st.label || '').toUpperCase().trim() === norm);
+          if (foundByLabel) return foundByLabel.code;
+
+          if (norm.includes('MANHÃ')) return 'M';
+          if (norm.includes('TARDE')) return 'T';
+          if (norm.includes('NOITE') || norm.includes('MADRUGADA')) return 'N';
+          if (norm.includes('ADMINISTRATIVO') || norm.includes('ADM')) return 'ADM';
+
+          return norm;
+        };
+
+        const list = this.collaborators();
+        const typedCollabs = (collabsData || []) as SimpleCollab[];
+        const workingCollabs = typedCollabs.filter((c) => {
+          const rawVal = scaleMap.get(c.id) || '-';
+          const resolvedCode = (rawVal === '-') ? getShiftCode(c.shift) : rawVal;
+          const upperCode = resolvedCode.toUpperCase().trim();
+          const isOff = offCodes.includes(upperCode) || siglaCodes.includes(upperCode);
+          return !isOff;
+        });
+
+        return list.filter(c => workingCollabs.some((wc) => wc.id === c.id));
+      } else {
+        // Fallback or Firestore implementation
+        const list = this.collaborators();
+        const offCodes = ['F', 'FF', 'FE', 'FM', 'FT', 'FN', 'X', 'LM', 'LMT', 'LA', 'FJ', 'FO'];
+        const siglaTypes = this.siglaTypes();
+        const siglaCodes = siglaTypes.map((s) => (s.code || '').toUpperCase().trim());
+        const shiftTypes = this.shiftTypes();
+
+        const getShiftCode = (s: string): string => {
+          const norm = (s || '').toUpperCase().trim();
+          const foundByCode = shiftTypes.find((st) => (st.code || '').toUpperCase().trim() === norm);
+          if (foundByCode) return foundByCode.code;
+
+          const foundByLabel = shiftTypes.find((st) => (st.label || '').toUpperCase().trim() === norm);
+          if (foundByLabel) return foundByLabel.code;
+
+          if (norm.includes('MANHÃ')) return 'M';
+          if (norm.includes('TARDE')) return 'T';
+          if (norm.includes('NOITE') || norm.includes('MADRUGADA')) return 'N';
+          if (norm.includes('ADMINISTRATIVO') || norm.includes('ADM')) return 'ADM';
+
+          return norm;
+        };
+
+        return list.filter((c) => {
+          const rawVal = c.scale[day] || '-';
+          const resolvedCode = (rawVal === '-') ? getShiftCode(c.shift) : rawVal;
+          const upperCode = resolvedCode.toUpperCase().trim();
+          const isOff = offCodes.includes(upperCode) || siglaCodes.includes(upperCode);
+          return !isOff;
+        });
+      }
+    } catch (e) {
+      console.error('Error in getCollaboratorsWorkingOnDate:', e);
+      return [];
     }
   }
 

@@ -2510,26 +2510,6 @@
                             </select>
                           </div>
 
-                          <!-- Apelido Amigável (Nickname) -->
-                          <div class="flex flex-col gap-1.5 col-span-1 md:col-span-12">
-                            <label for="modal_collab_nickname" class="font-black text-[9px] uppercase tracking-wider text-slate-400">Apelido Amigável (Usado pelo chatbot Bob)</label>
-                            <input id="modal_collab_nickname"
-                                   #editCollabNickname
-                                   [value]="editingCollab() ? (editingCollab()!.nickname || '') : ''"
-                                   placeholder="Ex: Paulinho, Carlinhos"
-                                   class="bg-[#071426] text-white border border-[#10213b] focus:border-emerald-500 outline-none rounded-lg px-3 py-2 text-xs font-semibold w-full placeholder:text-slate-600">
-                          </div>
-
-                          <!-- Lista de Gafes (Gaffes) -->
-                          <div class="flex flex-col gap-1.5 col-span-1 md:col-span-12">
-                            <label for="modal_collab_gafes" class="font-black text-[9px] uppercase tracking-wider text-slate-400">Lista de Gafes (Digite uma gafe por linha)</label>
-                            <textarea id="modal_collab_gafes"
-                                      #editCollabGafes
-                                      rows="3"
-                                      placeholder="Ex: Esqueceu o crachá na segunda-feira&#10;Derrubou café no teclado do setor"
-                                      class="bg-[#071426] text-white border border-[#10213b] focus:border-emerald-500 outline-none rounded-lg px-3 py-2 text-xs font-semibold w-full placeholder:text-slate-600 resize-none font-sans">{{ editingCollab() ? (editingCollab()!.gafes || []).join('\n') : '' }}</textarea>
-                          </div>
-
                         </div>
 
                         <!-- Seção de Datas Especiais foi movida para o Portal do Colaborador -->
@@ -2544,13 +2524,13 @@
                         </button>
                         
                         @if (editingCollab()) {
-                          <button (click)="saveEditedCollaborator(editingCollab()!.id, editCollabName.value, $any(isNewRoleMode() ? editCollabRoleInput.value : editCollabRoleSelect.value), $any(editCollabGroup.value), $any(editCollabShift.value), $any(isNewSectorMode() ? editCollabSectorInput.value : editCollabSectorSelect.value), 0, +editCollabScore.value || 100, newCollabPhotoData(), editCollabBirthday.value, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, editCollabIsAdmin.value === 'true', editCollabNickname.value, editCollabGafes.value)"
+                          <button (click)="saveEditedCollaborator(editingCollab()!.id, editCollabName.value, $any(isNewRoleMode() ? editCollabRoleInput.value : editCollabRoleSelect.value), $any(editCollabGroup.value), $any(editCollabShift.value), $any(isNewSectorMode() ? editCollabSectorInput.value : editCollabSectorSelect.value), 0, +editCollabScore.value || 100, newCollabPhotoData(), editCollabBirthday.value, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, editCollabIsAdmin.value === 'true')"
                                   class="bg-[#10b981] hover:bg-emerald-600 text-white font-black text-xs px-5 py-2.5 rounded-lg uppercase tracking-wider cursor-pointer border-none shadow-lg shadow-emerald-500/15 flex items-center gap-1.5 select-none transition-all outline-none">
                             <span class="material-icons text-sm">save</span>
                             Salvar Alterações
                           </button>
                         } @else {
-                          <button (click)="registerCollaborator(editCollabName.value, $any(isNewRoleMode() ? editCollabRoleInput.value : editCollabRoleSelect.value), $any(editCollabGroup.value), $any(editCollabShift.value), $any(isNewSectorMode() ? editCollabSectorInput.value : editCollabSectorSelect.value), 0, +editCollabScore.value || 100, newCollabPhotoData() || undefined, editCollabBirthday.value, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, editCollabIsAdmin.value === 'true', editCollabNickname.value, editCollabGafes.value); editCollabName.value = ''; editCollabBirthday.value = ''; editCollabNickname.value = ''; editCollabGafes.value = ''; newCollabPhotoData.set(null)"
+                          <button (click)="registerCollaborator(editCollabName.value, $any(isNewRoleMode() ? editCollabRoleInput.value : editCollabRoleSelect.value), $any(editCollabGroup.value), $any(editCollabShift.value), $any(isNewSectorMode() ? editCollabSectorInput.value : editCollabSectorSelect.value), 0, +editCollabScore.value || 100, newCollabPhotoData() || undefined, editCollabBirthday.value, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined, editCollabIsAdmin.value === 'true'); editCollabName.value = ''; editCollabBirthday.value = ''; newCollabPhotoData.set(null)"
                                   class="bg-[#10b981] hover:bg-emerald-600 text-white font-black text-xs px-5 py-2.5 rounded-lg uppercase tracking-wider cursor-pointer border-none shadow-lg shadow-emerald-500/15 flex items-center gap-1.5 select-none transition-all outline-none">
                             <span class="material-icons text-sm">person_add_alt</span>
                             Cadastrar Colaborador
@@ -4307,92 +4287,6 @@ CREATE TABLE IF NOT EXISTS public.audit_history (
       </div>
     @}
   }
-
-  <!-- CHATBOT BOB FLOATING WIDGET -->
-  <div class="fixed bottom-6 right-6 z-[200] flex flex-col items-end" id="bob_chat_floating_widget">
-    <!-- Chat Drawer -->
-    @if (isBobChatOpen()) {
-      <div class="w-80 md:w-96 h-[460px] bg-[#030a14] border border-[#10213b] rounded-xl shadow-2xl flex flex-col overflow-hidden mb-3 animate-slide-up" 
-           [class.bg-white]="isLightTheme()" [class.border-slate-200]="isLightTheme()" [class.shadow-xl]="isLightTheme()" id="bob_chat_drawer">
-        <!-- Header -->
-        <div class="px-4 py-3 bg-[#071426] border-b border-[#10213b]/60 flex items-center justify-between"
-             [class.bg-slate-100]="isLightTheme()" [class.border-slate-200]="isLightTheme()" id="bob_chat_header">
-          <div class="flex items-center gap-2.5">
-            <div class="w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center text-white relative shadow-md shadow-emerald-500/20">
-              <span class="material-icons text-base">smart_toy</span>
-              <span class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-400 border border-[#071426] rounded-full animate-ping"></span>
-              <span class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-400 border border-[#071426] rounded-full"></span>
-            </div>
-            <div class="text-left">
-              <h4 class="text-xs font-black uppercase tracking-wider text-white" [class.text-slate-800]="isLightTheme()">Bob</h4>
-              <p class="text-[9px] font-bold text-emerald-400 uppercase tracking-wide">Assistente de Escala</p>
-            </div>
-          </div>
-          
-          <button (click)="toggleBobChat()" class="text-slate-400 hover:text-white transition-colors bg-transparent border-none outline-none cursor-pointer p-1 rounded-lg hover:bg-white/5" [class.hover:bg-black/5]="isLightTheme()" [class.hover:text-slate-800]="isLightTheme()">
-            <span class="material-icons text-base">close</span>
-          </button>
-        </div>
-
-        <!-- Body / Messages viewport -->
-        <div class="flex-1 p-4 overflow-y-auto flex flex-col gap-3 scrollbar-thin bg-[#020813]/60" 
-             [class.bg-slate-50]="isLightTheme()" id="bob_chat_body">
-          @for (msg of bobChatMessages(); track msg.timestamp) {
-            <div class="flex flex-col max-w-[85%] text-left gap-1 animate-fade-in"
-                 [class.self-end]="msg.sender === 'user'"
-                 [class.self-start]="msg.sender === 'bob'">
-              
-              <span class="text-[8px] font-bold uppercase tracking-wider text-slate-500 block px-1"
-                    [class.text-right]="msg.sender === 'user'">
-                {{ msg.sender === 'user' ? 'Você' : 'Bob' }} • {{ msg.timestamp | date:'HH:mm' }}
-              </span>
-
-              <div [class]="msg.sender === 'user' ? 'bg-emerald-500 text-white border-emerald-600' : (isLightTheme() ? 'bg-white text-slate-700 border-slate-200' : 'bg-[#0b172a] text-slate-200 border-[#10213b]')" 
-                   class="px-3 py-2.5 rounded-xl text-xs font-medium leading-relaxed shadow-sm border">
-                <div [innerHTML]="formatMarkdown(msg.text)"></div>
-              </div>
-            </div>
-          }
-
-          @if (isBobTyping()) {
-            <div class="flex flex-col max-w-[85%] text-left gap-1 self-start animate-pulse">
-              <span class="text-[8px] font-bold uppercase tracking-wider text-slate-500 block px-1">Bob está pensando...</span>
-              <div class="px-4 py-3 rounded-xl text-xs bg-[#0b172a] border border-[#10213b] text-slate-400 flex items-center gap-1"
-                   [class.bg-white]="isLightTheme()" [class.border-slate-200]="isLightTheme()">
-                <span class="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce"></span>
-                <span class="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce delay-100"></span>
-                <span class="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce delay-200"></span>
-              </div>
-            </div>
-          }
-        </div>
-
-        <!-- Input footer -->
-        <div class="p-3 bg-[#030a14] border-t border-[#10213b]/60 flex items-center gap-2"
-             [class.bg-white]="isLightTheme()" [class.border-slate-200]="isLightTheme()" id="bob_chat_input_container">
-          <input type="text"
-                 [value]="bobChatInput()"
-                 (input)="bobChatInput.set($any($event.target).value)"
-                 (keydown.enter)="sendChatMessageToBob()"
-                 placeholder="Pergunte ao Bob..."
-                 class="flex-1 px-3 py-2 bg-[#051124] border border-[#10213b] rounded-lg text-xs font-bold text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500 transition-all font-sans"
-                 [class.bg-slate-100]="isLightTheme()" [class.border-slate-200]="isLightTheme()" [class.text-slate-800]="isLightTheme()" [class.placeholder-slate-400]="isLightTheme()" />
-          
-          <button (click)="sendChatMessageToBob()"
-                  class="w-8 h-8 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white flex items-center justify-center transition-all border-none outline-none cursor-pointer shadow-md shadow-emerald-500/20">
-            <span class="material-icons text-sm">send</span>
-          </button>
-        </div>
-      </div>
-    }
-
-    <!-- Floating Action Button -->
-    <button (click)="toggleBobChat()"
-            class="w-14 h-14 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white flex items-center justify-center shadow-lg shadow-emerald-500/30 border border-emerald-400/20 cursor-pointer transition-transform hover:scale-105 active:scale-95 outline-none"
-            title="Conversar com Bob" id="btn_bob_toggle">
-      <span class="material-icons text-2xl">{{ isBobChatOpen() ? 'chat_bubble_outline' : 'smart_toy' }}</span>
-    </button>
-  </div>
 
 }
 </div>
