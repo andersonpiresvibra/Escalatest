@@ -28,6 +28,13 @@ export interface Collaborator {
   trainings?: Training[];
   courses?: Course[];
   isAdmin?: boolean;
+  birthday?: string;
+  phone?: string;
+  photoUrl?: string;
+  photo?: string;
+  scale?: { [day: number]: string };
+  specialDates?: { description: string; date: string; priority: number }[];
+  folgaRequests?: { date: string; isPreSelected?: boolean }[];
 }
 
 export interface ShiftCell {
@@ -113,7 +120,7 @@ export function isWeekday(day: number, month = new Date().getMonth() + 1, year =
   return dayOfWeek !== 0 && dayOfWeek !== 6; 
 }
 
-export function isHoliday(day: number, month = new Date().getMonth() + 1, year = new Date().getFullYear()): boolean {
+export function isHoliday(day: number, month = new Date().getMonth() + 1, _year?: number): boolean {
   if (month === 3) {
     const holidays = [6, 25]; 
     return holidays.includes(day);
@@ -121,7 +128,7 @@ export function isHoliday(day: number, month = new Date().getMonth() + 1, year =
   return false;
 }
 
-export function getHolidayName(day: number, month = new Date().getMonth() + 1, year = new Date().getFullYear()): string | null {
+export function getHolidayName(day: number, month = new Date().getMonth() + 1, _year?: number): string | null {
   if (month === 3) {
     if (day === 6) return 'Feriado: Data Magna (PE)';
     if (day === 25) return 'Feriado: Data Magna (CE)';

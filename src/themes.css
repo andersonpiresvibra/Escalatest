@@ -47,19 +47,19 @@ body {
    2. LIGHT THEME SPECIFIC OVERRIDES
    High readability, visible borders, card shadows, distinct layout elements.
    -------------------------------------------------------------------------- */
-body.light-theme {
+.light-theme {
   background-color: #f1f5f9 !important;
   color: #0f172a !important;
 }
 
 /* Custom Scrollbar for light theme */
-body.light-theme ::-webkit-scrollbar-track {
+.light-theme ::-webkit-scrollbar-track {
   background: #f1f5f9;
 }
-body.light-theme ::-webkit-scrollbar-thumb {
+.light-theme ::-webkit-scrollbar-thumb {
   background: #cbd5e1;
 }
-body.light-theme ::-webkit-scrollbar-thumb:hover {
+.light-theme ::-webkit-scrollbar-thumb:hover {
   background: #10b981;
 }
 
@@ -725,7 +725,7 @@ body.light-theme ::-webkit-scrollbar-thumb:hover {
 }
 
 /* Light Theme overrides for Row Hover highlight */
-body.light-theme #matrix_table_scroll_container tbody tr:not(#matrix_summary_row):hover td::after {
+.light-theme #matrix_table_scroll_container tbody tr:not(#matrix_summary_row):hover td::after {
   background-color: rgba(16, 185, 129, 0.18) !important; /* Perfectly noticeable light green highlight */
 }
 

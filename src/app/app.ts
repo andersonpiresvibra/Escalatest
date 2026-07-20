@@ -209,8 +209,8 @@ export class App {
     }
   }
 
-  // Sub tab navigation: 'matrix' | 'ger.turnos' | 'siglas' | 'team' | 'team-mgmt' | 'portal' | 'dashboard'
-  public activeSubTab = signal<'matrix' | 'ger.turnos' | 'siglas' | 'team' | 'team-mgmt' | 'portal' | 'dashboard'>('matrix');
+  // Sub tab navigation: 'matrix' | 'ger.turnos' | 'siglas' | 'team' | 'team-mgmt' | 'portal' | 'dashboard' | 'escala' | 'perfil' | 'equipe' | 'indicadores'
+  public activeSubTab = signal<'matrix' | 'ger.turnos' | 'siglas' | 'team' | 'team-mgmt' | 'portal' | 'dashboard' | 'escala' | 'perfil' | 'equipe' | 'indicadores'>('matrix');
   
   public teamViewMode = signal<'gallery' | 'mgmt'>('gallery');
   public editingCollab = signal<Collaborator | null>(null);
@@ -412,7 +412,7 @@ export class App {
       .replace(/'/g, '&#039;');
 
     html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-    html = html.replace(/^\s*-\s+(.*?)$/gm, '<li class="ml-4 list-disc">$1</li>');
+    html = html.replace(/^\s*-[\s]+(.*?)$/gm, '<li class="ml-4 list-disc">$1</li>');
     html = html.replace(/\n/g, '<br>');
     return html;
   }
@@ -682,6 +682,36 @@ export class App {
   public isDbModalOpen = signal<boolean>(false);
   public isSolicitarFolgaModalOpen = signal<boolean>(false);
   public folgaModalSelectedDay = signal<number | null>(null);
+  public showWelcomeModal = signal<boolean>(!safeGetLocalStorage('welcome_modal_dismissed'));
+
+  // Print prevention states
+  public showPrintWarningModal = signal<boolean>(false);
+  public printWarningSource = signal<string>('');
+
+  public triggerPrintWarning(source: string) {
+    this.printWarningSource.set(source);
+    this.showPrintWarningModal.set(true);
+  }
+
+  public async confirmPrintWarning() {
+    this.showPrintWarningModal.set(false);
+    const source = this.printWarningSource() || 'Captura de tela/Impressão';
+    const logged = this.getLoggedCollab();
+    const userName = logged ? logged.name : 'USUÁRIO NÃO LOGADO';
+    const description = `Usuário ${userName} confirmou tentativa de print/impressão via: ${source}.`;
+    await this.scaleService.addAuditHistory('TENTATIVA_PRINT', description);
+    this.showToast('Tentativa registrada no histórico de auditoria com sucesso!');
+  }
+
+  public cancelPrintWarning() {
+    this.showPrintWarningModal.set(false);
+    this.showToast('Ação cancelada pelo usuário.');
+  }
+
+  public closeWelcomeModal() {
+    safeSetLocalStorage('welcome_modal_dismissed', 'true');
+    this.showWelcomeModal.set(false);
+  }
 
   isFolgaRequestPeriodOpen(): boolean {
     const today = this.simulatedDayOfMonth();
@@ -954,11 +984,32 @@ export class App {
 
   public editingSpecialDates = signal<{date: string, description: string, priority: number}[]>([]);
 
+  public openDaySelectorForIndex = signal<number | null>(null);
+  public openMonthSelectorForIndex = signal<number | null>(null);
+  public specialDateToDeleteIndex = signal<number | null>(null);
+
+  isMonthDisabled(month: string, day: string): boolean {
+    const d = parseInt(day, 10);
+    const m = parseInt(month, 10);
+    if (d === 31) {
+      return [2, 4, 6, 9, 11].includes(m);
+    }
+    if (d === 30) {
+      return m === 2;
+    }
+    return false;
+  }
+
+  clearSpecialDates() {
+    this.editingSpecialDates.set([]);
+  }
+
   openEditSpecialDates() {
     this.isPortalEditingDates.set(true);
     const logged = this.getLoggedCollab();
     if (logged) {
-       const currentDates = JSON.parse(JSON.stringify(logged.specialDates || []));
+       const currentDates = JSON.parse(JSON.stringify(logged.specialDates || []))
+         .filter((d: any) => d && d.description && !d.description.startsWith('BOB_METADATA:'));
        this.editingSpecialDates.set(currentDates);
     }
   }
@@ -971,11 +1022,20 @@ export class App {
         const parts = currentVal.split('-');
         const year = parts[0] || '2026';
         const month = parts[1] || '01';
+        let newDay = dayValue.padStart(2, '0');
+        // If we selected 31, but month doesn't support it, maybe change month? No, the rule is to disable months when 31 is selected.
+        // Wait, if we change the day to 31, and current month is Feb, we should probably change the month to Jan so we don't have an invalid date.
+        let newMonth = month;
+        if (this.isMonthDisabled(month, newDay)) {
+           newMonth = '01'; // Default to Jan if current month is disabled
+        }
+
         newDates[index] = {
           ...newDates[index],
-          date: `${year}-${month}-${dayValue.padStart(2, '0')}`
+          date: `${year}-${newMonth}-${newDay}`
         };
       }
+      this.openDaySelectorForIndex.set(null);
       return newDates;
     });
   }
@@ -987,12 +1047,19 @@ export class App {
         const currentVal = newDates[index].date || '2026-01-01';
         const parts = currentVal.split('-');
         const year = parts[0] || '2026';
-        const day = parts[2] || '01';
+        let day = parts[2] || '01';
+        
+        if (this.isMonthDisabled(monthValue, day)) {
+            // Cannot select this month! Wait, we disable it in UI so user can't click it. But just in case:
+            return newDates;
+        }
+
         newDates[index] = {
           ...newDates[index],
           date: `${year}-${monthValue.padStart(2, '0')}-${day}`
         };
       }
+      this.openMonthSelectorForIndex.set(null);
       return newDates;
     });
   }
@@ -1010,20 +1077,33 @@ export class App {
   }
 
   removeSpecialDateRow(index: number) {
-    this.editingSpecialDates.update(dates => {
-      const newDates = [...dates];
-      newDates.splice(index, 1);
-      return newDates;
-    });
+    this.specialDateToDeleteIndex.set(index);
+  }
+
+  confirmDeleteSpecialDate() {
+    const index = this.specialDateToDeleteIndex();
+    if (index !== null) {
+      this.editingSpecialDates.update(dates => {
+        const newDates = [...dates];
+        newDates.splice(index, 1);
+        return newDates;
+      });
+      this.specialDateToDeleteIndex.set(null);
+    }
+  }
+
+  cancelDeleteSpecialDate() {
+    this.specialDateToDeleteIndex.set(null);
   }
 
   saveSpecialDates() {
     const logged = this.getLoggedCollab();
     if (!logged) return;
     const validDates = this.editingSpecialDates().filter(d => d.date && d.description);
+    const metaDates = (logged.specialDates || []).filter(d => d && d.description && d.description.startsWith('BOB_METADATA:'));
     const updated = {
        ...logged,
-       specialDates: validDates
+       specialDates: [...validDates, ...metaDates]
     };
     this.scaleService.updateCollaborator(updated);
     this.isPortalEditingDates.set(false);
@@ -1467,7 +1547,41 @@ export class App {
         window.addEventListener(event, reset, { passive: true });
       });
       this.resetInactivityTimer();
+
+      // Interceptar atalhos de impressão/screenshot
+      window.addEventListener('keydown', (event: KeyboardEvent) => {
+        // Ctrl+P ou Cmd+P
+        if ((event.ctrlKey || event.metaKey) && event.key === 'p') {
+          event.preventDefault();
+          this.triggerPrintWarning('Atalho de Impressão (Ctrl+P / Cmd+P)');
+        }
+        // PrintScreen key
+        if (event.key === 'PrintScreen') {
+          event.preventDefault();
+          this.triggerPrintWarning('Tecla PrintScreen (Captura de Tela)');
+        }
+      });
+
+      // Interceptar antes de imprimir
+      window.addEventListener('beforeprint', () => {
+        this.triggerPrintWarning('Diálogo de Impressão do Navegador');
+      });
     }
+
+    // Enforce permission limits for logged-in non-admin users
+    effect(() => {
+      const logged = this.getLoggedCollab();
+      const currentTab = this.activeSubTab();
+      if (logged && !this.isAdmin(logged)) {
+        const adminTabs = ['matrix', 'ger.turnos', 'siglas', 'team', 'team-mgmt'];
+        if (adminTabs.includes(currentTab)) {
+          setTimeout(() => {
+            this.activeSubTab.set('portal');
+            this.showToast('Acesso restrito. Redirecionado para o seu Portal.');
+          }, 0);
+        }
+      }
+    });
 
     // Restore session from localStorage once collaborators are loaded
     effect(() => {
@@ -3181,9 +3295,54 @@ export class App {
   }
 
   navigateToCollabPortal(id: string): void {
+    const logged = this.getLoggedCollab();
+    if (logged && !this.isAdmin(logged) && logged.id !== id) {
+      this.showToast('Acesso restrito. Não é permitido visualizar a escala de outros colaboradores.');
+      return;
+    }
     this.loginAsCollab(id);
     this.isDayDetailsModalOpen.set(false);
     this.activeSubTab.set('portal');
+  }
+
+  isMobile(): boolean {
+    return typeof window !== 'undefined' && window.innerWidth < 768;
+  }
+
+  getBaseShift(shift: string): string {
+    if (!shift) return '';
+    const s = shift.toUpperCase();
+    if (s.includes('MANHÃ') || s.includes('MANHA')) return 'MANHÃ';
+    if (s.includes('TARDE')) return 'TARDE';
+    if (s.includes('NOITE')) return 'NOITE';
+    if (s.includes('MADRUGADA')) return 'MADRUGADA';
+    if (s.includes('ADMINISTRATIVO')) return 'ADMINISTRATIVO';
+    return s;
+  }
+
+  getCollabTeamMembers(): Collaborator[] {
+    const logged = this.getLoggedCollab();
+    if (!logged) return [];
+    const baseShift = this.getBaseShift(logged.shift);
+    return this.scaleService.collaborators().filter(c => {
+      return this.getBaseShift(c.shift) === baseShift;
+    });
+  }
+
+  saveProfileChanges(collab: Collaborator, name: string, birthday: string, phone: string, photoUrl: string) {
+    if (!name || !name.trim()) {
+      this.showToast('O nome não pode estar vazio.');
+      return;
+    }
+    const updated: Collaborator = {
+      ...collab,
+      name: name.trim(),
+      birthday: birthday ? birthday : collab.birthday,
+      phone: phone.trim() || undefined,
+      photoUrl: photoUrl.trim() || undefined
+    };
+    this.scaleService.updateCollaborator(updated);
+    this.showToast('Perfil atualizado com sucesso!');
   }
 
   registerCollaborator(
@@ -4006,8 +4165,42 @@ export class App {
   // Simulated Portal Collaborator Info
   getLoggedCollab(): Collaborator | null {
     const id = this.selectedSimulatedCollabId();
-    if (!id) return null;
-    return this.scaleService.collaborators().find(c => c.id === id) || null;
+    if (id) {
+      const found = this.scaleService.collaborators().find(c => c.id === id);
+      if (found) return found;
+    }
+
+    // Fallback auto-login in development/preview environments to NEVER request login/password
+    const isDevelopment = typeof window !== 'undefined' && (
+      window.location.hostname === 'localhost' ||
+      window.location.hostname.includes('127.0.0.1') ||
+      window.location.hostname.includes('ais-dev') ||
+      window.location.hostname.includes('aistudio') ||
+      window.location.hostname.includes('googleusercontent') ||
+      window.location.hostname.includes('cloudshell') ||
+      window.location.hostname.includes('web-preview') ||
+      window.location.hostname.includes('run.app') || // Always treat run.app preview environments as dev for convenience
+      (window.self !== window.top) // If inside an iframe (AI Studio preview iframe)
+    );
+
+    if (isDevelopment) {
+      const collabs = this.scaleService.collaborators();
+      if (collabs.length > 0) {
+        const devCollab = collabs.find(c => this.isAdmin(c)) || collabs[0];
+        if (devCollab) {
+          setTimeout(() => {
+            if (!this.selectedSimulatedCollabId()) {
+              this.selectedSimulatedCollabId.set(devCollab.id);
+              this.scaleService.selectedCollabName.set(devCollab.name);
+              this.scaleService.currentRole.set(devCollab.role);
+            }
+          }, 0);
+          return devCollab;
+        }
+      }
+    }
+
+    return null;
   }
 
   // Shift swaps / Permutas logic
@@ -4413,8 +4606,8 @@ Verifique se os nomes no PDF correspondem aos nomes no sistema.`;
     ];
 
     try {
-      for (let i = 0; i < codes.length; i++) {
-        const code = codes[i].toUpperCase().trim();
+      for (const codeStr of codes) {
+        const code = codeStr.toUpperCase().trim();
         // Generate a random pleasant color based on index or code
         let hash = 0;
         for (let j = 0; j < code.length; j++) {

@@ -72,6 +72,7 @@ export interface Collaborator {
   bhBalance: number;
   score: number;
   photoUrl?: string;
+  phone?: string;
   scale: { [day: number]: string }; // Day 1 to 30 of June new Date().getFullYear()
   photo?: string;
   birthday?: string; // Format: "YYYY-MM-DD"
@@ -733,7 +734,9 @@ export class ScaleService {
     this.firebaseUnsubscribes.forEach(unsub => {
       try {
         unsub();
-      } catch (e) {}
+      } catch {
+        // Ignored
+      }
     });
     this.firebaseUnsubscribes = [];
   }

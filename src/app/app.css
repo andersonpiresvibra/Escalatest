@@ -39,3 +39,9 @@ app-root:nth-of-type(1) > div#main_app_layout:nth-of-type(1) > header#global_mas
   background-color: #ffffff !important;
   color: #0f172a !important;
 }
+
+@media print {
+  body, #main_app_layout, app-root {
+    display: none !important;
+  }
+}

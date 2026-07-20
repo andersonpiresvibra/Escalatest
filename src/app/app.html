@@ -1,5 +1,5 @@
 <!-- MAIN WRAPPER: PREMIUM WORK SCALE MANAGEMENT DARK MODE -->
-<div class="h-screen bg-[#020813] font-sans text-slate-100 flex flex-col antialiased selection:bg-emerald-600 selection:text-white overflow-hidden" id="main_app_layout" [class.light-theme]="isLightTheme()">
+<div class="h-screen bg-[#020813] font-sans flex flex-col antialiased selection:bg-emerald-600 selection:text-white overflow-hidden" id="main_app_layout" [class.light-theme]="isLightTheme()" [class.text-slate-900]="isLightTheme()" [class.text-slate-100]="!isLightTheme()">
 
 
 
@@ -344,14 +344,14 @@
 
             <!-- Seções -->
             @if (isAdmin(getLoggedCollab())) {
-              <div class="py-1.5 bg-[#030a14] border-t border-[#10213b] hidden md:block" id="dropdown_sections_category">
+              <div class="py-1.5 bg-[#030a14] border-t border-[#10213b]" id="dropdown_sections_category">
                 <span class="block px-4 py-1 text-[8px] font-black uppercase text-slate-500 tracking-wider select-none">Seções</span>
                 
                 <button (click)="activeSubTab.set('matrix'); isDropdownOpen.set(false)"
-                        class="w-full text-left px-4 py-2 text-[10px] font-black uppercase transition-colors tracking-wider hidden md:flex items-center gap-2 cursor-pointer border-none outline-none bg-transparent"
+                        class="w-full text-left px-4 py-2 text-[10px] font-black uppercase transition-colors tracking-wider flex items-center gap-2 cursor-pointer border-none outline-none bg-transparent"
                         [class]="activeSubTab() === 'matrix' ? 'text-emerald-400 font-extrabold bg-[#0b1e36]/30' : 'text-slate-300 hover:bg-[#0b1e36]'">
                   <span class="material-icons text-sm" [class]="activeSubTab() === 'matrix' ? 'text-emerald-400' : 'text-slate-400'">calendar_month</span>
-                  Escala
+                  Escala Geral
                 </button>
 
 
@@ -359,38 +359,38 @@
                         class="w-full text-left px-4 py-2 text-[10px] font-black uppercase transition-colors tracking-wider flex items-center gap-2 cursor-pointer border-none outline-none bg-transparent"
                         [class]="activeSubTab() === 'portal' ? 'text-emerald-400 font-extrabold bg-[#0b1e36]/30' : 'text-slate-300 hover:bg-[#0b1e36]'">
                   <span class="material-icons text-sm" [class]="activeSubTab() === 'portal' ? 'text-emerald-400' : 'text-slate-400'">contact_page</span>
-                  Portal do Colaborador
+                  Meu Portal
                 </button>
               </div>
 
               <!-- Gerenciamento (Turnos & Siglas) -->
-              <div class="py-1.5 bg-[#030a14] border-t border-[#10213b] hidden md:block">
+              <div class="py-1.5 bg-[#030a14] border-t border-[#10213b]">
                 <span class="block px-4 py-1 text-[8px] font-black uppercase text-slate-500 tracking-wider select-none">Gerenciamento</span>
                 
                 <button (click)="activeSubTab.set('ger.turnos'); isDropdownOpen.set(false)"
-                        class="w-full text-left px-4 py-2 text-[10px] font-black uppercase transition-colors tracking-wider flex items-center gap-2 cursor-pointer border-none outline-none"
-                        [class]="activeSubTab() === 'ger.turnos' ? 'text-blue-400 bg-blue-950/20' : 'text-slate-300 hover:bg-[#0b1e36]'">
+                        class="w-full text-left px-4 py-2 text-[10px] font-black uppercase transition-colors tracking-wider flex items-center gap-2 cursor-pointer border-none outline-none bg-transparent"
+                        [class]="activeSubTab() === 'ger.turnos' ? 'text-blue-400 bg-blue-950/20 font-bold' : 'text-slate-300 hover:bg-[#0b1e36]'">
                   <span class="material-icons text-sm" [class]="activeSubTab() === 'ger.turnos' ? 'text-blue-400' : 'text-slate-400'">tune</span>
-                  Turno
+                  Turnos
                 </button>
 
                 <button (click)="activeSubTab.set('siglas'); isDropdownOpen.set(false)"
-                        class="w-full text-left px-4 py-2 text-[10px] font-black uppercase transition-colors tracking-wider flex items-center gap-2 cursor-pointer border-none outline-none"
-                        [class]="activeSubTab() === 'siglas' ? 'text-blue-400 bg-blue-950/20' : 'text-slate-300 hover:bg-[#0b1e36]'">
+                        class="w-full text-left px-4 py-2 text-[10px] font-black uppercase transition-colors tracking-wider flex items-center gap-2 cursor-pointer border-none outline-none bg-transparent"
+                        [class]="activeSubTab() === 'siglas' ? 'text-blue-400 bg-blue-950/20 font-bold' : 'text-slate-300 hover:bg-[#0b1e36]'">
                   <span class="material-icons text-sm" [class]="activeSubTab() === 'siglas' ? 'text-blue-400' : 'text-slate-400'">label</span>
                   Siglas
                 </button>
 
                 <button (click)="activeSubTab.set('team'); teamViewMode.set('mgmt'); isDropdownOpen.set(false)"
                         class="w-full text-left px-4 py-2 text-[10px] font-black uppercase transition-colors tracking-wider flex items-center gap-2 cursor-pointer border-none outline-none bg-transparent"
-                        [class]="activeSubTab() === 'team' && teamViewMode() === 'mgmt' ? 'text-blue-400 bg-blue-950/20' : 'text-slate-300 hover:bg-[#0b1e36]'">
+                        [class]="activeSubTab() === 'team' && teamViewMode() === 'mgmt' ? 'text-blue-400 bg-blue-950/20 font-bold' : 'text-slate-300 hover:bg-[#0b1e36]'">
                   <span class="material-icons text-sm" [class]="activeSubTab() === 'team' && teamViewMode() === 'mgmt' ? 'text-blue-400' : 'text-slate-400'">manage_accounts</span>
                   Ger. de Colaboradores
                 </button>
               </div>
 
               <!-- Modo de Apresentação (Restringir Escalas) -->
-              <div class="py-2.5 px-4 bg-[#091526] border-t border-[#10213b] hidden md:block" id="presentation_mode_dropdown_section">
+              <div class="py-2.5 px-4 bg-[#091526] border-t border-[#10213b]" id="presentation_mode_dropdown_section">
                 <span class="block text-[8px] font-black uppercase text-slate-500 tracking-wider mb-2 select-none">Apresentação</span>
                 @if (onlyNightShift()) {
                   <div class="space-y-1.5" id="presentation_restricted_box">
@@ -776,7 +776,7 @@
 
 
           <!-- MATRIX TABULAR GRID -->
-          <div class="flex-1 overflow-auto w-full bg-[#020813] border-b border-[#10213b]" id="matrix_table_scroll_container">
+          <div class="flex-1 overflow-auto w-full bg-[#020813] border-b border-[#10213b]" id="matrix_table_scroll_container" [class.bg-white]="isLightTheme()">
             <table class="w-full min-h-full text-left border-collapse select-none">
               <thead>
                 <!-- Months & Header Days Row -->
@@ -2251,7 +2251,7 @@
                 </div>
 
                 <!-- TABLE WITH STICKY HEADER -->
-                <div class="flex-1 overflow-auto w-full bg-[#020813]">
+                <div class="flex-1 overflow-auto w-full bg-[#020813]" [class.bg-white]="isLightTheme()">
                   <table class="w-full text-left border-collapse select-none text-slate-300">
                     <thead class="sticky top-0 bg-[#071426] z-10 shadow-md">
                       <tr class="border-b border-[#10213b] text-slate-400 uppercase text-[9px] font-black tracking-wider">
@@ -2566,8 +2566,8 @@
       }
 
       <!-- SECTION C: PORTAL DO COLABORADOR -->
-      @if (activeSubTab() === 'portal') {
-        <div class="p-2 sm:p-3 lg:p-4 space-y-3 animate-fade-in font-sans w-full flex-1 overflow-y-auto scrollbar-thin max-w-full" id="portal_tab_content">
+      @if (activeSubTab() === 'portal' || activeSubTab() === 'escala' || activeSubTab() === 'perfil' || activeSubTab() === 'equipe' || activeSubTab() === 'indicadores') {
+        <div class="p-2 sm:p-3 lg:p-4 space-y-3 animate-fade-in font-sans w-full flex-1 overflow-y-auto scrollbar-thin max-w-full" id="portal_tab_content" [class.bg-[#fafffe]]="isLightTheme()">
           <!-- SIMULATION BAR & QUICK SWITCH -->
           @if (!getLoggedCollab()) {
             <div [class]="'border rounded-lg p-3.5 shadow-md space-y-3 transition-all duration-300 ' + (isLightTheme() ? 'bg-white border-slate-200 text-slate-900' : 'bg-[#030a14] border-[#10213b] text-white')">
@@ -2638,7 +2638,7 @@
               <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 w-full">
                 
                 <!-- LEFT SIDEBAR: PROFILE MONITOR & STATS -->
-                <div class="lg:col-span-4 space-y-3">
+                <div class="lg:col-span-4 space-y-3" [class.hidden]="isMobile() && activeSubTab() !== 'indicadores'">
 
                   <!-- CARD 1: MONITOR DE ESCALA -->
                   <div [class]="'w-full border rounded-xl flex flex-col p-3 gap-2 transition-all duration-300 shadow-lg ' + (isLightTheme() ? 'bg-white border-slate-200 text-slate-900 shadow-slate-100/40' : 'bg-[#0F172A] border-[#334155] text-[#F8FAFC] shadow-black/25')" style="box-shadow: 0 12px 24px rgba(0,0,0,0.25);">
@@ -2882,7 +2882,7 @@
                 </div>
                 
                 <!-- TRABALHO / FOLGA COMPONENT (8 COLUMNS) -->
-                <div id="panel-trabalho-folga" [class]="'lg:col-span-8 w-full border rounded-[16px] p-5 shadow-2xl space-y-5 transition-all duration-300 ' + (isLightTheme() ? 'bg-white border-slate-200 text-slate-900 shadow-slate-100/40' : 'bg-[#0F172A] border-[#334155] text-[#F8FAFC] shadow-black/25')" style="box-shadow: 0 12px 24px rgba(0,0,0,0.25);">
+                <div id="panel-trabalho-folga" [class]="'lg:col-span-8 w-full border rounded-[16px] p-5 shadow-2xl space-y-5 transition-all duration-300 ' + (isLightTheme() ? 'bg-white border-slate-200 text-slate-900 shadow-slate-100/40' : 'bg-[#0F172A] border-[#334155] text-[#F8FAFC] shadow-black/25')" style="box-shadow: 0 12px 24px rgba(0,0,0,0.25);" [class.hidden]="isMobile() && activeSubTab() !== 'portal' && activeSubTab() !== 'escala'">
                   
                   <!-- HEADER / TABS (SPLIT 50% / 50%) -->
                   <div id="trabalho-folga-header" class="w-full border-b border-slate-100/10 pb-2.5" [class.border-slate-100]="isLightTheme()">
@@ -3125,10 +3125,10 @@
                 </div>
 
                 <!-- LEFT COLUMN: FOLGAS SOLICITADAS & DATAS IMPORTANTES -->
-                <div class="lg:col-span-4 space-y-3">
+                <div class="lg:col-span-4 space-y-3" [class.hidden]="isMobile() && activeSubTab() !== 'portal' && activeSubTab() !== 'escala' && activeSubTab() !== 'perfil'">
 
                   <!-- SECTION: FOLGAS SOLICITADAS -->
-                <div class="rounded-lg p-3.5 space-y-2 transition-colors"
+                <div class="rounded-lg p-3.5 space-y-2 transition-colors" [class.hidden]="isMobile() && activeSubTab() !== 'portal' && activeSubTab() !== 'escala'"
                      [class]="isLightTheme() ? 'bg-slate-50 border border-slate-200 shadow-sm' : 'bg-[#030a14] border border-[#10213b] shadow-xl'">
                   <div class="flex items-center justify-between pb-1 border-b border-[#10213b]/40">
                     <h4 class="font-black text-[11px] uppercase tracking-wider flex items-center gap-1.5"
@@ -3175,7 +3175,7 @@
                 </div>
 
                 <!-- SECTION: MINHAS DATAS IMPORTANTES -->
-                <div (click)="openEditSpecialDates()"
+                <div (click)="openEditSpecialDates()" [class.hidden]="isMobile() && activeSubTab() !== 'perfil'"
                      class="rounded-lg p-3.5 space-y-2 cursor-pointer select-none hover:border-rose-500/30 transition-colors relative group"
                      [class]="isLightTheme() ? 'bg-slate-50 border border-slate-200 shadow-sm' : 'bg-[#030a14] border border-[#10213b] shadow-xl'"
                      title="Clique para editar suas datas importantes">
@@ -3256,6 +3256,56 @@
                         <span class="text-[8px] font-bold uppercase tracking-wider text-slate-500">Nenhuma data especial cadastrada</span>
                       </div>
                     }
+                  </div>
+                </div>
+
+                <!-- SECTION: EDITAR PERFIL -->
+                <div [class.hidden]="isMobile() && activeSubTab() !== 'perfil'"
+                     [class]="'rounded-lg p-3.5 space-y-3 transition-colors border ' + (isLightTheme() ? 'bg-white border-slate-200 shadow-sm text-slate-900' : 'bg-[#030a14] border-[#10213b]/60 shadow-xl text-white')">
+                  <div class="flex items-center pb-2 border-b border-[#10213b]/30">
+                    <div class="flex items-center gap-2">
+                      <span class="material-icons text-emerald-400 text-sm">manage_accounts</span>
+                      <h4 class="font-black text-xs uppercase tracking-wider"
+                          [class]="isLightTheme() ? 'text-slate-800' : 'text-[#F8FAFC]'">
+                        Editar Perfil
+                      </h4>
+                    </div>
+                  </div>
+
+                  <div class="space-y-3">
+                    <div class="flex flex-col gap-1">
+                      <label class="text-[9px] font-black uppercase text-slate-400 tracking-wider">Nome Completo</label>
+                      <input type="text" [value]="logged.name" #newNameInput
+                             class="bg-[#030a14] border border-[#10213b]/40 text-white text-[11px] px-3 py-2 rounded-lg w-full outline-none focus:border-emerald-500 font-sans"
+                             [class.bg-white]="isLightTheme()" [class.border-slate-200]="isLightTheme()" [class.text-slate-900]="isLightTheme()">
+                    </div>
+
+                    <div class="flex flex-col gap-1">
+                      <label class="text-[9px] font-black uppercase text-slate-400 tracking-wider">Data de Nascimento</label>
+                      <input type="date" [value]="logged.birthday" #newBirthdayInput
+                             class="bg-[#030a14] border border-[#10213b]/40 text-white text-[11px] px-3 py-2 rounded-lg w-full outline-none focus:border-emerald-500 font-mono"
+                             [class.bg-white]="isLightTheme()" [class.border-slate-200]="isLightTheme()" [class.text-slate-900]="isLightTheme()">
+                    </div>
+
+                    <div class="flex flex-col gap-1">
+                      <label class="text-[9px] font-black uppercase text-slate-400 tracking-wider">Telefone de Contato</label>
+                      <input type="text" [value]="logged.phone || ''" #newPhoneInput placeholder="(00) 00000-0000"
+                             class="bg-[#030a14] border border-[#10213b]/40 text-white text-[11px] px-3 py-2 rounded-lg w-full outline-none focus:border-emerald-500 font-mono"
+                             [class.bg-white]="isLightTheme()" [class.border-slate-200]="isLightTheme()" [class.text-slate-900]="isLightTheme()">
+                    </div>
+
+                    <div class="flex flex-col gap-1">
+                      <label class="text-[9px] font-black uppercase text-slate-400 tracking-wider">Foto do Perfil (URL)</label>
+                      <input type="text" [value]="logged.photoUrl || ''" #newPhotoUrlInput placeholder="https://exemplo.com/foto.jpg"
+                             class="bg-[#030a14] border border-[#10213b]/40 text-white text-[11px] px-3 py-2 rounded-lg w-full outline-none focus:border-emerald-500 font-sans"
+                             [class.bg-white]="isLightTheme()" [class.border-slate-200]="isLightTheme()" [class.text-slate-900]="isLightTheme()">
+                    </div>
+
+                    <button (click)="saveProfileChanges(logged, newNameInput.value, newBirthdayInput.value, newPhoneInput.value, newPhotoUrlInput.value)"
+                            class="w-full text-center py-2 bg-emerald-500 hover:bg-emerald-400 text-emerald-950 font-black text-[10px] uppercase rounded-lg cursor-pointer transition-colors border-none outline-none flex items-center justify-center gap-1.5 shadow-md active:scale-95">
+                      <span class="material-icons text-xs">save</span>
+                      Salvar Alterações
+                    </button>
                   </div>
                 </div>
 
@@ -3387,6 +3437,63 @@
 
 
               </div>
+
+              <!-- SECTION: MINHA EQUIPE DO TURNO -->
+              <div [class.hidden]="!isMobile() || activeSubTab() !== 'equipe'"
+                   [class]="'w-full border rounded-[16px] flex flex-col p-4 gap-3.5 transition-all duration-300 shadow-xl ' + (isLightTheme() ? 'bg-white border-slate-200 text-slate-900 shadow-slate-100/40' : 'bg-[#0F172A] border-[#334155] text-[#F8FAFC] shadow-black/25')" style="box-shadow: 0 12px 24px rgba(0,0,0,0.25);">
+                <!-- HEADER -->
+                <div class="flex items-center pb-2 border-b" [class]="isLightTheme() ? 'border-slate-100' : 'border-[#334155]'">
+                  <div class="flex items-center gap-2">
+                    <span class="material-icons text-emerald-400 text-sm">groups</span>
+                    <span [class]="'text-[13px] font-bold tracking-wide uppercase ' + (isLightTheme() ? 'text-slate-800' : 'text-[#F8FAFC]')">
+                      Minha Equipe (Turno {{ getBaseShift(logged.shift) }})
+                    </span>
+                  </div>
+                </div>
+
+                <p [class]="'text-[10px] ' + (isLightTheme() ? 'text-slate-600' : 'text-slate-400')">
+                  Abaixo estão listados todos os colaboradores pertencentes ao turno base <strong class="text-emerald-500 font-bold uppercase">{{ getBaseShift(logged.shift) }}</strong>.
+                </p>
+
+                <!-- Members list -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  @for (member of getCollabTeamMembers(); track member.id) {
+                    <div [class]="'flex items-center gap-3 p-3 border rounded-xl transition-all ' + (isLightTheme() ? 'border-slate-150 bg-slate-50/50 hover:bg-slate-100/50' : 'border-[#10213b] bg-[#071426]/30 hover:bg-[#071426]')">
+                      <!-- Photo -->
+                      <img [src]="getCollabPhoto(member)" alt="Avatar" referrerpolicy="no-referrer"
+                           class="w-10 h-10 rounded-full object-cover border shrink-0"
+                           [class]="isLightTheme() ? 'border-slate-200' : 'border-[#10213b]'">
+
+                      <!-- Information -->
+                      <div class="min-w-0 flex-1">
+                        <p [class]="'text-[11px] font-black truncate ' + (isLightTheme() ? 'text-slate-800' : 'text-white')">
+                          {{ member.name }}
+                        </p>
+                        <p [class]="'text-[8px] font-bold uppercase tracking-wider truncate ' + (isLightTheme() ? 'text-slate-500' : 'text-slate-400')">
+                          {{ member.role }} &bull; {{ member.sector }}
+                        </p>
+                        <!-- Specific sub-shift -->
+                        <span class="text-[7.5px] font-black font-mono px-1 py-0.5 rounded uppercase border mt-1 inline-block"
+                              [class]="isLightTheme() ? 'text-slate-600 bg-slate-150 border-slate-200' : 'text-slate-400 bg-[#030a14] border-[#10213b]/40'">
+                          {{ member.shift }}
+                        </span>
+                      </div>
+
+                      <!-- Today status dot -->
+                      @let mStats = getConsecutiveWorkStats(member);
+                      <div class="flex flex-col items-end gap-1 select-none shrink-0">
+                        <span [class]="'text-[7px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded border ' + 
+                                       (mStats.isWorking ? 
+                                        'text-amber-500 bg-amber-500/10 border-amber-500/20' : 
+                                        'text-emerald-500 bg-emerald-500/10 border-emerald-500/20')">
+                          {{ mStats.isWorking ? 'ATIVO' : 'FOLGA' }}
+                        </span>
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
+
             </div>
           </div>
           }
@@ -3395,6 +3502,62 @@
 
     </section>
   </main>
+
+  <!-- MOBILE BOTTOM NAVIGATION MENU -->
+  @if (getLoggedCollab()) {
+    <nav class="md:hidden flex items-center justify-around bg-[#030a14] border-t border-[#10213b] px-1 py-1 pb-[max(env(safe-area-inset-bottom),0.5rem)] shrink-0 relative z-[60] shadow-[0_-4px_15px_rgba(0,0,0,0.5)]"
+         [class.bg-white]="isLightTheme()" [class.border-slate-200]="isLightTheme()" [class.shadow-[0_-4px_15px_rgba(0,0,0,0.05)]]="isLightTheme()">
+      
+      <!-- ESCALA -->
+      <button (click)="activeSubTab.set('escala')"
+              class="flex flex-col items-center justify-center p-1.5 flex-1 gap-1 rounded-lg transition-all border-none outline-none bg-transparent cursor-pointer active:scale-95 active:bg-slate-500/10"
+              [class]="(activeSubTab() === 'portal' || activeSubTab() === 'escala' || activeSubTab() === 'matrix') ? 
+                       (isLightTheme() ? 'text-emerald-650 font-bold bg-emerald-50/60' : 'text-emerald-400 font-bold bg-emerald-500/10') : 
+                       (isLightTheme() ? 'text-slate-500 hover:text-slate-700' : 'text-slate-400 hover:text-slate-200')">
+        <span class="material-icons text-lg font-bold">calendar_month</span>
+        <span class="text-[8.5px] font-black uppercase tracking-wider">Escala</span>
+      </button>
+
+      <!-- PERFIL -->
+      <button (click)="activeSubTab.set('perfil')"
+              class="flex flex-col items-center justify-center p-1.5 flex-1 gap-1 rounded-lg transition-all border-none outline-none bg-transparent cursor-pointer active:scale-95 active:bg-slate-500/10"
+              [class]="activeSubTab() === 'perfil' ? 
+                       (isLightTheme() ? 'text-emerald-650 font-bold bg-emerald-50/60' : 'text-emerald-400 font-bold bg-emerald-500/10') : 
+                       (isLightTheme() ? 'text-slate-500 hover:text-slate-700' : 'text-slate-400 hover:text-slate-200')">
+        <span class="material-icons text-lg">account_circle</span>
+        <span class="text-[8.5px] font-black uppercase tracking-wider">Perfil</span>
+      </button>
+
+      <!-- EQUIPE -->
+      <button (click)="activeSubTab.set('equipe')"
+              class="flex flex-col items-center justify-center p-1.5 flex-1 gap-1 rounded-lg transition-all border-none outline-none bg-transparent cursor-pointer active:scale-95 active:bg-slate-500/10"
+              [class]="(activeSubTab() === 'equipe' || activeSubTab() === 'team') ? 
+                       (isLightTheme() ? 'text-emerald-650 font-bold bg-emerald-50/60' : 'text-emerald-400 font-bold bg-emerald-500/10') : 
+                       (isLightTheme() ? 'text-slate-500 hover:text-slate-700' : 'text-slate-400 hover:text-slate-200')">
+        <span class="material-icons text-lg">groups</span>
+        <span class="text-[8.5px] font-black uppercase tracking-wider">Equipe</span>
+      </button>
+
+      <!-- INDICADORES -->
+      <button (click)="activeSubTab.set('indicadores')"
+              class="flex flex-col items-center justify-center p-1.5 flex-1 gap-1 rounded-lg transition-all border-none outline-none bg-transparent cursor-pointer active:scale-95 active:bg-slate-500/10"
+              [class]="activeSubTab() === 'indicadores' ? 
+                       (isLightTheme() ? 'text-emerald-650 font-bold bg-emerald-50/60' : 'text-emerald-400 font-bold bg-emerald-500/10') : 
+                       (isLightTheme() ? 'text-slate-500 hover:text-slate-700' : 'text-slate-400 hover:text-slate-200')">
+        <span class="material-icons text-lg">analytics</span>
+        <span class="text-[8.5px] font-black uppercase tracking-wider">Indicadores</span>
+      </button>
+
+      <!-- SAIR -->
+      <button (click)="logout()"
+              class="flex flex-col items-center justify-center p-1.5 flex-1 gap-1 rounded-lg transition-all border-none outline-none bg-transparent cursor-pointer active:scale-95 active:bg-rose-500/10"
+              [class]="isLightTheme() ? 'text-slate-500 hover:text-rose-600 hover:bg-rose-50' : 'text-slate-400 hover:text-rose-400 hover:bg-rose-950/20'">
+        <span class="material-icons text-lg">logout</span>
+        <span class="text-[8.5px] font-black uppercase tracking-wider">Sair</span>
+      </button>
+
+    </nav>
+  }
 
   <!-- AUTHENTICATION DIALOG / LOGIN SIMULATION MODAL -->
   @if (isAuthModalOpen()) {
@@ -3822,10 +3985,16 @@ CREATE TABLE IF NOT EXISTS public.audit_history (
   <!-- MODAL: EDITAR DATAS IMPORTANTES -->
   @if (isPortalEditingDates()) {
     <div class="fixed inset-0 z-[250] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in" id="modal_editing_dates_overlay">
-      <div class="bg-[#030a14] border border-[#10213b] rounded-xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col animate-slide-up" id="modal_editing_dates_content">
-        <div class="p-4 border-b border-[#10213b] flex items-center justify-between shrink-0 bg-slate-900/30">
+      <div class="bg-[#030a14] border border-[#10213b] rounded-xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col animate-slide-up" 
+           [class.bg-[#030a14]]="!isLightTheme()" [class.border-[#10213b]]="!isLightTheme()"
+           [class.bg-white]="isLightTheme()" [class.border-slate-300]="isLightTheme()"
+           id="modal_editing_dates_content">
+        <div class="p-4 border-b border-[#10213b] flex items-center justify-between shrink-0 bg-slate-900/30"
+             [class.border-[#10213b]]="!isLightTheme()" [class.bg-slate-900/30]="!isLightTheme()"
+             [class.border-slate-200]="isLightTheme()" [class.bg-slate-50]="isLightTheme()">
           <div>
-            <h3 class="font-black text-sm uppercase tracking-wider text-white">Editar Datas Importantes</h3>
+            <h3 class="font-black text-sm uppercase tracking-wider text-white"
+                [class.text-white]="!isLightTheme()" [class.text-slate-800]="isLightTheme()">Editar Datas Importantes</h3>
             <span class="text-[10px] font-bold text-slate-400 block uppercase mt-0.5">
               Personalize suas datas (Aniversários, Casamento, etc.)
             </span>
@@ -3839,39 +4008,128 @@ CREATE TABLE IF NOT EXISTS public.audit_history (
              <div class="flex items-center gap-2">
                 <!-- Seleção de Dia e Mês (Sem Ano) -->
                 <div class="flex items-center gap-1 shrink-0">
-                  <select [value]="getDayFromDate(date.date)"
-                          (change)="updateSpecialDateDay($index, $any($event.target).value)"
-                          class="bg-[#071426] text-white border border-[#10213b] focus:border-emerald-500 outline-none rounded-lg px-2 py-1.5 text-[11px] font-mono h-8 cursor-pointer w-14">
-                    @for (d of daysOptions; track d) {
-                      <option [value]="d">{{ d }}</option>
+                  <div class="relative">
+                    <button (click)="openDaySelectorForIndex.set(openDaySelectorForIndex() === $index ? null : $index); openMonthSelectorForIndex.set(null)"
+                            class="border hover:border-emerald-500 rounded-lg px-2 text-[11px] font-mono h-8 w-10 flex items-center justify-center cursor-pointer"
+                            [class.bg-[#071426]]="!isLightTheme()" [class.text-white]="!isLightTheme()" [class.border-[#10213b]]="!isLightTheme()"
+                            [class.bg-white]="isLightTheme()" [class.text-slate-800]="isLightTheme()" [class.border-slate-300]="isLightTheme()">
+                      {{ getDayFromDate(date.date) }}
+                    </button>
+                    @if (openDaySelectorForIndex() === $index) {
+                      <div class="absolute top-full mt-1 left-0 z-50 border rounded-xl shadow-2xl p-2 w-[240px] grid grid-cols-7 gap-1 animate-fade-in"
+                           [class.bg-[#030a14]]="!isLightTheme()" [class.border-[#10213b]]="!isLightTheme()"
+                           [class.bg-white]="isLightTheme()" [class.border-slate-200]="isLightTheme()">
+                        @for (d of daysOptions; track d) {
+                          <button (click)="updateSpecialDateDay($index, d)"
+                                  [class.bg-emerald-500]="d === getDayFromDate(date.date)"
+                                  [class.text-white]="d === getDayFromDate(date.date)"
+                                  [class.bg-[#071426]]="!isLightTheme() && d !== getDayFromDate(date.date)"
+                                  [class.text-slate-300]="!isLightTheme() && d !== getDayFromDate(date.date)"
+                                  [class.bg-slate-100]="isLightTheme() && d !== getDayFromDate(date.date)"
+                                  [class.text-slate-700]="isLightTheme() && d !== getDayFromDate(date.date)"
+                                  [class.border-[#10213b]]="!isLightTheme()" [class.border-slate-200]="isLightTheme()"
+                                  class="h-8 rounded flex items-center justify-center text-[10px] font-mono font-bold hover:bg-emerald-500/20 hover:text-emerald-500 transition-colors cursor-pointer border">
+                            {{ d }}
+                          </button>
+                        }
+                      </div>
                     }
-                  </select>
+                  </div>
                   <span class="text-slate-500 text-xs font-bold">/</span>
-                  <select [value]="getMonthFromDate(date.date)"
-                          (change)="updateSpecialDateMonth($index, $any($event.target).value)"
-                          class="bg-[#071426] text-white border border-[#10213b] focus:border-emerald-500 outline-none rounded-lg px-2 py-1.5 text-[11px] font-mono h-8 cursor-pointer w-20">
-                    @for (m of monthsOptions; track m.value) {
-                      <option [value]="m.value">{{ m.name }}</option>
+                  <div class="relative">
+                    <button (click)="openMonthSelectorForIndex.set(openMonthSelectorForIndex() === $index ? null : $index); openDaySelectorForIndex.set(null)"
+                            class="border hover:border-emerald-500 rounded-lg px-2 text-[11px] font-mono h-8 w-14 flex items-center justify-center cursor-pointer"
+                            [class.bg-[#071426]]="!isLightTheme()" [class.text-white]="!isLightTheme()" [class.border-[#10213b]]="!isLightTheme()"
+                            [class.bg-white]="isLightTheme()" [class.text-slate-800]="isLightTheme()" [class.border-slate-300]="isLightTheme()">
+                      {{ monthsOptions[(+getMonthFromDate(date.date)) - 1]?.name.substring(0, 3).toUpperCase() || 'JAN' }}
+                    </button>
+                    @if (openMonthSelectorForIndex() === $index) {
+                      <div class="absolute top-full mt-1 left-0 z-50 border rounded-xl shadow-2xl p-2 w-[240px] grid grid-cols-4 gap-1 animate-fade-in"
+                           [class.bg-[#030a14]]="!isLightTheme()" [class.border-[#10213b]]="!isLightTheme()"
+                           [class.bg-white]="isLightTheme()" [class.border-slate-200]="isLightTheme()">
+                        @for (m of monthsOptions; track m.value) {
+                          @let disabled = isMonthDisabled(m.value, getDayFromDate(date.date));
+                          <button (click)="!disabled && updateSpecialDateMonth($index, m.value)"
+                                  [disabled]="disabled"
+                                  [class.bg-emerald-500]="m.value === getMonthFromDate(date.date) && !disabled"
+                                  [class.text-white]="m.value === getMonthFromDate(date.date) && !disabled"
+                                  [class.bg-[#071426]]="!isLightTheme() && m.value !== getMonthFromDate(date.date) && !disabled"
+                                  [class.text-slate-300]="!isLightTheme() && m.value !== getMonthFromDate(date.date) && !disabled"
+                                  [class.bg-slate-100]="isLightTheme() && m.value !== getMonthFromDate(date.date) && !disabled"
+                                  [class.text-slate-700]="isLightTheme() && m.value !== getMonthFromDate(date.date) && !disabled"
+                                  [class.opacity-30]="disabled"
+                                  [class.cursor-not-allowed]="disabled"
+                                  [class.hover:bg-emerald-500/20]="!disabled"
+                                  [class.hover:text-emerald-500]="!disabled"
+                                  [class.border-[#10213b]]="!isLightTheme()" [class.border-slate-200]="isLightTheme()"
+                                  class="h-8 rounded flex items-center justify-center text-[10px] font-mono font-bold transition-colors border">
+                            {{ m.name.substring(0, 3).toUpperCase() }}
+                          </button>
+                        }
+                      </div>
                     }
-                  </select>
+                  </div>
                 </div>
-                <input type="text" [value]="date.description" (input)="updateSpecialDateRow($index, 'description', $any($event.target).value)" placeholder="Descrição (ex: Casamento)" class="flex-1 bg-[#071426] text-white border border-[#10213b] focus:border-emerald-500 outline-none rounded-lg px-2 py-1.5 text-xs h-8">
-                <button (click)="removeSpecialDateRow($index)" class="w-8 h-8 rounded flex items-center justify-center bg-rose-500/10 text-rose-500 border border-rose-500/20 hover:bg-rose-500/20 cursor-pointer">
+                <input type="text" [value]="date.description" (input)="updateSpecialDateRow($index, 'description', $any($event.target).value)" placeholder="Descrição (ex: Casamento)" 
+                       class="flex-1 max-sm:w-[100px] max-sm:min-w-[100px] border focus:border-emerald-500 outline-none rounded-lg px-2 py-1.5 text-xs h-8"
+                       [class.bg-[#071426]]="!isLightTheme()" [class.text-white]="!isLightTheme()" [class.border-[#10213b]]="!isLightTheme()"
+                       [class.bg-white]="isLightTheme()" [class.text-slate-800]="isLightTheme()" [class.border-slate-300]="isLightTheme()">
+                <button (click)="removeSpecialDateRow($index)" class="w-8 h-8 rounded flex items-center justify-center bg-rose-500/10 text-rose-500 border border-rose-500/20 hover:bg-rose-500/20 cursor-pointer shrink-0">
                   <span class="material-icons text-sm leading-none">delete</span>
                 </button>
              </div>
            } @empty {
-              <div class="text-center py-4 border border-dashed border-[#10213b]/60 rounded-lg bg-slate-900/30">
+              <div class="text-center py-4 border border-dashed rounded-lg"
+                   [class.border-[#10213b]/60]="!isLightTheme()" [class.bg-slate-900/30]="!isLightTheme()"
+                   [class.border-slate-300]="isLightTheme()" [class.bg-slate-50]="isLightTheme()">
                 <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Nenhuma data adicionada.</span>
               </div>
            }
-           <button (click)="addSpecialDateRow()" class="w-full py-2 bg-[#071426] border border-dashed border-[#10213b] hover:bg-[#10213b] hover:border-emerald-500/40 hover:text-emerald-400 text-slate-400 text-[10px] font-bold uppercase rounded-lg transition-colors flex items-center justify-center gap-1 cursor-pointer">
+           <button (click)="addSpecialDateRow()" class="w-full py-2 border border-dashed text-[10px] font-bold uppercase rounded-lg transition-colors flex items-center justify-center gap-1 cursor-pointer"
+                   [class.bg-[#071426]]="!isLightTheme()" [class.border-[#10213b]]="!isLightTheme()" [class.text-slate-400]="!isLightTheme()" [class.hover:bg-[#10213b]]="!isLightTheme()" [class.hover:border-emerald-500/40]="!isLightTheme()" [class.hover:text-emerald-400]="!isLightTheme()"
+                   [class.bg-white]="isLightTheme()" [class.border-slate-300]="isLightTheme()" [class.text-slate-500]="isLightTheme()" [class.hover:bg-slate-50]="isLightTheme()" [class.hover:border-emerald-500]="isLightTheme()" [class.hover:text-emerald-600]="isLightTheme()">
              <span class="material-icons text-xs">add</span> Adicionar Data Especial
            </button>
         </div>
-        <div class="p-4 border-t border-[#10213b] bg-slate-900/30">
-          <button (click)="saveSpecialDates()" class="w-full py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-black text-[10px] uppercase tracking-wider rounded-lg shadow-[0_0_15px_rgba(16,185,129,0.3)] transition-all cursor-pointer">
-            Salvar Datas no Cadastro
+        <div class="p-4 border-t flex items-center gap-2"
+             [class.border-[#10213b]]="!isLightTheme()" [class.bg-slate-900/30]="!isLightTheme()"
+             [class.border-slate-200]="isLightTheme()" [class.bg-slate-50]="isLightTheme()">
+          <button (click)="clearSpecialDates()" class="flex-1 py-2 bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 border border-amber-500/20 font-black text-[10px] uppercase tracking-wider rounded-lg transition-all cursor-pointer">
+            Limpar
+          </button>
+          <button (click)="isPortalEditingDates.set(false)" class="flex-1 py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 border border-rose-500/20 font-black text-[10px] uppercase tracking-wider rounded-lg transition-all cursor-pointer">
+            Cancelar
+          </button>
+          <button (click)="saveSpecialDates()" class="flex-[2] py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-black text-[10px] uppercase tracking-wider rounded-lg shadow-[0_0_15px_rgba(16,185,129,0.3)] transition-all cursor-pointer">
+            Salvar
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- CONFIRM DELETE SPECIAL DATE MODAL -->
+  @if (specialDateToDeleteIndex() !== null) {
+    <div class="fixed inset-0 z-[260] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+      <div class="border rounded-xl w-full max-w-sm shadow-2xl overflow-hidden flex flex-col animate-slide-up"
+           [class.bg-[#030a14]]="!isLightTheme()" [class.border-[#10213b]]="!isLightTheme()"
+           [class.bg-white]="isLightTheme()" [class.border-slate-300]="isLightTheme()">
+        <div class="p-4 flex flex-col items-center justify-center text-center space-y-3">
+          <div class="w-12 h-12 rounded-full bg-rose-500/10 flex items-center justify-center text-rose-500 mb-2">
+            <span class="material-icons text-2xl">delete_outline</span>
+          </div>
+          <h3 class="font-black text-sm uppercase tracking-wider" [class.text-white]="!isLightTheme()" [class.text-slate-800]="isLightTheme()">Excluir data especial?</h3>
+          <p class="text-xs text-slate-500">Tem certeza que deseja excluir esta data? A ação será concluída ao Salvar.</p>
+        </div>
+        <div class="p-3 border-t flex items-center gap-2"
+             [class.border-[#10213b]]="!isLightTheme()" [class.bg-slate-900/30]="!isLightTheme()"
+             [class.border-slate-200]="isLightTheme()" [class.bg-slate-50]="isLightTheme()">
+          <button (click)="cancelDeleteSpecialDate()" class="flex-1 py-2 bg-transparent hover:bg-slate-800 text-slate-400 font-bold text-xs rounded-lg transition-colors cursor-pointer"
+                  [class.hover:bg-slate-800]="!isLightTheme()" [class.hover:bg-slate-200]="isLightTheme()">
+            Cancelar
+          </button>
+          <button (click)="confirmDeleteSpecialDate()" class="flex-1 py-2 bg-rose-500 hover:bg-rose-600 text-white font-bold text-xs rounded-lg transition-colors cursor-pointer">
+            Excluir
           </button>
         </div>
       </div>
@@ -4308,91 +4566,111 @@ CREATE TABLE IF NOT EXISTS public.audit_history (
     @}
   }
 
-  <!-- CHATBOT BOB FLOATING WIDGET -->
-  <div class="fixed bottom-6 right-6 z-[200] flex flex-col items-end" id="bob_chat_floating_widget">
-    <!-- Chat Drawer -->
-    @if (isBobChatOpen()) {
-      <div class="w-80 md:w-96 h-[460px] bg-[#030a14] border border-[#10213b] rounded-xl shadow-2xl flex flex-col overflow-hidden mb-3 animate-slide-up" 
-           [class.bg-white]="isLightTheme()" [class.border-slate-200]="isLightTheme()" [class.shadow-xl]="isLightTheme()" id="bob_chat_drawer">
-        <!-- Header -->
-        <div class="px-4 py-3 bg-[#071426] border-b border-[#10213b]/60 flex items-center justify-between"
-             [class.bg-slate-100]="isLightTheme()" [class.border-slate-200]="isLightTheme()" id="bob_chat_header">
-          <div class="flex items-center gap-2.5">
-            <div class="w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center text-white relative shadow-md shadow-emerald-500/20">
-              <span class="material-icons text-base">smart_toy</span>
-              <span class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-400 border border-[#071426] rounded-full animate-ping"></span>
-              <span class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-400 border border-[#071426] rounded-full"></span>
-            </div>
-            <div class="text-left">
-              <h4 class="text-xs font-black uppercase tracking-wider text-white" [class.text-slate-800]="isLightTheme()">Bob</h4>
-              <p class="text-[9px] font-bold text-emerald-400 uppercase tracking-wide">Assistente de Escala</p>
-            </div>
+  <!-- INICIO DO SISTEMA / ANNOUNCEMENT MODAL -->
+  @if (showWelcomeModal()) {
+    <div class="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm transition-all duration-300">
+      <div [class]="'w-full max-w-sm rounded-2xl border p-5 flex flex-col gap-4 shadow-2xl relative ' + 
+                   (isLightTheme() ? 'bg-white border-slate-200 text-slate-900 shadow-slate-100/40' : 'bg-[#030a14] border-[#10213b] text-[#F8FAFC] shadow-black/25')"
+           id="welcome_modal_container">
+        
+        <!-- Icon / Header -->
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 bg-emerald-500 rounded-full flex items-center justify-center text-white shadow-md shadow-emerald-500/20 shrink-0">
+            <span class="material-icons text-lg">campaign</span>
           </div>
-          
-          <button (click)="toggleBobChat()" class="text-slate-400 hover:text-white transition-colors bg-transparent border-none outline-none cursor-pointer p-1 rounded-lg hover:bg-white/5" [class.hover:bg-black/5]="isLightTheme()" [class.hover:text-slate-800]="isLightTheme()">
-            <span class="material-icons text-base">close</span>
-          </button>
+          <div class="text-left">
+            <h3 class="text-xs font-black uppercase tracking-wider text-emerald-500">Comunicado</h3>
+            <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Atualização do Sistema</p>
+          </div>
         </div>
 
-        <!-- Body / Messages viewport -->
-        <div class="flex-1 p-4 overflow-y-auto flex flex-col gap-3 scrollbar-thin bg-[#020813]/60" 
-             [class.bg-slate-50]="isLightTheme()" id="bob_chat_body">
-          @for (msg of bobChatMessages(); track msg.timestamp) {
-            <div class="flex flex-col max-w-[85%] text-left gap-1 animate-fade-in"
-                 [class.self-end]="msg.sender === 'user'"
-                 [class.self-start]="msg.sender === 'bob'">
-              
-              <span class="text-[8px] font-bold uppercase tracking-wider text-slate-500 block px-1"
-                    [class.text-right]="msg.sender === 'user'">
-                {{ msg.sender === 'user' ? 'Você' : 'Bob' }} • {{ msg.timestamp | date:'HH:mm' }}
-              </span>
+        <!-- Content Message -->
+        <div class="text-left text-xs space-y-2.5 leading-relaxed">
+          <p class="font-medium">
+            Pedimos desculpas caso o aplicativo apresente qualquer oscilação momentânea.
+          </p>
+          <p class="text-slate-400 font-normal">
+            O app está em desenvolvimento e novas integrações como agente de inteligência artificial, clima tempo e despertador estão sendo implantados em processo de melhorias.
+          </p>
+          <ul class="space-y-1.5 pl-1.5">
+            <li class="flex items-center gap-2">
+              <span class="material-icons text-emerald-400 text-sm shrink-0">smart_toy</span>
+              <span class="text-slate-300 font-semibold text-[11px]" [class.text-slate-700]="isLightTheme()">Agente de Inteligência Artificial</span>
+            </li>
+            <li class="flex items-center gap-2">
+              <span class="material-icons text-amber-400 text-sm shrink-0">cloud</span>
+              <span class="text-slate-300 font-semibold text-[11px]" [class.text-slate-700]="isLightTheme()">Clima Tempo</span>
+            </li>
+            <li class="flex items-center gap-2">
+              <span class="material-icons text-rose-400 text-sm shrink-0">alarm</span>
+              <span class="text-slate-300 font-semibold text-[11px]" [class.text-slate-700]="isLightTheme()">Despertador & Alertas</span>
+            </li>
+          </ul>
+        </div>
 
-              <div [class]="msg.sender === 'user' ? 'bg-emerald-500 text-white border-emerald-600' : (isLightTheme() ? 'bg-white text-slate-700 border-slate-200' : 'bg-[#0b172a] text-slate-200 border-[#10213b]')" 
-                   class="px-3 py-2.5 rounded-xl text-xs font-medium leading-relaxed shadow-sm border">
-                <div [innerHTML]="formatMarkdown(msg.text)"></div>
-              </div>
+        <!-- Signature & Button -->
+        <div class="flex flex-col gap-3 mt-1 border-t pt-3.5 border-[#10213b]/60" [class.border-slate-200]="isLightTheme()">
+          <div class="flex items-center justify-between">
+            <div class="text-left">
+              <span class="text-xs font-black text-white uppercase tracking-wide" [class.text-slate-800]="isLightTheme()">Anderson Horácio</span>
             </div>
-          }
-
-          @if (isBobTyping()) {
-            <div class="flex flex-col max-w-[85%] text-left gap-1 self-start animate-pulse">
-              <span class="text-[8px] font-bold uppercase tracking-wider text-slate-500 block px-1">Bob está pensando...</span>
-              <div class="px-4 py-3 rounded-xl text-xs bg-[#0b172a] border border-[#10213b] text-slate-400 flex items-center gap-1"
-                   [class.bg-white]="isLightTheme()" [class.border-slate-200]="isLightTheme()">
-                <span class="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce"></span>
-                <span class="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce delay-100"></span>
-                <span class="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce delay-200"></span>
-              </div>
-            </div>
-          }
+            
+            <button (click)="closeWelcomeModal()" 
+                    class="px-5 py-2 bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white font-black text-[10px] uppercase tracking-widest rounded-lg transition-all cursor-pointer border-none shadow-md shadow-emerald-500/20"
+                    id="btn_welcome_modal_ok">
+              OK
+            </button>
+          </div>
         </div>
 
-        <!-- Input footer -->
-        <div class="p-3 bg-[#030a14] border-t border-[#10213b]/60 flex items-center gap-2"
-             [class.bg-white]="isLightTheme()" [class.border-slate-200]="isLightTheme()" id="bob_chat_input_container">
-          <input type="text"
-                 [value]="bobChatInput()"
-                 (input)="bobChatInput.set($any($event.target).value)"
-                 (keydown.enter)="sendChatMessageToBob()"
-                 placeholder="Pergunte ao Bob..."
-                 class="flex-1 px-3 py-2 bg-[#051124] border border-[#10213b] rounded-lg text-xs font-bold text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500 transition-all font-sans"
-                 [class.bg-slate-100]="isLightTheme()" [class.border-slate-200]="isLightTheme()" [class.text-slate-800]="isLightTheme()" [class.placeholder-slate-400]="isLightTheme()" />
-          
-          <button (click)="sendChatMessageToBob()"
-                  class="w-8 h-8 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white flex items-center justify-center transition-all border-none outline-none cursor-pointer shadow-md shadow-emerald-500/20">
-            <span class="material-icons text-sm">send</span>
-          </button>
-        </div>
       </div>
-    }
+    </div>
+  }
 
-    <!-- Floating Action Button -->
-    <button (click)="toggleBobChat()"
-            class="w-14 h-14 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white flex items-center justify-center shadow-lg shadow-emerald-500/30 border border-emerald-400/20 cursor-pointer transition-transform hover:scale-105 active:scale-95 outline-none"
-            title="Conversar com Bob" id="btn_bob_toggle">
-      <span class="material-icons text-2xl">{{ isBobChatOpen() ? 'chat_bubble_outline' : 'smart_toy' }}</span>
-    </button>
-  </div>
+  <!-- PRINT / SCREENSHOT PREVENTION WARNING MODAL -->
+  @if (showPrintWarningModal()) {
+    <div class="fixed inset-0 bg-[#020813]/85 backdrop-blur-sm flex items-center justify-center z-[110] animate-fade-in" id="print_warning_modal">
+      <div class="bg-[#071426] border border-rose-500/30 w-full max-w-md rounded-2xl p-6 shadow-2xl space-y-4 animate-scale-up" [class.bg-white]="isLightTheme()" [class.border-rose-200]="isLightTheme()">
+        
+        <!-- Header -->
+        <div class="flex items-center justify-between pb-2 border-b border-rose-500/20" [class.border-rose-100]="isLightTheme()">
+          <h3 class="font-black text-xs text-rose-400 uppercase tracking-tight flex items-center gap-1.5" [class.text-rose-600]="isLightTheme()">
+            <span class="material-icons text-rose-500 text-sm">warning</span>
+            Captura de Tela / Impressão Detectada
+          </h3>
+          <button (click)="cancelPrintWarning()" class="text-slate-400 hover:text-white bg-transparent border-none cursor-pointer outline-none" [class.hover:text-slate-900]="isLightTheme()">
+            <span class="material-icons text-sm">close</span>
+          </button>
+        </div>
+
+        <div class="space-y-3 text-left">
+          <p class="text-[11px] text-slate-300 leading-relaxed font-sans" [class.text-slate-700]="isLightTheme()">
+            A ação de impressão ou captura de tela (print) <strong class="text-rose-400" [class.text-rose-600]="isLightTheme()">não é recomendada</strong> enquanto o aplicativo está em estado de desenvolvimento.
+          </p>
+          <p class="text-[11px] text-slate-400 leading-relaxed font-sans" [class.text-slate-600]="isLightTheme()">
+            Para garantir a segurança das informações corporativas e do design do nosso aplicativo, se você decidir continuar, <span class="text-amber-400 font-bold" [class.text-amber-600]="isLightTheme()">esta ação será registrada permanentemente no banco de dados</span> de auditoria para fins de ciência do desenvolvedor.
+          </p>
+          <div class="text-[9px] font-mono p-2 rounded border" [class]="isLightTheme() ? 'bg-slate-50 border-slate-200 text-slate-600' : 'bg-[#030a14] border-[#10213b] text-slate-500'">
+            Método detectado: {{ printWarningSource() }}
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex items-center justify-end gap-2.5 pt-3.5 border-t border-[#10213b]" [class.border-slate-100]="isLightTheme()">
+          <button (click)="cancelPrintWarning()" 
+                  class="px-4 py-2 border font-black text-[9px] uppercase rounded-lg cursor-pointer transition-colors outline-none"
+                  [class]="isLightTheme() ? 'border-slate-200 bg-white hover:bg-slate-50 text-slate-600' : 'border-[#10213b] bg-[#030a14] hover:bg-slate-800 text-slate-300'">
+            Cancelar (Descartar)
+          </button>
+          <button (click)="confirmPrintWarning()" 
+                  class="px-4 py-2 bg-rose-600 hover:bg-rose-500 active:scale-95 text-white font-black text-[9px] uppercase rounded-lg cursor-pointer transition-colors border-none outline-none">
+            OK (Entendi e Registrar)
+          </button>
+        </div>
+
+      </div>
+    </div>
+  }
 
 }
 </div>
