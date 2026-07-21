@@ -2982,9 +2982,8 @@
                         @if (team.length > 0) {
                           <div class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-7 lg:grid-cols-8 xl:grid-cols-9 gap-2">
                             @for (col of team; track col.id) {
-                              <div (click)="navigateToCollabPortal(col.id)"
-                                   [id]="'coworker-work-' + col.id"
-                                   class="flex flex-col items-center p-1.5 rounded-[14px] border cursor-pointer hover:scale-[1.03] hover:shadow-md transition-all duration-300 shadow-sm text-center"
+                              <div [id]="'coworker-work-' + col.id"
+                                   class="flex flex-col items-center p-1.5 rounded-[14px] border transition-all duration-300 shadow-sm text-center select-none"
                                    [class]="isLightTheme() ? 'bg-white border-slate-200/80 text-slate-800' : 'bg-[#0b1329]/70 border-[#10213b] text-[#F8FAFC]'">
                                 
                                 <div class="w-full aspect-square rounded-[10px] overflow-hidden border shrink-0 transition-all duration-300"
@@ -3098,9 +3097,8 @@
                         @if (vacs.length > 0) {
                           <div class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-7 lg:grid-cols-8 xl:grid-cols-9 gap-2">
                             @for (col of vacs; track col.id) {
-                              <div (click)="navigateToCollabPortal(col.id)"
-                                   [id]="'coworker-vacation-' + col.id"
-                                   class="flex flex-col items-center p-1.5 rounded-[14px] border cursor-pointer hover:scale-[1.03] hover:shadow-md transition-all duration-300 shadow-sm text-center"
+                              <div [id]="'coworker-vacation-' + col.id"
+                                   class="flex flex-col items-center p-1.5 rounded-[14px] border transition-all duration-300 shadow-sm text-center select-none"
                                    [class]="isLightTheme() ? 'bg-white border-slate-200/80 text-slate-800' : 'bg-[#0b1329]/70 border-[#10213b] text-[#F8FAFC]'">
                                 
                                 <div class="w-full aspect-square rounded-[10px] overflow-hidden border shrink-0 transition-all duration-300"
@@ -4311,12 +4309,12 @@ CREATE TABLE IF NOT EXISTS public.audit_history (
                      [src]="detailCol.photo" 
                      alt="Colaborador" 
                      class="w-10 h-10 rounded-full object-cover border border-[#10213b] cursor-pointer hover:opacity-85 transition-all" 
-                     title="Ir para o Portal do Colaborador"
+                     title="Colega de trabalho"
                      referrerpolicy="no-referrer" />
               } @else {
                 <div (click)="navigateToCollabPortal(detailCol.id)"
                      class="w-10 h-10 rounded-full bg-[#10213b] text-slate-300 flex items-center justify-center font-black text-sm cursor-pointer hover:opacity-85 transition-all"
-                     title="Ir para o Portal do Colaborador">
+                     title="Colega de trabalho">
                   {{ detailCol.name.slice(0, 2).toUpperCase() }}
                 </div>
               }
@@ -4324,7 +4322,7 @@ CREATE TABLE IF NOT EXISTS public.audit_history (
               <div class="flex-1">
                 <span (click)="navigateToCollabPortal(detailCol.id)"
                       class="text-xs font-black text-white block cursor-pointer hover:text-emerald-400 hover:underline transition-all"
-                      title="Ir para o Portal do Colaborador">{{ detailCol.name }}</span>
+                      title="Colega de trabalho">{{ detailCol.name }}</span>
                 <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider font-mono">
                   {{ detailCol.role }} • {{ detailCol.sector }}
                 </span>
@@ -4421,12 +4419,12 @@ CREATE TABLE IF NOT EXISTS public.audit_history (
                            [src]="col.photo" 
                            alt="Avatar" 
                            class="w-8 h-8 rounded-full object-cover border border-[#10213b] cursor-pointer hover:opacity-85 transition-all" 
-                           title="Ir para o Portal do Colaborador"
+                           title="Colega de trabalho"
                            referrerpolicy="no-referrer" />
                     } @else {
                       <div (click)="navigateToCollabPortal(col.id)"
                            class="w-8 h-8 rounded-full bg-[#10213b] text-slate-300 flex items-center justify-center font-bold text-xs cursor-pointer hover:opacity-85 transition-all"
-                           title="Ir para o Portal do Colaborador">
+                           title="Colega de trabalho">
                         {{ col.name.slice(0, 2).toUpperCase() }}
                       </div>
                     }
@@ -4434,7 +4432,7 @@ CREATE TABLE IF NOT EXISTS public.audit_history (
                     <div>
                       <span (click)="navigateToCollabPortal(col.id)"
                             class="block text-xs font-extrabold text-white leading-tight cursor-pointer hover:text-emerald-400 hover:underline transition-all"
-                            title="Ir para o Portal do Colaborador">{{ col.name }}</span>
+                            title="Colega de trabalho">{{ col.name }}</span>
                       <span class="text-[8px] font-semibold text-slate-400 uppercase tracking-wider font-mono">
                         {{ col.role }} • {{ col.sector }}
                       </span>

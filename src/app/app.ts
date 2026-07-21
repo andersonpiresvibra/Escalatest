@@ -1531,6 +1531,11 @@ export class App {
   }
 
   constructor() {
+    effect(() => {
+      const loggedId = this.selectedSimulatedCollabId();
+      this.scaleService.selectedSimulatedCollabId.set(loggedId);
+    });
+
     if (typeof window !== 'undefined' && window.innerWidth < 768) {
       this.activeSubTab.set('portal');
     }
@@ -3266,6 +3271,11 @@ export class App {
   }
 
   loginAsCollab(id: string) {
+    const currentLogged = this.getLoggedCollab();
+    if (currentLogged && !this.isAdmin(currentLogged) && currentLogged.id !== id) {
+      this.showToast('Os avatares dos colegas são apenas informativos. Acesso restrito à sessão de outros colaboradores.');
+      return;
+    }
     this.selectedSimulatedCollabId.set(id);
     const collab = this.scaleService.collaborators().find(c => c.id === id);
     if (collab) {
@@ -3297,7 +3307,7 @@ export class App {
   navigateToCollabPortal(id: string): void {
     const logged = this.getLoggedCollab();
     if (logged && !this.isAdmin(logged) && logged.id !== id) {
-      this.showToast('Acesso restrito. Não é permitido visualizar a escala de outros colaboradores.');
+      this.showToast('Os avatares dos colegas são apenas informativos. Acesso restrito à sessão de outros colaboradores.');
       return;
     }
     this.loginAsCollab(id);
@@ -3815,7 +3825,7 @@ export class App {
       }
 
       // 'TODOS'
-      return this.getCollabEffectiveShiftForDay(c, day) === myShiftCode;
+      return true;
     });
 
     return this.sortCollaboratorsWithLoggedFirst(filtered);

@@ -1,4 +1,4 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, WritableSignal } from '@angular/core';
 import { initializeApp } from 'firebase/app';
 import { initializeFirestore, getFirestore, collection, doc, onSnapshot, setDoc, deleteDoc } from 'firebase/firestore';
 import { firebaseConfig } from './firebase-config';
@@ -199,9 +199,10 @@ export class ScaleService {
   // Selected state signals
   selectedCollabName = signal<string | null>(null);
   currentRole = signal<string>('SUPERVISOR');
+  selectedSimulatedCollabId = signal<string | null>(safeGetLocalStorageItem('selectedSimulatedCollabId'));
 
   // Real-time synchronization lists via signals
-  collaborators = (() => {
+  _allCollaborators = (() => {
     const s = signal<Collaborator[]>([]);
     const originalSet = s.set.bind(s);
     const originalUpdate = s.update.bind(s);
@@ -216,6 +217,18 @@ export class ScaleService {
     s.update = (fn: (val: Collaborator[]) => Collaborator[]) => originalUpdate((val) => normalize(fn(val)));
     return s;
   })();
+
+  collaborators: WritableSignal<Collaborator[]> = (() => {
+    const fn = (() => this._allCollaborators()) as unknown as WritableSignal<Collaborator[]>;
+    fn.set = (val: Collaborator[]) => this._allCollaborators.set(val);
+    fn.update = (fnUpdate: (val: Collaborator[]) => Collaborator[]) => this._allCollaborators.update(fnUpdate);
+    fn.asReadonly = () => this._allCollaborators;
+    return fn;
+  })();
+
+  setCollaborators(list: Collaborator[]): void {
+    this._allCollaborators.set(list);
+  }
   shiftTypes = signal<ShiftType[]>([]);
   siglaTypes = signal<SiglaType[]>([]);
   auditHistory = signal<BackupHistory[]>([]);
@@ -966,9 +979,7 @@ export class ScaleService {
           special_dates: newCollab.specialDates || null,
           folga_requests: newCollab.folgaRequests || null,
           password: newCollab.password || null,
-          is_admin: newCollab.isAdmin,
-          nickname: newCollab.nickname || null,
-          gafes: newCollab.gafes || null
+          is_admin: newCollab.isAdmin ?? false
         };
         const upRes = await this.supabase.from('colaboradores').upsert(dbRow);
         if (upRes.error) throw upRes.error;
@@ -1065,9 +1076,7 @@ export class ScaleService {
           special_dates: refreshedCol.specialDates || null,
           folga_requests: refreshedCol.folgaRequests || null,
           password: refreshedCol.password || null,
-          is_admin: refreshedCol.isAdmin,
-          nickname: refreshedCol.nickname || null,
-          gafes: refreshedCol.gafes || null
+          is_admin: refreshedCol.isAdmin ?? false
         };
         const upRes = await this.supabase.from('colaboradores').upsert(dbRow);
         if (upRes.error) throw upRes.error;
@@ -1145,7 +1154,9 @@ export class ScaleService {
             photo_url: refreshed.photoUrl || refreshed.photo || null,
             birthday: refreshed.birthday || null,
             special_dates: refreshed.specialDates || null,
-            folga_requests: []
+            folga_requests: [],
+            password: refreshed.password || null,
+            is_admin: refreshed.isAdmin ?? false
           });
         });
 
@@ -1244,7 +1255,9 @@ export class ScaleService {
             photo_url: refreshed.photoUrl || refreshed.photo || null,
             birthday: refreshed.birthday || null,
             special_dates: refreshed.specialDates || null,
-            folga_requests: refreshed.folgaRequests || null
+            folga_requests: refreshed.folgaRequests || null,
+            password: refreshed.password || null,
+            is_admin: refreshed.isAdmin ?? false
           });
         });
 
