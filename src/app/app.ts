@@ -81,6 +81,21 @@ interface AppNotification {
   read: boolean;
 }
 
+export interface HourlyWeatherItem {
+  timeIso: string;
+  timeLabel: string;
+  dateLabel: string;
+  hour: number;
+  temp: number;
+  rainProb: number;
+  humidity: number;
+  wind: number;
+  weatherCode: number;
+  conditionText: string;
+  icon: string;
+  isNight: boolean;
+}
+
 @Component({
   selector: 'app-root',
   standalone: true,
@@ -300,6 +315,221 @@ export class App {
   public selectedCalendarDay = signal<number>(new Date().getDate());
   public hidePastDays = signal<boolean>(false);
   public coworkersFilter = signal<'MEU_TURNO' | 'OUTROS' | 'MANHA_TARDE' | 'TODOS'>('MEU_TURNO');
+
+  // Weather Sub-Header Signals & Methods (Guarulhos Base)
+  public rawHourlyWeather = signal<HourlyWeatherItem[]>([]);
+  public weatherLoading = signal<boolean>(false);
+  public weatherError = signal<string | null>(null);
+  public weatherSelectedShift = signal<'AUTO' | 'MANHA' | 'TARDE' | 'NOITE' | 'ADM' | 'PROXIMAS'>('AUTO');
+  public weatherExpanded = signal<boolean>(true);
+
+  public async fetchWeatherForecast(): Promise<void> {
+    this.weatherLoading.set(true);
+    this.weatherError.set(null);
+    try {
+      const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=-23.4356&longitude=-46.4731&hourly=temperature_2m,relative_humidity_2m,precipitation_probability,weather_code,wind_speed_10m&forecast_days=2&timezone=America%2FSao_Paulo');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      
+      if (data && data.hourly && Array.isArray(data.hourly.time)) {
+        const times: string[] = data.hourly.time;
+        const temps: number[] = data.hourly.temperature_2m || [];
+        const humidities: number[] = data.hourly.relative_humidity_2m || [];
+        const rainProbs: number[] = data.hourly.precipitation_probability || [];
+        const codes: number[] = data.hourly.weather_code || [];
+        const winds: number[] = data.hourly.wind_speed_10m || [];
+
+        const items: HourlyWeatherItem[] = times.map((t, idx) => {
+          const dateObj = new Date(t);
+          const hour = dateObj.getHours();
+          const timeLabel = `${String(hour).padStart(2, '0')}:00`;
+          const dateLabel = `${String(dateObj.getDate()).padStart(2, '0')}/${String(dateObj.getMonth() + 1).padStart(2, '0')}`;
+          
+          const code = codes[idx] ?? 0;
+          const { text, icon } = this.getWmoWeatherDetails(code, hour);
+
+          return {
+            timeIso: t,
+            timeLabel,
+            dateLabel,
+            hour,
+            temp: Math.round(temps[idx] ?? 20),
+            rainProb: Math.round(rainProbs[idx] ?? 0),
+            humidity: Math.round(humidities[idx] ?? 50),
+            wind: Math.round(winds[idx] ?? 10),
+            weatherCode: code,
+            conditionText: text,
+            icon,
+            isNight: hour < 6 || hour >= 18
+          };
+        });
+
+        this.rawHourlyWeather.set(items);
+      } else {
+        throw new Error('Formato de resposta inválido');
+      }
+    } catch (err: unknown) {
+      console.warn('Weather fetch warning, falling back to simulated weather:', err);
+      this.rawHourlyWeather.set(this.generateFallbackWeather());
+    } finally {
+      this.weatherLoading.set(false);
+    }
+  }
+
+  public getWmoWeatherDetails(code: number, hour: number): { text: string; icon: string } {
+    const isNightTime = hour < 6 || hour >= 18;
+    switch (code) {
+      case 0:
+        return { text: 'Céu Limpo', icon: isNightTime ? 'nights_stay' : 'wb_sunny' };
+      case 1:
+        return { text: 'Predominantemente Limpo', icon: isNightTime ? 'nights_stay' : 'wb_sunny' };
+      case 2:
+        return { text: 'Parcialmente Nublado', icon: isNightTime ? 'nights_stay' : 'partly_cloudy_day' };
+      case 3:
+        return { text: 'Nublado', icon: 'cloud' };
+      case 45:
+      case 48:
+        return { text: 'Nevoeiro', icon: 'foggy' };
+      case 51:
+      case 53:
+      case 55:
+        return { text: 'Garoa Leve', icon: 'grain' };
+      case 61:
+      case 63:
+        return { text: 'Chuva', icon: 'water_drop' };
+      case 65:
+        return { text: 'Chuva Forte', icon: 'water_drop' };
+      case 80:
+      case 81:
+      case 82:
+        return { text: 'Pancadas de Chuva', icon: 'umbrella' };
+      case 95:
+      case 96:
+      case 99:
+        return { text: 'Tempestade com Raios', icon: 'thunderstorm' };
+      default:
+        return { text: 'Parcialmente Nublado', icon: isNightTime ? 'nights_stay' : 'partly_cloudy_day' };
+    }
+  }
+
+  public generateFallbackWeather(): HourlyWeatherItem[] {
+    const items: HourlyWeatherItem[] = [];
+    const now = new Date();
+    for (let i = 0; i < 48; i++) {
+      const d = new Date(now.getTime() + i * 3600000);
+      const hour = d.getHours();
+      const isNight = hour < 6 || hour >= 18;
+      const temp = isNight ? 16 + (i % 3) : 22 + (i % 5);
+      const rainProb = (hour >= 14 && hour <= 18) ? 30 : 5;
+      const { text, icon } = this.getWmoWeatherDetails(rainProb > 25 ? 61 : 1, hour);
+      items.push({
+        timeIso: d.toISOString(),
+        timeLabel: `${String(hour).padStart(2, '0')}:00`,
+        dateLabel: `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`,
+        hour,
+        temp,
+        rainProb,
+        humidity: 60,
+        wind: 12,
+        weatherCode: rainProb > 25 ? 61 : 1,
+        conditionText: text,
+        icon,
+        isNight
+      });
+    }
+    return items;
+  }
+
+  public getShiftHoursInfo(shiftStr?: string): { startHour: number; endHour: number; label: string } {
+    const norm = (shiftStr || '').toUpperCase().trim();
+    if (norm.includes('NOITE') || norm.includes('3ª') || norm.includes('3º') || norm.includes('NIGHT') || norm === 'N1' || norm === 'N2') {
+      return { startHour: 21, endHour: 6, label: 'Turno Noite (21h00 às 06h00)' };
+    }
+    if (norm.includes('MANHÃ') || norm.includes('MANHA') || norm.includes('1ª') || norm.includes('1º') || norm === 'T1' || norm === 'M1') {
+      return { startHour: 6, endHour: 15, label: 'Turno Manhã (06h00 às 15h00)' };
+    }
+    if (norm.includes('TARDE') || norm.includes('2ª') || norm.includes('2º') || norm === 'T2') {
+      return { startHour: 15, endHour: 0, label: 'Turno Tarde (15h00 às 00h00)' };
+    }
+    if (norm.includes('ADM') || norm.includes('ADMIN') || norm.includes('7H20')) {
+      return { startHour: 8, endHour: 17, label: 'Turno ADM (08h00 às 17h00)' };
+    }
+    return { startHour: 21, endHour: 6, label: 'Turno Operacional (21h00 às 06h00)' };
+  }
+
+  public shiftWeatherList = computed(() => {
+    const raw = this.rawHourlyWeather();
+    if (raw.length === 0) return [];
+
+    const mode = this.weatherSelectedShift();
+    const logged = this.getLoggedCollab();
+
+    let startHour = 21;
+    let endHour = 6;
+
+    if (mode === 'NOITE') {
+      startHour = 21; endHour = 6;
+    } else if (mode === 'MANHA') {
+      startHour = 6; endHour = 15;
+    } else if (mode === 'TARDE') {
+      startHour = 15; endHour = 0;
+    } else if (mode === 'ADM') {
+      startHour = 8; endHour = 17;
+    } else if (mode === 'PROXIMAS') {
+      const currentHour = new Date().getHours();
+      let startIdx = raw.findIndex(item => item.hour === currentHour);
+      if (startIdx === -1) startIdx = 0;
+      return raw.slice(startIdx, startIdx + 12);
+    } else {
+      const shiftStr = logged ? logged.shift : '';
+      const parsed = this.getShiftHoursInfo(shiftStr);
+      startHour = parsed.startHour;
+      endHour = parsed.endHour;
+    }
+
+    let startIdx = raw.findIndex(item => item.hour === startHour);
+    if (startIdx === -1) startIdx = 0;
+
+    let totalItems = 10;
+    if (startHour > endHour) {
+      totalItems = (24 - startHour) + endHour + 1;
+    } else {
+      totalItems = (endHour - startHour) + 1;
+    }
+
+    return raw.slice(startIdx, startIdx + totalItems);
+  });
+
+  public currentWeatherOverview = computed(() => {
+    const list = this.shiftWeatherList();
+    if (list.length === 0) {
+      return { temp: '--', condition: 'Carregando...', icon: 'cloud', rainProb: 0, humidity: 0, wind: 0 };
+    }
+    const first = list[0];
+    return {
+      temp: `${first.temp}°C`,
+      condition: first.conditionText,
+      icon: first.icon,
+      rainProb: first.rainProb,
+      humidity: first.humidity,
+      wind: first.wind
+    };
+  });
+
+  public getLoggedCollabShiftLabel(): string {
+    const logged = this.getLoggedCollab();
+    const mode = this.weatherSelectedShift();
+    if (mode === 'MANHA') return 'Visão: Turno Manhã (06h00 às 15h00)';
+    if (mode === 'TARDE') return 'Visão: Turno Tarde (15h00 às 00h00)';
+    if (mode === 'NOITE') return 'Visão: Turno Noite (21h00 às 06h00)';
+    if (mode === 'ADM') return 'Visão: Turno ADM (08h00 às 17h00)';
+    if (mode === 'PROXIMAS') return 'Visão: Próximas 12 Horas';
+    if (logged) {
+      const parsed = this.getShiftHoursInfo(logged.shift);
+      return `Seu Turno: ${logged.shift} (${parsed.startHour.toString().padStart(2, '0')}h00 às ${parsed.endHour.toString().padStart(2, '0')}h00)`;
+    }
+    return 'Turno Noite (21h00 às 06h00)';
+  }
 
   // Chatbot Bob Signals & Methods
   public isBobChatOpen = signal<boolean>(false);
@@ -1541,6 +1771,7 @@ export class App {
     }
     this.updateClock();
     setInterval(() => this.updateClock(), 1000);
+    this.fetchWeatherForecast();
     this.showToast('Escala Easy VIBRA - Protótipo MVP Pronto');
     if (typeof document !== 'undefined') {
       document.body.classList.add('light-theme');
