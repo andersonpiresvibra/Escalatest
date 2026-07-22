@@ -451,7 +451,7 @@
   </header>
 
   <!-- SUB-HEADER DE PREVISÃO DO TEMPO • GUARULHOS (BASE DO TRABALHO) -->
-  @if (getLoggedCollab()) {
+  @if (getLoggedCollab() && (activeSubTab() === 'portal' || activeSubTab() === 'escala' || activeSubTab() === 'perfil' || activeSubTab() === 'equipe' || activeSubTab() === 'indicadores')) {
     <div id="weather_subheader_bar"
          class="w-full border-b border-[#10213b] transition-all duration-300 select-none px-3 md:px-4 py-2 shrink-0 z-30"
          [class.bg-[#050f1d]]="!isLightTheme()"
@@ -2777,13 +2777,13 @@
                 <div class="lg:col-span-4 space-y-3" [class.hidden]="isMobile() && activeSubTab() !== 'indicadores'">
 
                   <!-- CARD 1: MONITOR DE ESCALA -->
-                  <div [class]="'w-full border rounded-xl flex flex-col p-3 gap-2 transition-all duration-300 shadow-lg ' + (isLightTheme() ? 'bg-white border-slate-200 text-slate-900 shadow-slate-100/40' : 'bg-[#0F172A] border-[#334155] text-[#F8FAFC] shadow-black/25')" style="box-shadow: 0 12px 24px rgba(0,0,0,0.25);">
+                  <div [class]="'w-full border rounded-xl flex flex-col p-3 gap-2 transition-all duration-300 ' + (isLightTheme() ? 'bg-white border-slate-200 text-slate-900 shadow-md' : 'bg-[#0F172A] border-[#334155] text-[#F8FAFC] shadow-lg')">
                     <!-- HEADER -->
                     <div class="flex items-center pb-2 border-b" [class]="isLightTheme() ? 'border-slate-100' : 'border-[#334155]'">
                       <div class="flex items-center gap-2">
                         <span class="material-icons text-emerald-400 text-sm">query_stats</span>
                         <span [class]="'text-[13px] font-bold tracking-wide uppercase ' + (isLightTheme() ? 'text-slate-800' : 'text-[#F8FAFC]')">
-                          Monitor de Escala
+                          Status
                         </span>
                       </div>
                     </div>
@@ -2867,14 +2867,14 @@
                     </div>
                   </div>
 
-                  <!-- CARD 2: INDICADORES DE PERFIL -->
-                  <div [class]="'w-full border rounded-[16px] flex flex-col p-4 gap-3.5 transition-all duration-300 shadow-xl ' + (isLightTheme() ? 'bg-white border-slate-200 text-slate-900 shadow-slate-100/40' : 'bg-[#0F172A] border-[#334155] text-[#F8FAFC] shadow-black/25')" style="box-shadow: 0 12px 24px rgba(0,0,0,0.25);">
+                  <!-- CARD 2: INDICADORES DE JORNADA -->
+                  <div [class]="'w-full border rounded-[16px] flex flex-col p-4 gap-3.5 transition-all duration-300 ' + (isLightTheme() ? 'bg-white border-slate-200 text-slate-900 shadow-md' : 'bg-[#0F172A] border-[#334155] text-[#F8FAFC] shadow-lg')">
                     <!-- HEADER -->
                     <div class="flex items-center pb-2 border-b" [class]="isLightTheme() ? 'border-slate-100' : 'border-[#334155]'">
                       <div class="flex items-center gap-2">
                         <span class="material-icons text-emerald-400 text-sm">speed</span>
                         <span [class]="'text-[13px] font-bold tracking-wide uppercase ' + (isLightTheme() ? 'text-slate-800' : 'text-[#F8FAFC]')">
-                          Indicadores de Perfil
+                          Indicadores de Jornada
                         </span>
                       </div>
                     </div>
@@ -3018,10 +3018,14 @@
                 </div>
                 
                 <!-- TRABALHO / FOLGA COMPONENT (8 COLUMNS) -->
-                <div id="panel-trabalho-folga" [class]="'lg:col-span-8 w-full border rounded-[16px] p-5 shadow-2xl space-y-5 transition-all duration-300 ' + (isLightTheme() ? 'bg-white border-slate-200 text-slate-900 shadow-slate-100/40' : 'bg-[#0F172A] border-[#334155] text-[#F8FAFC] shadow-black/25')" style="box-shadow: 0 12px 24px rgba(0,0,0,0.25);" [class.hidden]="isMobile() && activeSubTab() !== 'portal' && activeSubTab() !== 'escala'">
+                <div id="panel-trabalho-folga" [class]="'lg:col-span-8 w-full border rounded-[16px] p-5 space-y-5 transition-all duration-300 ' + (isLightTheme() ? 'bg-white border-slate-200 text-slate-900 shadow-md' : 'bg-[#0F172A] border-[#334155] text-[#F8FAFC] shadow-lg')" [class.hidden]="isMobile() && activeSubTab() !== 'portal' && activeSubTab() !== 'escala'">
                   
                   <!-- HEADER / TABS (SPLIT 50% / 50%) -->
-                  <div id="trabalho-folga-header" class="w-full border-b border-slate-100/10 pb-2.5" [class.border-slate-100]="isLightTheme()">
+                  <div id="trabalho-folga-header" class="w-full pb-0 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div class="flex items-center gap-2">
+                      <span class="material-icons text-emerald-500 text-lg">calendar_today</span>
+                      <h3 class="text-sm sm:text-base font-black uppercase tracking-wider" [class]="isLightTheme() ? 'text-slate-800' : 'text-slate-100'">Minha Escala</h3>
+                    </div>
                     <div class="grid grid-cols-2 w-full sm:max-w-xs p-1.5 rounded-2xl" [class]="isLightTheme() ? 'bg-slate-100' : 'bg-[#0b1329]'">
                       <button id="btn-tab-trabalho" (click)="setTurnVacationTab('work')"
                               class="w-full py-3.5 rounded-xl text-[11px] font-black uppercase tracking-wider transition-all duration-300 cursor-pointer flex items-center justify-center gap-2"
@@ -3050,11 +3054,11 @@
                             <!-- Toggle button -->
                             <button (click)="hidePastDays.set(!hidePastDays())"
                                     class="flex items-center gap-1 px-1.5 py-0.5 rounded border text-[8.5px] font-black uppercase tracking-wider transition-all duration-300 cursor-pointer shadow-sm select-none"
-                                    [class]="hidePastDays() ? 
-                                             (isLightTheme() ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-emerald-500 text-emerald-950 border-emerald-500') : 
-                                             (isLightTheme() ? 'bg-white border-slate-200 text-slate-400 hover:text-slate-600' : 'bg-[#0b1329]/40 border-[#10213b] text-slate-400 hover:text-[#F8FAFC]')">
-                              <span class="material-icons text-[10px]">{{ hidePastDays() ? 'visibility_off' : 'visibility' }}</span>
-                              {{ hidePastDays() ? 'Futuros' : 'Todos' }}
+                                    [class]="!hidePastDays() ? 
+                                             (isLightTheme() ? 'bg-emerald-600 text-white border-emerald-600 font-bold' : 'bg-emerald-500 text-emerald-950 border-emerald-500 font-black') : 
+                                             (isLightTheme() ? 'bg-white border-slate-200 text-slate-500 hover:text-slate-800' : 'bg-[#0b1329]/40 border-[#10213b] text-slate-400 hover:text-[#F8FAFC]')">
+                              <span class="material-icons text-[10px]">{{ !hidePastDays() ? 'visibility' : 'visibility_off' }}</span>
+                              Concluídos
                             </button>
                             <span class="text-[9px] font-mono text-emerald-400 bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-500/20">{{ getFilteredCollabWorkDays(logged).length }} Ativos</span>
                           </div>
@@ -3165,11 +3169,11 @@
                             <!-- Toggle button -->
                             <button (click)="hidePastDays.set(!hidePastDays())"
                                     class="flex items-center gap-1 px-1.5 py-0.5 rounded border text-[8.5px] font-black uppercase tracking-wider transition-all duration-300 cursor-pointer shadow-sm select-none"
-                                    [class]="hidePastDays() ? 
-                                             (isLightTheme() ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-emerald-500 text-emerald-950 border-emerald-500') : 
-                                             (isLightTheme() ? 'bg-white border-slate-200 text-slate-400 hover:text-slate-600' : 'bg-[#0b1329]/40 border-[#10213b] text-slate-400 hover:text-[#F8FAFC]')">
-                              <span class="material-icons text-[10px]">{{ hidePastDays() ? 'visibility_off' : 'visibility' }}</span>
-                              {{ hidePastDays() ? 'Futuros' : 'Todos' }}
+                                    [class]="!hidePastDays() ? 
+                                             (isLightTheme() ? 'bg-amber-600 text-white border-amber-600 font-bold' : 'bg-amber-500 text-amber-950 border-amber-500 font-black') : 
+                                             (isLightTheme() ? 'bg-white border-slate-200 text-slate-500 hover:text-slate-800' : 'bg-[#0b1329]/40 border-[#10213b] text-slate-400 hover:text-[#F8FAFC]')">
+                              <span class="material-icons text-[10px]">{{ !hidePastDays() ? 'visibility' : 'visibility_off' }}</span>
+                              Concluídos
                             </button>
                             <span class="text-[9px] font-mono text-amber-400 bg-amber-950/40 px-2 py-0.5 rounded border border-amber-500/20">{{ getFilteredCollabOffDays(logged).length }} Folgas</span>
                           </div>
@@ -3263,7 +3267,7 @@
 
                   <!-- SECTION: FOLGAS SOLICITADAS -->
                 <div class="rounded-lg p-3.5 space-y-2 transition-colors" [class.hidden]="isMobile() && activeSubTab() !== 'portal' && activeSubTab() !== 'escala'"
-                     [class]="isLightTheme() ? 'bg-slate-50 border border-slate-200 shadow-sm' : 'bg-[#030a14] border border-[#10213b] shadow-xl'">
+                     [class]="isLightTheme() ? 'bg-white border border-slate-200 shadow-md' : 'bg-[#030a14] border border-[#10213b] shadow-lg'">
                   <div class="flex items-center justify-between pb-1 border-b border-[#10213b]/40">
                     <h4 class="font-black text-[11px] uppercase tracking-wider flex items-center gap-1.5"
                         [class]="isLightTheme() ? 'text-slate-800' : 'text-slate-100'">
@@ -3407,6 +3411,34 @@
                   </div>
 
                   <div class="space-y-3">
+                    <!-- Foto de Perfil com Crop Trigger -->
+                    <div class="flex flex-col items-center justify-center pb-2">
+                      <div (click)="profilePhotoCropInput.click()"
+                           title="Clique para alterar e recortar sua foto de perfil"
+                           class="relative w-16 h-16 rounded-full overflow-hidden border-2 shrink-0 shadow-md cursor-pointer group transition-all duration-200 hover:scale-105 active:scale-95 border-emerald-500/60 bg-slate-100 hover:border-emerald-600">
+                        
+                        <img [src]="getCollabPhoto(logged)"
+                             [alt]="logged.name"
+                             class="w-full h-full object-cover group-hover:opacity-50 transition-opacity duration-200"
+                             referrerpolicy="no-referrer">
+
+                        <!-- Overlay Hover -->
+                        <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-white transition-opacity duration-200">
+                          <span class="material-icons text-base">photo_camera</span>
+                          <span class="text-[8px] font-black uppercase tracking-tight">Alterar</span>
+                        </div>
+
+                        <!-- Borda inferior indicando crop -->
+                        <div class="absolute bottom-0 inset-x-0 bg-emerald-600/90 py-0.5 text-center text-white text-[8px] font-bold flex items-center justify-center gap-0.5">
+                          <span class="material-icons text-[10px]">crop</span>
+                        </div>
+                      </div>
+
+                      <!-- Input File Oculto -->
+                      <input type="file" #profilePhotoCropInput class="hidden" accept="image/*" (change)="onProfilePhotoSelectedForCrop($event)">
+                      <span class="text-[9px] font-medium text-slate-400 mt-1">Clique para recortar e alterar foto</span>
+                    </div>
+
                     <div class="flex flex-col gap-1">
                       <label class="text-[9px] font-black uppercase text-slate-400 tracking-wider">Nome Completo</label>
                       <input type="text" [value]="logged.name" #newNameInput
@@ -3428,14 +3460,7 @@
                              [class.bg-white]="isLightTheme()" [class.border-slate-200]="isLightTheme()" [class.text-slate-900]="isLightTheme()">
                     </div>
 
-                    <div class="flex flex-col gap-1">
-                      <label class="text-[9px] font-black uppercase text-slate-400 tracking-wider">Foto do Perfil (URL)</label>
-                      <input type="text" [value]="logged.photoUrl || ''" #newPhotoUrlInput placeholder="https://exemplo.com/foto.jpg"
-                             class="bg-[#030a14] border border-[#10213b]/40 text-white text-[11px] px-3 py-2 rounded-lg w-full outline-none focus:border-emerald-500 font-sans"
-                             [class.bg-white]="isLightTheme()" [class.border-slate-200]="isLightTheme()" [class.text-slate-900]="isLightTheme()">
-                    </div>
-
-                    <button (click)="saveProfileChanges(logged, newNameInput.value, newBirthdayInput.value, newPhoneInput.value, newPhotoUrlInput.value)"
+                    <button (click)="saveProfileChanges(logged, newNameInput.value, newBirthdayInput.value, newPhoneInput.value)"
                             class="w-full text-center py-2 bg-emerald-500 hover:bg-emerald-400 text-emerald-950 font-black text-[10px] uppercase rounded-lg cursor-pointer transition-colors border-none outline-none flex items-center justify-center gap-1.5 shadow-md active:scale-95">
                       <span class="material-icons text-xs">save</span>
                       Salvar Alterações
@@ -3574,7 +3599,7 @@
 
               <!-- SECTION: MINHA EQUIPE DO TURNO -->
               <div [class.hidden]="!isMobile() || activeSubTab() !== 'equipe'"
-                   [class]="'w-full border rounded-[16px] flex flex-col p-4 gap-3.5 transition-all duration-300 shadow-xl ' + (isLightTheme() ? 'bg-white border-slate-200 text-slate-900 shadow-slate-100/40' : 'bg-[#0F172A] border-[#334155] text-[#F8FAFC] shadow-black/25')" style="box-shadow: 0 12px 24px rgba(0,0,0,0.25);">
+                   [class]="'w-full border rounded-[16px] flex flex-col p-4 gap-3.5 transition-all duration-300 ' + (isLightTheme() ? 'bg-white border-slate-200 text-slate-900 shadow-md' : 'bg-[#0F172A] border-[#334155] text-[#F8FAFC] shadow-lg')">
                 <!-- HEADER -->
                 <div class="flex items-center pb-2 border-b" [class]="isLightTheme() ? 'border-slate-100' : 'border-[#334155]'">
                   <div class="flex items-center gap-2">
@@ -4713,33 +4738,28 @@ CREATE TABLE IF NOT EXISTS public.audit_history (
             <span class="material-icons text-lg">campaign</span>
           </div>
           <div class="text-left">
-            <h3 class="text-xs font-black uppercase tracking-wider text-emerald-500">Comunicado</h3>
-            <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Atualização do Sistema</p>
+            <h3 class="text-xs font-black uppercase tracking-wider text-emerald-500">Comunicado aos Colaboradores</h3>
+            <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Atualização do Sistema Mobile</p>
           </div>
         </div>
 
         <!-- Content Message -->
         <div class="text-left text-xs space-y-2.5 leading-relaxed">
-          <p class="font-medium">
-            Pedimos desculpas caso o aplicativo apresente qualquer oscilação momentânea.
+          <p class="font-medium" [class.text-slate-800]="isLightTheme()">
+            Aplicativo disponibilizado para uso dos colaboradores (versão mobile) e em constante aperfeiçoamento.
           </p>
           <p class="text-slate-400 font-normal">
-            O app está em desenvolvimento e novas integrações como agente de inteligência artificial, clima tempo e despertador estão sendo implantados em processo de melhorias.
+            A funcionalidade de solicitação de folgas está sendo implantada e pode apresentar oscilações momentâneas.
           </p>
-          <ul class="space-y-1.5 pl-1.5">
-            <li class="flex items-center gap-2">
-              <span class="material-icons text-emerald-400 text-sm shrink-0">smart_toy</span>
-              <span class="text-slate-300 font-semibold text-[11px]" [class.text-slate-700]="isLightTheme()">Agente de Inteligência Artificial</span>
-            </li>
-            <li class="flex items-center gap-2">
-              <span class="material-icons text-amber-400 text-sm shrink-0">cloud</span>
-              <span class="text-slate-300 font-semibold text-[11px]" [class.text-slate-700]="isLightTheme()">Clima Tempo</span>
-            </li>
-            <li class="flex items-center gap-2">
-              <span class="material-icons text-rose-400 text-sm shrink-0">alarm</span>
-              <span class="text-slate-300 font-semibold text-[11px]" [class.text-slate-700]="isLightTheme()">Despertador & Alertas</span>
-            </li>
-          </ul>
+          
+          <div class="p-2.5 rounded-xl border flex items-start gap-2.5"
+               [class]="isLightTheme() ? 'bg-emerald-50/80 border-emerald-200 text-emerald-950' : 'bg-emerald-950/30 border-emerald-500/20 text-emerald-200'">
+            <span class="material-icons text-emerald-400 text-base shrink-0 mt-0.5">wb_sunny</span>
+            <div class="text-[11px] leading-snug">
+              <span class="font-bold block mb-0.5 text-emerald-400">Previsão do Tempo Inteligente</span>
+              Novo sistema com previsão hora a hora para o aeroporto de Guarulhos (ideia desenvolvida com o <strong>Caio do setor de testes</strong>).
+            </div>
+          </div>
         </div>
 
         <!-- Signature & Button -->
@@ -4752,7 +4772,7 @@ CREATE TABLE IF NOT EXISTS public.audit_history (
             <button (click)="closeWelcomeModal()" 
                     class="px-5 py-2 bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white font-black text-[10px] uppercase tracking-widest rounded-lg transition-all cursor-pointer border-none shadow-md shadow-emerald-500/20"
                     id="btn_welcome_modal_ok">
-              OK
+              Ciente
             </button>
           </div>
         </div>
@@ -4799,6 +4819,94 @@ CREATE TABLE IF NOT EXISTS public.audit_history (
           <button (click)="confirmPrintWarning()" 
                   class="px-4 py-2 bg-rose-600 hover:bg-rose-500 active:scale-95 text-white font-black text-[9px] uppercase rounded-lg cursor-pointer transition-colors border-none outline-none">
             OK (Entendi e Registrar)
+          </button>
+        </div>
+
+      </div>
+    </div>
+  }
+
+  <!-- MODAL DE RECORTE E ZOOM DE FOTO DE PERFIL (CROP) -->
+  @if (isCropModalOpen()) {
+    <div class="fixed inset-0 z-[1200] bg-black/85 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn" id="crop_photo_modal_overlay">
+      <div class="w-full max-w-md rounded-2xl p-5 shadow-2xl border transition-all duration-200 space-y-4 bg-white border-slate-200 text-slate-900" id="crop_photo_modal_card">
+        
+        <!-- Cabeçalho -->
+        <div class="flex items-center justify-between pb-3 border-b border-slate-200 gap-2">
+          <div class="flex items-center gap-2">
+            <span class="material-icons text-emerald-500 text-lg">crop</span>
+            <h3 class="font-black text-xs sm:text-sm uppercase tracking-wider text-slate-800">
+              Recortar e Ajustar Foto
+            </h3>
+          </div>
+          <button (click)="closeCropModal()" class="p-1 rounded-lg text-slate-400 hover:text-slate-900 hover:bg-slate-100 cursor-pointer border-none bg-transparent outline-none transition-colors">
+            <span class="material-icons text-base">close</span>
+          </button>
+        </div>
+
+        <!-- Área Interativa de Preview e Arrasto -->
+        <div class="flex flex-col items-center justify-center gap-2">
+          <p class="text-[10px] font-medium text-center text-slate-500">
+            Arraste a imagem para reposicionar e use o zoom para ajustar dentro da moldura
+          </p>
+
+          <div class="relative w-64 h-64 rounded-xl overflow-hidden border-2 border-slate-300 bg-black select-none cursor-grab active:cursor-grabbing shadow-inner flex items-center justify-center touch-none"
+               (mousedown)="startCropDrag($event)"
+               (mousemove)="onCropDrag($event)"
+               (mouseup)="endCropDrag()"
+               (mouseleave)="endCropDrag()"
+               (touchstart)="startCropDrag($event)"
+               (touchmove)="onCropDrag($event)"
+               (touchend)="endCropDrag()">
+            
+            <!-- Imagem em edição -->
+            <img [src]="cropImageSrc() || ''"
+                 alt="Foto em edição"
+                 class="max-w-none pointer-events-none transition-transform duration-75"
+                 [style.transform]="'translate(' + cropOffsetX() + 'px, ' + cropOffsetY() + 'px) scale(' + cropZoom() + ')'"
+                 referrerpolicy="no-referrer">
+
+            <!-- Moldura circular com escurecimento das bordas -->
+            <div class="absolute inset-0 pointer-events-none rounded-full border-2 border-emerald-400 shadow-[0_0_0_9999px_rgba(0,0,0,0.6)]"></div>
+          </div>
+        </div>
+
+        <!-- Controle de Zoom e Controles -->
+        <div class="space-y-2 p-3 rounded-xl border bg-slate-50 border-slate-200">
+          <div class="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-slate-600">
+            <span class="flex items-center gap-1">
+              <span class="material-icons text-xs text-emerald-500">zoom_in</span>
+              Zoom
+            </span>
+            <span class="font-mono text-emerald-500">{{ (cropZoom() * 100).toFixed(0) }}%</span>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <button (click)="zoomOutCrop()" title="Diminuir Zoom" class="p-1 rounded bg-slate-200 text-slate-700 hover:bg-emerald-500 hover:text-white transition-colors cursor-pointer border-none outline-none">
+              <span class="material-icons text-sm">zoom_out</span>
+            </button>
+
+            <input type="range" min="0.5" max="3.5" step="0.05" [value]="cropZoom()" (input)="cropZoom.set(+$any($event.target).value)" class="w-full accent-emerald-500 cursor-pointer h-1.5 bg-slate-200 rounded-lg outline-none">
+
+            <button (click)="zoomInCrop()" title="Aumentar Zoom" class="p-1 rounded bg-slate-200 text-slate-700 hover:bg-emerald-500 hover:text-white transition-colors cursor-pointer border-none outline-none">
+              <span class="material-icons text-sm">zoom_in</span>
+            </button>
+
+            <button (click)="resetCrop()" title="Centralizar e Resetar" class="p-1 px-2 text-[9px] font-bold rounded bg-slate-200 text-slate-700 hover:bg-emerald-500 hover:text-white transition-colors cursor-pointer border-none outline-none flex items-center gap-1">
+              <span class="material-icons text-xs">center_focus_strong</span>
+              Reset
+            </button>
+          </div>
+        </div>
+
+        <!-- Botões de Ação -->
+        <div class="flex items-center justify-end gap-2.5 pt-2">
+          <button (click)="closeCropModal()" class="px-4 py-2 border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 font-bold text-xs uppercase tracking-wider rounded-lg cursor-pointer transition-colors outline-none">
+            Cancelar
+          </button>
+          <button (click)="applyPhotoCrop()" class="px-5 py-2 bg-emerald-500 hover:bg-emerald-400 active:scale-95 font-bold text-xs uppercase tracking-wider text-white rounded-lg cursor-pointer transition-all border-none outline-none flex items-center gap-1.5 shadow-md">
+            <span class="material-icons text-sm">check_circle</span>
+            Aplicar e Salvar Foto
           </button>
         </div>
 

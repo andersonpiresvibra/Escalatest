@@ -313,7 +313,7 @@ export class App {
   public selectedDetailCollab = signal<any | null>(null);
   public dayDetailsActiveTab = signal<'seu_turno' | 'turno_posterior' | 'geral'>('seu_turno');
   public selectedCalendarDay = signal<number>(new Date().getDate());
-  public hidePastDays = signal<boolean>(false);
+  public hidePastDays = signal<boolean>(true);
   public coworkersFilter = signal<'MEU_TURNO' | 'OUTROS' | 'MANHA_TARDE' | 'TODOS'>('MEU_TURNO');
 
   // Weather Sub-Header Signals & Methods (Guarulhos Base)
@@ -874,29 +874,169 @@ export class App {
     return hours;
   }
 
-  getCollabPhoto(collab: any): string {
-    if (collab && (collab.photoUrl || collab.photo)) {
-      return collab.photoUrl || collab.photo;
-    }
+  getCollabPhoto(collab: unknown): string {
+    const c = collab as { photoUrl?: string; photo?: string } | null;
+    if (c && c.photoUrl) return c.photoUrl;
+    if (c && c.photo) return c.photo;
+
     const isLight = this.isLightTheme();
-    const bgFill = isLight ? '#f1f5f9' : '#0b1a30';
-    const borderStroke = isLight ? '#cbd5e1' : '#10213b';
-    
-    const msnAvatarSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-  <rect width="100" height="100" rx="50" fill="${bgFill}" stroke="${borderStroke}" stroke-width="1.5" />
-  <g transform="translate(0, 4)">
-    <circle cx="40" cy="38" r="12" fill="#0080C0" />
-    <path d="M 40 38 A 12 12 0 0 1 52 38 A 9 9 0 0 0 40 38 Z" fill="#3399FF" opacity="0.5"/>
-    <path d="M 40 52 C 22 52, 16 78, 16 84 L 64 84 C 64 78, 58 52, 40 52 Z" fill="#0080C0" />
-    <path d="M 40 52 C 27 52, 20 68, 18 78 C 25 65, 36 56, 40 56 C 44 56, 55 65, 62 78 C 60 68, 53 52, 40 52 Z" fill="#3399FF" opacity="0.5"/>
-    <circle cx="62" cy="44" r="12" fill="#74C322" />
-    <path d="M 62 44 A 12 12 0 0 1 74 44 A 9 9 0 0 0 62 44 Z" fill="#9CE146" opacity="0.6"/>
-    <path d="M 62 58 C 44 58, 38 84, 38 90 L 86 90 C 86 84, 80 58, 62 58 Z" fill="#74C322" stroke="${bgFill}" stroke-width="2" />
-    <path d="M 62 58 C 44 58, 42 74, 40 84 C 47 71, 58 62, 62 62 C 66 62, 77 71, 84 84 C 82 74, 75 58, 62 58 Z" fill="#9CE146" opacity="0.5"/>
+
+    const delicateAvatarSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <linearGradient id="softBgLight" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F8FAFC"/>
+      <stop offset="100%" stop-color="#E2E8F0"/>
+    </linearGradient>
+    <linearGradient id="softBgDark" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0F172A"/>
+      <stop offset="100%" stop-color="#020617"/>
+    </linearGradient>
+    <linearGradient id="avatarGradLight" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#94A3B8"/>
+      <stop offset="100%" stop-color="#64748B"/>
+    </linearGradient>
+    <linearGradient id="avatarGradDark" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#64748B"/>
+      <stop offset="100%" stop-color="#475569"/>
+    </linearGradient>
+  </defs>
+  <rect width="100" height="100" fill="${isLight ? 'url(#softBgLight)' : 'url(#softBgDark)'}"/>
+  <rect x="1" y="1" width="98" height="98" fill="none" stroke="${isLight ? '#CBD5E1' : '#1E293B'}" stroke-width="1.5" opacity="0.6"/>
+  <g opacity="0.88">
+    <circle cx="50" cy="37" r="14.5" fill="${isLight ? 'url(#avatarGradLight)' : 'url(#avatarGradDark)'}"/>
+    <path d="M 50 53 C 32 53, 21 68, 21 84 C 21 86, 23 88, 25 88 L 75 88 C 77 88, 79 86, 79 84 C 79 68, 68 53, 50 53 Z" fill="${isLight ? 'url(#avatarGradLight)' : 'url(#avatarGradDark)'}"/>
   </g>
 </svg>`;
 
-    return 'data:image/svg+xml;utf8,' + encodeURIComponent(msnAvatarSvg);
+    return 'data:image/svg+xml;utf8,' + encodeURIComponent(delicateAvatarSvg);
+  }
+
+  // Signal & Estado do Modal de Recorte de Foto (Crop)
+  public isCropModalOpen = signal<boolean>(false);
+  public cropImageSrc = signal<string | null>(null);
+  public cropZoom = signal<number>(1);
+  public cropOffsetX = signal<number>(0);
+  public cropOffsetY = signal<number>(0);
+
+  private isDraggingCrop = false;
+  private dragStartX = 0;
+  private dragStartY = 0;
+  private dragStartOffsetX = 0;
+  private dragStartOffsetY = 0;
+
+  // Método de seleção de arquivo
+  onProfilePhotoSelectedForCrop(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e: ProgressEvent<FileReader>) => {
+      if (e.target?.result) {
+        this.cropImageSrc.set(e.target.result as string);
+        this.cropZoom.set(1);
+        this.cropOffsetX.set(0);
+        this.cropOffsetY.set(0);
+        this.isCropModalOpen.set(true);
+      }
+      if (input) input.value = '';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  closeCropModal() {
+    this.isCropModalOpen.set(false);
+    this.cropImageSrc.set(null);
+    this.cropZoom.set(1);
+    this.cropOffsetX.set(0);
+    this.cropOffsetY.set(0);
+  }
+
+  zoomInCrop() {
+    this.cropZoom.update(z => Math.min(3.5, +(z + 0.15).toFixed(2)));
+  }
+
+  zoomOutCrop() {
+    this.cropZoom.update(z => Math.max(0.5, +(z - 0.15).toFixed(2)));
+  }
+
+  resetCrop() {
+    this.cropZoom.set(1);
+    this.cropOffsetX.set(0);
+    this.cropOffsetY.set(0);
+  }
+
+  // Drag / Arrasto da Foto
+  startCropDrag(event: MouseEvent | TouchEvent) {
+    this.isDraggingCrop = true;
+    const clientX = 'touches' in event ? event.touches[0].clientX : event.clientX;
+    const clientY = 'touches' in event ? event.touches[0].clientY : event.clientY;
+    this.dragStartX = clientX;
+    this.dragStartY = clientY;
+    this.dragStartOffsetX = this.cropOffsetX();
+    this.dragStartOffsetY = this.cropOffsetY();
+  }
+
+  onCropDrag(event: MouseEvent | TouchEvent) {
+    if (!this.isDraggingCrop) return;
+    const clientX = 'touches' in event ? event.touches[0].clientX : event.clientX;
+    const clientY = 'touches' in event ? event.touches[0].clientY : event.clientY;
+    const deltaX = clientX - this.dragStartX;
+    const deltaY = clientY - this.dragStartY;
+    this.cropOffsetX.set(this.dragStartOffsetX + deltaX);
+    this.cropOffsetY.set(this.dragStartOffsetY + deltaY);
+  }
+
+  endCropDrag() {
+    this.isDraggingCrop = false;
+  }
+
+  // Aplica o recorte e gera imagem em alta resolução num Canvas
+  applyPhotoCrop() {
+    const imgSrc = this.cropImageSrc();
+    if (!imgSrc) return;
+
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const CROP_SIZE = 240;
+      canvas.width = CROP_SIZE;
+      canvas.height = CROP_SIZE;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      ctx.clearRect(0, 0, CROP_SIZE, CROP_SIZE);
+
+      const baseScale = Math.max(CROP_SIZE / img.width, CROP_SIZE / img.height);
+      const scale = baseScale * this.cropZoom();
+
+      const drawWidth = img.width * scale;
+      const drawHeight = img.height * scale;
+
+      const centerX = CROP_SIZE / 2 + this.cropOffsetX();
+      const centerY = CROP_SIZE / 2 + this.cropOffsetY();
+
+      const drawX = centerX - drawWidth / 2;
+      const drawY = centerY - drawHeight / 2;
+
+      ctx.drawImage(img, drawX, drawY, drawWidth, drawHeight);
+
+      const croppedDataUrl = canvas.toDataURL('image/jpeg', 0.88);
+
+      const logged = this.getLoggedCollab();
+      if (logged) {
+        const updatedCollab: Collaborator = {
+          ...logged,
+          photo: croppedDataUrl,
+          photoUrl: croppedDataUrl
+        };
+        this.scaleService.updateCollaborator(updatedCollab);
+        this.showToast('Foto de perfil atualizada e recortada com sucesso!');
+      }
+
+      this.closeCropModal();
+    };
+    img.src = imgSrc;
   }
 
   // Real-time aviation clock
@@ -3570,7 +3710,7 @@ export class App {
     });
   }
 
-  saveProfileChanges(collab: Collaborator, name: string, birthday: string, phone: string, photoUrl: string) {
+  saveProfileChanges(collab: Collaborator, name: string, birthday: string, phone: string, photoUrl?: string) {
     if (!name || !name.trim()) {
       this.showToast('O nome não pode estar vazio.');
       return;
@@ -3580,7 +3720,7 @@ export class App {
       name: name.trim(),
       birthday: birthday ? birthday : collab.birthday,
       phone: phone.trim() || undefined,
-      photoUrl: photoUrl.trim() || undefined
+      photoUrl: photoUrl && photoUrl.trim() ? photoUrl.trim() : collab.photoUrl
     };
     this.scaleService.updateCollaborator(updated);
     this.showToast('Perfil atualizado com sucesso!');
@@ -5039,52 +5179,8 @@ Verifique se os nomes no PDF correspondem aos nomes no sistema.`;
     reader.readAsDataURL(file);
   }
 
-  onPortalPhotoSelected(event: any) {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    const collab = this.getLoggedCollab();
-    if (!collab) return;
-
-    const reader = new FileReader();
-    reader.onload = (e: any) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const MAX_WIDTH = 120;
-        const MAX_HEIGHT = 120;
-        let width = img.width;
-        let height = img.height;
-
-        if (width > height) {
-          if (width > MAX_WIDTH) {
-            height *= MAX_WIDTH / width;
-            width = MAX_WIDTH;
-          }
-        } else {
-          if (height > MAX_HEIGHT) {
-            width *= MAX_HEIGHT / height;
-            height = MAX_HEIGHT;
-          }
-        }
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-          ctx.drawImage(img, 0, 0, width, height);
-          const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
-          const updatedCollab: Collaborator = {
-            ...collab,
-            photo: dataUrl,
-            photoUrl: dataUrl
-          };
-          this.scaleService.updateCollaborator(updatedCollab);
-          this.showToast('Foto de perfil atualizada com sucesso!');
-        }
-      };
-      img.src = e.target.result;
-    };
-    reader.readAsDataURL(file);
+  onPortalPhotoSelected(event: Event) {
+    this.onProfilePhotoSelectedForCrop(event);
   }
 
   getAbbreviatedName(name: string): string {
