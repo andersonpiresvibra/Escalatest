@@ -1,0 +1,4 @@
+
+> ai-studio-angular-app@0.0.0 build
+> npx node inject-env.js && ng build
+

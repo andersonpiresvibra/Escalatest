@@ -324,6 +324,84 @@ export class App {
   public weatherError = signal<string | null>(null);
   public weatherSelectedShift = signal<'AUTO' | 'MANHA' | 'TARDE' | 'NOITE' | 'ADM' | 'PROXIMAS'>('AUTO');
   public weatherExpanded = signal<boolean>(true);
+  public selectedWeatherHourIdx = signal<number | null>(null);
+
+  public weatherChartData = computed(() => {
+    const list = this.shiftWeatherList();
+    if (list.length === 0) {
+      return {
+        points: [],
+        linePath: '',
+        areaPath: '',
+        minTemp: 0,
+        maxTemp: 0
+      };
+    }
+
+    const temps = list.map(item => item.temp);
+    const minTemp = Math.min(...temps);
+    const maxTemp = Math.max(...temps);
+    const tempDiff = maxTemp - minTemp;
+
+    // Expand bounds for visual padding
+    const tempMinLimit = minTemp - (tempDiff > 0 ? tempDiff * 0.25 : 4);
+    const tempMaxLimit = maxTemp + (tempDiff > 0 ? tempDiff * 0.25 : 4);
+    const limitDiff = tempMaxLimit - tempMinLimit || 1;
+
+    const points = list.map((item, i) => {
+      // 1000px width total, 40px margin on each side, so 920px usable span
+      const x = (list.length > 1) ? (i / (list.length - 1)) * 920 + 40 : 500;
+      // 110px height total. We'll map temperatures to y-values between 45 (top) and 80 (bottom)
+      const y = 80 - ((item.temp - tempMinLimit) / limitDiff) * 35;
+      
+      const rainHeight = (item.rainProb / 100) * 25;
+      const rainY = 90 - rainHeight;
+
+      return {
+        item,
+        index: i,
+        x,
+        y,
+        temp: item.temp,
+        rainHeight,
+        rainY
+      };
+    });
+
+    let linePath = '';
+    let areaPath = '';
+    if (points.length > 0) {
+      linePath = `M ${points[0].x} ${points[0].y}`;
+      for (let i = 1; i < points.length; i++) {
+        const p0 = points[i - 1];
+        const p1 = points[i];
+        const cpX1 = p0.x + (p1.x - p0.x) / 2;
+        const cpY1 = p0.y;
+        const cpX2 = p0.x + (p1.x - p0.x) / 2;
+        const cpY2 = p1.y;
+        linePath += ` C ${cpX1} ${cpY1}, ${cpX2} ${cpY2}, ${p1.x} ${p1.y}`;
+      }
+      areaPath = linePath + ` L ${points[points.length - 1].x} 90 L ${points[0].x} 90 Z`;
+    }
+
+    return {
+      points,
+      linePath,
+      areaPath,
+      minTemp,
+      maxTemp
+    };
+  });
+
+  public activeWeatherItem = computed(() => {
+    const list = this.shiftWeatherList();
+    if (list.length === 0) return null;
+    const idx = this.selectedWeatherHourIdx();
+    if (idx !== null && idx >= 0 && idx < list.length) {
+      return list[idx];
+    }
+    return list[0];
+  });
 
   public async fetchWeatherForecast(): Promise<void> {
     this.weatherLoading.set(true);
@@ -2549,10 +2627,178 @@ export class App {
     }
   }
 
-  getEnergyPercent(seqStats: any): number {
+  getEnergyPercent(seqStats: any, collab?: any): number {
+    if (!collab) {
+      collab = this.getLoggedCollab();
+    }
+    if (collab) {
+      const chargingState = this.getDescansoChargingState(collab);
+      if (chargingState.isRecharging) {
+        return chargingState.percent;
+      }
+    }
     if (!seqStats) return 100;
     if (!seqStats.isWorking) return 100;
     return Math.max(20, 100 - (seqStats.streak - 1) * 20);
+  }
+
+  getDescansoChargingState(collab: any): { isRecharging: boolean; percent: number; statusLabel: string; hoursToStart: number; descText: string } {
+    if (!collab) {
+      return { isRecharging: false, percent: 100, statusLabel: 'Carregada', hoursToStart: 0, descText: '' };
+    }
+
+    const seqStats = this.getConsecutiveWorkStats(collab);
+    const now = new Date();
+    const currentHour = now.getHours();
+    
+    // Find next shift start:
+    const parsedShift = this.getShiftHoursInfo(collab.shift);
+    const startHour = parsedShift.startHour;
+    const endHour = parsedShift.endHour;
+
+    let nextShiftStart: Date | null = null;
+    let lastShiftEnd: Date | null = null;
+
+    const maxDay = this.daysInMonth().length;
+    const currentDay = now.getDate();
+
+    // 1. Find next shift start
+    for (let d = currentDay; d <= currentDay + 7; d++) {
+      const targetDayNum = d > maxDay ? d - maxDay : d;
+      const targetMonthOffset = d > maxDay ? 1 : 0;
+      
+      const targetYear = now.getFullYear();
+      const targetMonth = now.getMonth() + targetMonthOffset;
+      
+      if (this.isWorkDay(collab, targetDayNum)) {
+        if (d === currentDay && currentHour >= startHour) {
+          continue; // next shift will be tomorrow or later
+        }
+        
+        nextShiftStart = new Date(targetYear, targetMonth, targetDayNum, startHour, 0, 0, 0);
+        break;
+      }
+    }
+
+    // 2. Find last shift end
+    for (let d = currentDay; d >= currentDay - 7; d--) {
+      const targetDayNum = d <= 0 ? maxDay + d : d;
+      const targetMonthOffset = d <= 0 ? -1 : 0;
+      
+      const targetYear = now.getFullYear();
+      const targetMonth = now.getMonth() + targetMonthOffset;
+
+      if (this.isWorkDay(collab, targetDayNum)) {
+        if (d === currentDay && currentHour < endHour) {
+          continue; // last shift was yesterday or earlier
+        }
+        
+        const shiftInfo = this.getShiftHoursInfo(collab.shift);
+        lastShiftEnd = new Date(targetYear, targetMonth, targetDayNum, shiftInfo.endHour, 0, 0, 0);
+        break;
+      }
+    }
+
+    // Fallbacks if not found
+    if (!nextShiftStart) {
+      nextShiftStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, startHour, 0, 0, 0);
+    }
+    if (!lastShiftEnd) {
+      lastShiftEnd = new Date(now.getTime() - 12 * 3600 * 1000);
+    }
+
+    const diffMs = nextShiftStart.getTime() - now.getTime();
+    const diffHours = diffMs / (1000 * 60 * 60);
+
+    let isCurrentlyOnShift = false;
+    if (this.isWorkDay(collab, currentDay)) {
+      if (startHour < endHour) {
+        isCurrentlyOnShift = currentHour >= startHour && currentHour < endHour;
+      } else {
+        isCurrentlyOnShift = currentHour >= startHour || currentHour < endHour;
+      }
+    }
+
+    if (isCurrentlyOnShift) {
+      return {
+        isRecharging: false,
+        percent: Math.max(20, 100 - (seqStats.streak - 1) * 20),
+        statusLabel: seqStats.fatigueLevel,
+        hoursToStart: 0,
+        descText: seqStats.alertMessage
+      };
+    }
+
+    // They are off-duty / resting (recharging)
+    const targetTimeMs = nextShiftStart.getTime() - 2 * 3600 * 1000;
+    const nowTimeMs = now.getTime();
+
+    let percent = 100;
+    let statusLabel = 'Carregada';
+
+    if (nowTimeMs >= targetTimeMs) {
+      percent = 100;
+      statusLabel = 'Carregada';
+    } else {
+      const totalRestTimeMs = targetTimeMs - lastShiftEnd.getTime();
+      const elapsedRestTimeMs = nowTimeMs - lastShiftEnd.getTime();
+      
+      if (totalRestTimeMs > 0 && elapsedRestTimeMs > 0) {
+        percent = Math.floor((elapsedRestTimeMs / totalRestTimeMs) * 100);
+      } else {
+        const remainingHours = diffHours - 2;
+        percent = Math.floor(Math.max(10, Math.min(100, 100 - (remainingHours / 12) * 100)));
+      }
+      
+      percent = Math.max(10, Math.min(100, percent));
+      
+      if (percent < 100) {
+        statusLabel = `Carregando ${percent}%`;
+      } else {
+        statusLabel = 'Carregada';
+      }
+    }
+
+    const roundedHours = Math.max(0, Math.round(diffHours * 10) / 10);
+    const descText = percent >= 100 
+      ? `Descanso completo. Prontidão total para o turno (${roundedHours}h restantes).`
+      : `Bateria biológica em recuperação. Faltam ${roundedHours}h para o início do turno.`;
+
+    return {
+      isRecharging: true,
+      percent,
+      statusLabel,
+      hoursToStart: diffHours,
+      descText
+    };
+  }
+
+  getArcStrokeColor(arcIndex: number, collab: any): string {
+    if (!collab) return this.isLightTheme() ? '#e2e8f0' : '#223147';
+    
+    const seqStats = this.getConsecutiveWorkStats(collab);
+    const chargingState = this.getDescansoChargingState(collab);
+    
+    if (chargingState.isRecharging) {
+      const requiredPercent = arcIndex * 20;
+      if (chargingState.percent >= requiredPercent) {
+        return '#10b981'; // emerald-500
+      } else {
+        return this.isLightTheme() ? '#e2e8f0' : '#223147';
+      }
+    } else {
+      if (arcIndex === 1) {
+        return '#10b981';
+      } else if (arcIndex === 2) {
+        return (seqStats.streak >= 2) ? '#3b82f6' : (this.isLightTheme() ? '#e2e8f0' : '#223147');
+      } else if (arcIndex === 3) {
+        return (seqStats.streak >= 3) ? '#eab308' : (this.isLightTheme() ? '#e2e8f0' : '#223147');
+      } else if (arcIndex === 4) {
+        return (seqStats.streak >= 4) ? '#f97316' : (this.isLightTheme() ? '#e2e8f0' : '#223147');
+      } else {
+        return (seqStats.streak >= 5) ? '#ef4444' : (this.isLightTheme() ? '#e2e8f0' : '#223147');
+      }
+    }
   }
 
   getDonutColor(streak: number, isWorking: boolean): string {
@@ -5334,6 +5580,41 @@ Verifique se os nomes no PDF correspondem aos nomes no sistema.`;
       countdownText,
       isReady: onFolga
     };
+  }
+
+  getReturnDay(collab: any): string {
+    if (!collab) return '';
+    const today = new Date();
+    const dayToAnalyze = today.getDate();
+    const maxDay = this.daysInMonth().length;
+    
+    // Find the end of the consecutive off days starting from today
+    let endDay = dayToAnalyze;
+    while (endDay < maxDay && !this.isWorkDay(collab, endDay + 1)) {
+      endDay++;
+    }
+    
+    const returnDay = endDay + 1;
+    if (returnDay <= maxDay) {
+      return `Dia ${returnDay}`;
+    } else {
+      return `Dia 1`;
+    }
+  }
+
+  getReturnDayNumber(collab: any): number {
+    if (!collab) return 1;
+    const today = new Date();
+    const dayToAnalyze = today.getDate();
+    const maxDay = this.daysInMonth().length;
+    
+    let endDay = dayToAnalyze;
+    while (endDay < maxDay && !this.isWorkDay(collab, endDay + 1)) {
+      endDay++;
+    }
+    
+    const returnDay = endDay + 1;
+    return returnDay <= maxDay ? returnDay : 1;
   }
 
   autoSelectTodayTabForLoggedCollab(logged: Collaborator | null | undefined) {
