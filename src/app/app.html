@@ -99,29 +99,11 @@
         <span class="material-icons text-xl text-white-force" style="color: #ffffff !important;">calendar_month</span>
       </div>
       <div class="flex flex-col select-none">
-        <div class="flex items-center gap-1.5">
-          <span class="text-xl font-black tracking-tight leading-none" [class.text-white]="!isLightTheme()" [class.text-slate-800]="isLightTheme()">ESCALA<span class="text-[#10b981]">.</span>EASY</span>
-        </div>
+        <span class="flex items-center gap-1.5">
+          <span class="text-[12px] font-black tracking-tight leading-none" [class.text-white]="!isLightTheme()" [class.text-slate-800]="isLightTheme()">ESCALA<span class="text-[#10b981]">.</span>EASY</span>
+        </span>
         
-        <!-- Database Status & Realtime Sync Indicator -->
-        <div class="mt-0.5 flex items-center gap-1.5" id="database_sync_indicators">
-          <div class="flex items-center gap-1 px-1.5 py-0.5 rounded-full border border-[#10213b] bg-[#071426] w-fit" title="Status do Banco de Dados Supabase">
-            @if (dbStatus() === 'checking') {
-              <span class="material-icons text-[8px] text-slate-400 animate-spin">sync</span>
-              <span class="text-[7px] font-bold uppercase tracking-widest text-slate-400">Verificando...</span>
-            } @else if (dbStatus() === 'connected') {
-              <span class="relative flex h-1.5 w-1.5">
-                <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500 animate-pulse"></span>
-              </span>
-              <span class="text-[7px] font-bold uppercase tracking-widest text-emerald-500">Conectado (Supabase API)</span>
-            } @else {
-              <span class="relative flex h-1.5 w-1.5">
-                <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-red-500"></span>
-              </span>
-              <span class="text-[7px] font-bold uppercase tracking-widest text-red-600">Erro</span>
-            }
-          </div>
-        </div>
+
       </div>
     </div>
 
@@ -129,7 +111,7 @@
     @if (getLoggedCollab()) {
       @let loggedH = getLoggedCollab()!;
       
-      <div class="flex items-center gap-3 relative z-10 select-none" id="header_portal_profile" class="hidden md:flex">
+      <div class="hidden md:flex items-center gap-3 relative z-10 select-none" id="header_portal_profile">
         <!-- Avatar Container -->
         <div class="relative shrink-0 group cursor-pointer">
           <div class="absolute -inset-0.5 bg-gradient-to-r from-emerald-400 to-emerald-600 rounded-lg blur opacity-35"></div>
@@ -202,7 +184,7 @@
 
       <!-- THEME (CLARO / ESCURO) TOGGLE -->
       <button (click)="toggleTheme()"
-              class="hidden md:flex relative p-2.5 h-[40px] w-[40px] bg-[#071426] border border-[#10213b] text-slate-400 hover:text-white hover:bg-[#0b1e36] rounded-lg transition-all items-center justify-center cursor-pointer shadow-sm select-none border-none outline-none"
+              class="flex relative p-2.5 h-[40px] w-[40px] bg-[#071426] border border-[#10213b] text-slate-400 hover:text-white hover:bg-[#0b1e36] rounded-lg transition-all items-center justify-center cursor-pointer shadow-sm select-none border-none outline-none"
               title="Alternar Tema">
         <span class="material-icons text-lg" style="color: #e8e22f !important;" [class.text-amber-500]="isLightTheme()">{{ isLightTheme() ? 'light_mode' : 'dark_mode' }}</span>
       </button>
@@ -265,21 +247,23 @@
 
       <div class="relative inline-block text-left" id="options_dropdown_container">
         <button (click)="toggleDropdownMenu($event)"
-                class="px-2 md:px-3.5 py-2 md:py-2.5 h-[40px] text-[10px] font-black tracking-wider uppercase bg-transparent md:bg-[#071426] hover:bg-[#0b1e36] text-slate-300 border-none md:border md:border-[#10213b] transition-all flex items-center gap-1.5 cursor-pointer rounded-lg shadow-none md:shadow-sm select-none outline-none"
+                class="relative p-2.5 md:px-3.5 h-[40px] bg-[#071426] border border-[#10213b] text-slate-400 hover:text-white hover:bg-[#0b1e36] rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm select-none border-none outline-none text-[10px] font-black tracking-wider uppercase overflow-hidden"
+                [class.max-md:p-0]="getLoggedCollab()"
+                [class.max-md:w-[40px]]="getLoggedCollab()"
                 id="btn_options_dropdown">
           @if (getLoggedCollab()) {
             @let loggedH = getLoggedCollab()!;
-            <div class="md:hidden w-10 h-10 rounded-md border border-emerald-500/20 bg-slate-800 flex items-center justify-center text-emerald-500 font-bold text-sm overflow-hidden">
+            <div class="md:hidden w-full h-full bg-slate-800 flex items-center justify-center text-emerald-500 font-bold text-xs overflow-hidden shrink-0">
                @if (loggedH.photoUrl || loggedH.photo) {
                  <img [src]="getCollabPhoto(loggedH)" class="w-full h-full object-cover">
                } @else {
                  {{ loggedH.name.charAt(0) }}
                }
             </div>
-            <span class="hidden md:inline-flex material-icons text-xs text-slate-400">settings</span>
+            <span class="hidden md:inline-flex material-icons text-lg">settings</span>
             <span class="hidden md:inline-block">Opções</span>
           } @else {
-            <span class="material-icons text-xs text-slate-400">settings</span>
+            <span class="material-icons text-lg">settings</span>
             <span class="hidden md:inline-block">Opções</span>
           }
           <span class="hidden md:inline-block material-icons text-xs transition-transform duration-200" [class.rotate-180]="isDropdownOpen()">expand_more</span>
@@ -317,15 +301,7 @@
                 </div>
               }
 
-              
-              <!-- Theme Toggle in Dropdown for Mobile -->
-              <div class="py-1.5 border-t border-[#10213b] md:hidden">
-                <button (click)="toggleTheme(); isDropdownOpen.set(false)"
-                        class="w-full text-left px-4 py-2 text-[10px] font-black uppercase transition-colors tracking-wider flex items-center gap-2 cursor-pointer border-none outline-none bg-transparent hover:bg-[#0b1e36]">
-                  <span class="material-icons text-sm" style="color: #e8e22f !important;" [class.text-amber-500]="isLightTheme()">{{ isLightTheme() ? 'light_mode' : 'dark_mode' }}</span>
-                  Modo {{ isLightTheme() ? 'Claro' : 'Escuro' }}
-                </button>
-              </div>
+
               
               @if (!scaleService.selectedCollabName()) {
                 <button (click)="openAuthModal('LOGIN'); isDropdownOpen.set(false)"
@@ -431,27 +407,59 @@
                 </button>
               </div>
             } @else {
-              <!-- Para colaboradores comuns, mostramos apenas o atalho do Portal dele (caso precise voltar) -->
+              <!-- Menu de Navegação para Colaborador Comum (Mesmas opções do rodapé mobile, sem 'Portal do Colaborador') -->
               <div class="py-1.5 bg-[#030a14] border-t border-[#10213b]" id="dropdown_sections_category">
-                <span class="block px-4 py-1 text-[8px] font-black uppercase text-slate-500 tracking-wider select-none">Menu</span>
+                <span class="block px-4 py-1 text-[8px] font-black uppercase text-slate-500 tracking-wider select-none">Navegação</span>
+                
+                <!-- INÍCIO / PORTAL -->
                 <button (click)="activeSubTab.set('portal'); isDropdownOpen.set(false)"
                         class="w-full text-left px-4 py-2 text-[10px] font-black uppercase transition-colors tracking-wider flex items-center gap-2 cursor-pointer border-none outline-none bg-transparent"
                         [class]="activeSubTab() === 'portal' ? 'text-emerald-400 font-extrabold bg-[#0b1e36]/30' : 'text-slate-300 hover:bg-[#0b1e36]'">
-                  <span class="material-icons text-sm" [class]="activeSubTab() === 'portal' ? 'text-emerald-400 font-extrabold' : 'text-slate-400'">contact_page</span>
-                  Portal do Colaborador
+                  <span class="material-icons text-sm" [class]="activeSubTab() === 'portal' ? 'text-emerald-400' : 'text-slate-400'">home</span>
+                  Início
+                </button>
+
+                <!-- ESCALA -->
+                <button (click)="activeSubTab.set('escala'); isDropdownOpen.set(false)"
+                        class="w-full text-left px-4 py-2 text-[10px] font-black uppercase transition-colors tracking-wider flex items-center gap-2 cursor-pointer border-none outline-none bg-transparent"
+                        [class]="activeSubTab() === 'escala' ? 'text-emerald-400 font-extrabold bg-[#0b1e36]/30' : 'text-slate-300 hover:bg-[#0b1e36]'">
+                  <span class="material-icons text-sm" [class]="activeSubTab() === 'escala' ? 'text-emerald-400' : 'text-slate-400'">calendar_month</span>
+                  Escala
+                </button>
+
+                <!-- PERFIL -->
+                <button (click)="activeSubTab.set('perfil'); isDropdownOpen.set(false)"
+                        class="w-full text-left px-4 py-2 text-[10px] font-black uppercase transition-colors tracking-wider flex items-center gap-2 cursor-pointer border-none outline-none bg-transparent"
+                        [class]="activeSubTab() === 'perfil' ? 'text-emerald-400 font-extrabold bg-[#0b1e36]/30' : 'text-slate-300 hover:bg-[#0b1e36]'">
+                  <span class="material-icons text-sm" [class]="activeSubTab() === 'perfil' ? 'text-emerald-400' : 'text-slate-400'">account_circle</span>
+                  Perfil
+                </button>
+
+                <!-- EQUIPE -->
+                <button (click)="activeSubTab.set('equipe'); isDropdownOpen.set(false)"
+                        class="w-full text-left px-4 py-2 text-[10px] font-black uppercase transition-colors tracking-wider flex items-center gap-2 cursor-pointer border-none outline-none bg-transparent"
+                        [class]="(activeSubTab() === 'equipe' || activeSubTab() === 'team') ? 'text-emerald-400 font-extrabold bg-[#0b1e36]/30' : 'text-slate-300 hover:bg-[#0b1e36]'">
+                  <span class="material-icons text-sm" [class]="(activeSubTab() === 'equipe' || activeSubTab() === 'team') ? 'text-emerald-400' : 'text-slate-400'">groups</span>
+                  Equipe
+                </button>
+
+                <!-- INDICADORES -->
+                <button (click)="activeSubTab.set('indicadores'); isDropdownOpen.set(false)"
+                        class="w-full text-left px-4 py-2 text-[10px] font-black uppercase transition-colors tracking-wider flex items-center gap-2 cursor-pointer border-none outline-none bg-transparent"
+                        [class]="activeSubTab() === 'indicadores' ? 'text-emerald-400 font-extrabold bg-[#0b1e36]/30' : 'text-slate-300 hover:bg-[#0b1e36]'">
+                  <span class="material-icons text-sm" [class]="activeSubTab() === 'indicadores' ? 'text-emerald-400' : 'text-slate-400'">analytics</span>
+                  Indicadores
                 </button>
               </div>
             }
           </div>
         }
       </div>
-
-            
     </div>
   </header>
 
   <!-- SUB-HEADER DE PREVISÃO DO TEMPO • GUARULHOS (BASE DO TRABALHO) -->
-  @if (getLoggedCollab() && (activeSubTab() === 'portal' || activeSubTab() === 'escala' || activeSubTab() === 'perfil' || activeSubTab() === 'equipe' || activeSubTab() === 'indicadores')) {
+  @if (getLoggedCollab() && activeSubTab() === 'indicadores') {
     <div id="weather_subheader_bar"
          class="w-full border-b border-[#10213b] transition-all duration-300 select-none px-3 md:px-4 py-2 shrink-0 z-30"
          [class.bg-[#050f1d]]="!isLightTheme()"
@@ -479,10 +487,6 @@
                 <span class="material-icons text-[10px]">water_drop</span> {{ currentWeatherOverview().rainProb }}% Chuva
               </span>
             </div>
-
-            <span class="text-[9px] font-semibold text-slate-400 uppercase tracking-wider mt-0.5 truncate">
-              {{ getLoggedCollabShiftLabel() }}
-            </span>
           </div>
         </div>
 
@@ -2702,7 +2706,7 @@
       }
 
       <!-- SECTION C: PORTAL DO COLABORADOR -->
-      @if (activeSubTab() === 'portal' || activeSubTab() === 'escala' || activeSubTab() === 'perfil' || activeSubTab() === 'equipe' || activeSubTab() === 'indicadores') {
+      @if (activeSubTab() === 'portal' || activeSubTab() === 'escala' || activeSubTab() === 'perfil' || activeSubTab() === 'equipe' || activeSubTab() === 'indicadores' || activeSubTab() === 'solicitacoes') {
         <div class="p-2 sm:p-3 lg:p-4 space-y-3 animate-fade-in font-sans w-full flex-1 overflow-y-auto scrollbar-thin max-w-full" id="portal_tab_content" [class.bg-[#fafffe]]="isLightTheme()">
           <!-- SIMULATION BAR & QUICK SWITCH -->
           @if (!getLoggedCollab()) {
@@ -2774,10 +2778,10 @@
               <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 w-full">
                 
                 <!-- LEFT SIDEBAR: PROFILE MONITOR & STATS -->
-                <div class="lg:col-span-4 space-y-3" [class.hidden]="isMobile() && activeSubTab() !== 'indicadores'">
+                <div class="lg:col-span-4 space-y-3.5" [class.hidden]="isMobile() && activeSubTab() !== 'portal' && activeSubTab() !== 'indicadores'">
 
                   <!-- CARD 1: MONITOR DE ESCALA -->
-                  <div [class]="'w-full border rounded-xl flex flex-col p-3 gap-2 transition-all duration-300 ' + (isLightTheme() ? 'bg-white border-slate-200 text-slate-900 shadow-md' : 'bg-[#0F172A] border-[#334155] text-[#F8FAFC] shadow-lg')">
+                  <div [class]="'w-full border rounded-[16px] flex flex-col p-4 gap-3.5 transition-all duration-300 ' + (isLightTheme() ? 'bg-white border-slate-200 text-slate-900 shadow-md' : 'bg-[#0F172A] border-[#334155] text-[#F8FAFC] shadow-lg')">
                     <!-- HEADER -->
                     <div class="flex items-center pb-2 border-b" [class]="isLightTheme() ? 'border-slate-100' : 'border-[#334155]'">
                       <div class="flex items-center gap-2">
@@ -2789,7 +2793,7 @@
                     </div>
 
                     <!-- STATUS DO DIA (100% WIDTH) -->
-                    <div [class]="'rounded-[12px] p-3 flex items-center justify-between border transition-all duration-300 ' + (isLightTheme() ? 'bg-slate-50 border-slate-200' : 'bg-[#1E293B] border-[#334155]')">
+                    <div [class]="'rounded-xl p-3.5 flex items-center justify-between border transition-all duration-300 ' + (isLightTheme() ? 'bg-slate-50 border-slate-200' : 'bg-[#1E293B] border-[#334155]')">
                       @if (seqStats.isWorking) {
                         <div class="flex items-center gap-2">
                           <span class="relative flex h-2.5 w-2.5">
@@ -2820,9 +2824,10 @@
                     </div>
 
                     <!-- FEEDBACK COGNITIVO -->
-                    <div [class]="'rounded-xl border p-3 flex gap-2.5 items-start transition-all duration-300 shadow-sm ' + getFeedbackCardClass(seqStats)">
-                      <!-- Inline SVG Warning/Alert Icon matching Figma -->
-                      @if (!seqStats.isWorking || seqStats.streak <= 2) {
+                    <div [class]="'rounded-xl border p-3.5 flex gap-2.5 items-start transition-all duration-300 shadow-sm ' + getFeedbackCardClass(seqStats)">
+                      @if (!seqStats.isWorking) {
+                        <span class="material-icons text-base shrink-0 text-emerald-500 animate-bounce">celebration</span>
+                      } @else if (seqStats.streak <= 2) {
                         <svg class="w-4 h-4 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
                           <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
@@ -2835,7 +2840,7 @@
                       <div class="flex flex-col min-w-0">
                         <span class="text-[11px] font-black uppercase tracking-wide font-sans leading-tight">
                           @if (!seqStats.isWorking) {
-                            Excelente Folga
+                            Boa Folga! 🎉
                           } @else if (seqStats.streak === 1) {
                             Bom Retorno
                           } @else if (seqStats.streak === 2) {
@@ -2850,7 +2855,7 @@
                         </span>
                         <p class="text-[10px] opacity-90 leading-relaxed font-sans mt-0.5">
                           @if (!seqStats.isWorking) {
-                            Desconecte-se e aproveite seu descanso hoje.
+                            Aproveite para recarregar as energias e descansar hoje.
                           } @else if (seqStats.streak === 1) {
                             Primeiro dia de retorno pós-folga. Energias renovadas!
                           } @else if (seqStats.streak === 2) {
@@ -3017,8 +3022,10 @@
                   </div>
                 </div>
                 
-                <!-- TRABALHO / FOLGA COMPONENT (8 COLUMNS) -->
-                <div id="panel-trabalho-folga" [class]="'lg:col-span-8 w-full border rounded-[16px] p-5 space-y-5 transition-all duration-300 ' + (isLightTheme() ? 'bg-white border-slate-200 text-slate-900 shadow-md' : 'bg-[#0F172A] border-[#334155] text-[#F8FAFC] shadow-lg')" [class.hidden]="isMobile() && activeSubTab() !== 'portal' && activeSubTab() !== 'escala'">
+                <!-- MIDDLE/RIGHT CONTENT (8 COLUMNS) -->
+                <div class="lg:col-span-8 space-y-3" [class.hidden]="activeSubTab() !== 'escala' && activeSubTab() !== 'portal'">
+                  
+                  <div id="panel-trabalho-folga" [class]="'w-full border rounded-[16px] p-5 space-y-5 transition-all duration-300 ' + (isLightTheme() ? 'bg-white border-slate-200 text-slate-900 shadow-md' : 'bg-[#0F172A] border-[#334155] text-[#F8FAFC] shadow-lg')" [class.hidden]="activeSubTab() !== 'escala'">
                   
                   <!-- HEADER / TABS (SPLIT 50% / 50%) -->
                   <div id="trabalho-folga-header" class="w-full pb-0 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -3030,8 +3037,8 @@
                       <button id="btn-tab-trabalho" (click)="setTurnVacationTab('work')"
                               class="w-full py-3.5 rounded-xl text-[11px] font-black uppercase tracking-wider transition-all duration-300 cursor-pointer flex items-center justify-center gap-2"
                               [class]="turnVacationTab() === 'work' ? (isLightTheme() ? 'bg-white text-slate-850 shadow-md border-b border-slate-200' : 'bg-emerald-500 text-emerald-950 shadow-lg') : (isLightTheme() ? 'text-slate-500 hover:text-slate-700' : 'text-slate-400 hover:text-slate-200')">
-                        <span class="material-icons text-sm">work</span>
-                        Trabalho
+                        <span class="material-icons text-sm font-bold">calendar_month</span>
+                        Calendário
                       </button>
                       <button id="btn-tab-folga" (click)="setTurnVacationTab('vacation')"
                               class="w-full py-3.5 rounded-xl text-[11px] font-black uppercase tracking-wider transition-all duration-300 cursor-pointer flex items-center justify-center gap-2"
@@ -3049,7 +3056,15 @@
                       <!-- GRID OF WORK DAYS -->
                       <div id="section-calendar-work" class="p-4 border rounded-xl transition-all duration-300" [class]="isLightTheme() ? 'bg-slate-50 border-slate-200' : 'bg-[#071426]/40 border-[#10213b]'">
                         <div class="flex items-center justify-between pb-2.5 border-b border-slate-100/10 mb-3" [class.border-slate-200]="isLightTheme()">
-                          <span class="text-[10px] font-black uppercase tracking-wider text-slate-400">Meus Dias de Trabalho</span>
+                          <div class="flex items-center gap-2 flex-wrap">
+                            <span class="text-[10px] font-black uppercase tracking-wider text-slate-400">Minha Escala Selecionada</span>
+                            @if (getLoggedCollab()) {
+                              <span class="text-[9px] font-mono font-black uppercase tracking-wider px-2 py-0.5 rounded shadow-sm"
+                                    [class]="isLightTheme() ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'">
+                                {{ getLoggedCollab()!.shift }}
+                              </span>
+                            }
+                          </div>
                           <div class="flex items-center gap-2">
                             <!-- Toggle button -->
                             <button (click)="hidePastDays.set(!hidePastDays())"
@@ -3078,70 +3093,6 @@
                           }
                         </div>
                       </div>
-
-                      <!-- CO-WORKERS ON SAME SHIFT IN GRID (QUADRADINHO) -->
-                      <div id="section-coworkers-work" class="p-4 border rounded-xl transition-all" [class]="isLightTheme() ? 'bg-slate-50 border-slate-200' : 'bg-[#071426]/40 border-[#10213b]'">
-                        <div class="flex items-center justify-between pb-2.5 border-b border-slate-100/10 mb-3" [class.border-slate-200]="isLightTheme()">
-                          <span class="text-[10px] font-black uppercase tracking-wider text-slate-400">Colegas de Trabalho Hoje / Dia {{ selectedCalendarDay() }} &mdash; {{ getTodayTeamShiftLabel() }}</span>
-                          <span class="text-[9px] font-mono text-emerald-400 bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-500/20">{{ getTodayTeamCollaborators().length }} Membros</span>
-                        </div>
-
-                        <!-- FILTER SELECTOR PILLS -->
-                        <div class="flex flex-wrap items-center gap-1.5 mb-3.5">
-                          <button (click)="coworkersFilter.set('MEU_TURNO')"
-                                  class="px-2.5 py-1 rounded border text-[8.5px] font-black uppercase tracking-wider transition-all duration-300 cursor-pointer shadow-sm select-none"
-                                  [class]="coworkersFilter() === 'MEU_TURNO' ? 
-                                           (isLightTheme() ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-emerald-500 text-emerald-950 border-emerald-500 font-black') : 
-                                           (isLightTheme() ? 'bg-white border-slate-200 text-slate-500 hover:text-slate-800' : 'bg-[#0b1329]/40 border-[#10213b] text-slate-400 hover:text-white')">
-                            Meu Turno ({{ logged.shift || 'N/A' }})
-                          </button>
-                          <button (click)="coworkersFilter.set('OUTROS')"
-                                  class="px-2.5 py-1 rounded border text-[8.5px] font-black uppercase tracking-wider transition-all duration-300 cursor-pointer shadow-sm select-none"
-                                  [class]="coworkersFilter() === 'OUTROS' ? 
-                                           (isLightTheme() ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-emerald-500 text-emerald-950 border-emerald-500 font-black') : 
-                                           (isLightTheme() ? 'bg-white border-slate-200 text-slate-500 hover:text-slate-800' : 'bg-[#0b1329]/40 border-[#10213b] text-slate-400 hover:text-white')">
-                            Outros Turnos
-                          </button>
-                          <button (click)="coworkersFilter.set('MANHA_TARDE')"
-                                  class="px-2.5 py-1 rounded border text-[8.5px] font-black uppercase tracking-wider transition-all duration-300 cursor-pointer shadow-sm select-none"
-                                  [class]="coworkersFilter() === 'MANHA_TARDE' ? 
-                                           (isLightTheme() ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-emerald-500 text-emerald-950 border-emerald-500 font-black') : 
-                                           (isLightTheme() ? 'bg-white border-slate-200 text-slate-500 hover:text-slate-800' : 'bg-[#0b1329]/40 border-[#10213b] text-slate-400 hover:text-white')">
-                            Manhã e Tarde
-                          </button>
-                          <button (click)="coworkersFilter.set('TODOS')"
-                                  class="px-2.5 py-1 rounded border text-[8.5px] font-black uppercase tracking-wider transition-all duration-300 cursor-pointer shadow-sm select-none"
-                                  [class]="coworkersFilter() === 'TODOS' ? 
-                                           (isLightTheme() ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-emerald-500 text-emerald-950 border-emerald-500 font-black') : 
-                                           (isLightTheme() ? 'bg-white border-slate-200 text-slate-500 hover:text-slate-800' : 'bg-[#0b1329]/40 border-[#10213b] text-slate-400 hover:text-white')">
-                            Todos
-                          </button>
-                        </div>
-
-                        @let team = getTodayTeamCollaborators();
-                        @if (team.length > 0) {
-                          <div class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-7 lg:grid-cols-8 xl:grid-cols-9 gap-2">
-                            @for (col of team; track col.id) {
-                              <div [id]="'coworker-work-' + col.id"
-                                   class="flex flex-col items-center p-1.5 rounded-[14px] border transition-all duration-300 shadow-sm text-center select-none"
-                                   [class]="isLightTheme() ? 'bg-white border-slate-200/80 text-slate-800' : 'bg-[#0b1329]/70 border-[#10213b] text-[#F8FAFC]'">
-                                
-                                <div class="w-full aspect-square rounded-[10px] overflow-hidden border shrink-0 transition-all duration-300"
-                                     [class]="isLightTheme() ? 'border-slate-200/60 bg-slate-50' : 'border-[#10213b] bg-slate-900/40'">
-                                  <img [src]="getCollabPhoto(col)" [alt]="col.name" referrerpolicy="no-referrer" class="w-full h-full object-cover">
-                                </div>
-
-                                <div class="text-[9px] font-black tracking-wide truncate w-full mt-1.5 leading-tight"
-                                     [class]="col.id === logged.id ? (isLightTheme() ? 'text-emerald-650' : 'text-emerald-400') : (isLightTheme() ? 'text-slate-700' : 'text-slate-300')">
-                                  {{ col.name }}
-                                </div>
-                              </div>
-                            }
-                          </div>
-                        } @else {
-                          <div class="text-center py-4 text-[10px] text-slate-500 uppercase tracking-wider">Nenhum colega neste turno</div>
-                        }
-                      </div>
                     </div>
                   }
 
@@ -3149,18 +3100,6 @@
                   @if (turnVacationTab() === 'vacation') {
                     <div class="space-y-5">
                       
-                      <!-- REAL-TIME COUNTDOWN BANNER (FOLGA TODAY) -->
-                      @let cdState = getFolgaCountdownState(logged);
-                      @if (cdState.isReady) {
-                        <div id="countdown-banner-folga" class="p-4 rounded-xl border transition-all duration-300 flex items-center gap-3 shadow-sm bg-emerald-500/10 border-emerald-500/20 text-emerald-400">
-                          <span class="material-icons text-xl text-emerald-500 animate-bounce">celebration</span>
-                          <div class="text-left">
-                            <h5 class="text-[12px] font-black uppercase tracking-wider leading-none">Boa Folga! 🎉</h5>
-                            <p class="text-[10px] opacity-80 mt-1 font-sans">Aproveite para recarregar as energias e descansar hoje.</p>
-                          </div>
-                        </div>
-                      }
-
                       <!-- GRID OF VACATION DAYS -->
                       <div id="section-calendar-vacation" class="p-4 border rounded-xl transition-all duration-300" [class]="isLightTheme() ? 'bg-slate-50 border-slate-200' : 'bg-[#071426]/40 border-[#10213b]'">
                         <div class="flex items-center justify-between pb-2.5 border-b border-slate-100/10 mb-3" [class.border-slate-200]="isLightTheme()">
@@ -3261,12 +3200,94 @@
                   }
 
                 </div>
+              </div>
 
                 <!-- LEFT COLUMN: FOLGAS SOLICITADAS & DATAS IMPORTANTES -->
-                <div class="lg:col-span-4 space-y-3" [class.hidden]="isMobile() && activeSubTab() !== 'portal' && activeSubTab() !== 'escala' && activeSubTab() !== 'perfil'">
+                <div class="lg:col-span-4 space-y-3.5" [class.hidden]="isMobile() && activeSubTab() !== 'perfil'">
+
+                  <!-- SECTION: INFORMAÇÕES DO PERFIL -->
+                  <div class="rounded-[16px] p-4 space-y-4 transition-colors border"
+                       [class]="isLightTheme() ? 'bg-white border-slate-200 shadow-md text-slate-900' : 'bg-[#030a14] border-[#10213b]/60 shadow-lg text-white'">
+                    <div class="flex items-center justify-between pb-1.5 border-b" [class]="isLightTheme() ? 'border-slate-100' : 'border-[#10213b]/30'">
+                      <h4 class="font-black text-[11px] uppercase tracking-wider flex items-center gap-1.5"
+                          [class]="isLightTheme() ? 'text-slate-800' : 'text-slate-100'">
+                        <span class="material-icons text-emerald-400 text-sm">person</span>
+                        Meu Perfil
+                      </h4>
+                      <span class="text-[7.5px] font-black font-mono px-1.5 py-0.5 rounded border uppercase shrink-0 transition-colors"
+                            [class]="isLightTheme() ? 'text-slate-650 bg-slate-100 border-slate-200' : 'text-slate-300 bg-[#071426] border-[#10213b]/40'">
+                        {{ logged.id }}
+                      </span>
+                    </div>
+
+                    <!-- Profile Photo & Header Details -->
+                    <div class="flex items-center justify-between gap-3">
+                      <div class="flex items-center gap-3 min-w-0 flex-1">
+                        <div class="relative w-14 h-14 rounded-full overflow-hidden border shrink-0 shadow-sm"
+                             [class]="isLightTheme() ? 'border-slate-200 bg-slate-50' : 'border-[#10213b]/40 bg-slate-900'">
+                          <img [src]="getCollabPhoto(logged)"
+                               [alt]="logged.name"
+                               class="w-full h-full object-cover"
+                               referrerpolicy="no-referrer">
+                        </div>
+                        <div class="min-w-0 flex-1">
+                          <h3 class="text-xs font-black uppercase tracking-wide truncate"
+                              [class]="isLightTheme() ? 'text-slate-850' : 'text-slate-100'">
+                            {{ logged.name }}
+                          </h3>
+                          <span class="inline-block mt-0.5 px-2 py-0.5 rounded text-[7.5px] font-black uppercase tracking-wider leading-none border"
+                                [class]="isLightTheme() ? 'bg-slate-50 text-slate-600 border-slate-200' : 'bg-emerald-950/30 text-emerald-400 border-emerald-500/25'">
+                            {{ logged.role === 'SUPERVISOR' ? 'ADMIN' : logged.role === 'LIDER' ? 'LÍDER DE TURNO' : 'COLABORADOR' }}
+                          </span>
+                        </div>
+                      </div>
+
+                      <!-- Edit Profile Trigger Button (Moved here to save space) -->
+                      <button (click)="isProfileEditOpen.set(!isProfileEditOpen())"
+                              class="px-2.5 py-1.5 font-black text-[9px] uppercase rounded-lg cursor-pointer transition-all duration-200 border-none outline-none flex items-center justify-center gap-1 shadow-sm active:scale-95 shrink-0"
+                              [class]="isProfileEditOpen() ? 
+                                       (isLightTheme() ? 'bg-slate-150 text-slate-750 hover:bg-slate-200' : 'bg-[#10213b]/80 text-slate-300 hover:bg-[#10213b]') : 
+                                       (isLightTheme() ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : 'bg-emerald-500 hover:bg-emerald-400 text-emerald-950')">
+                        <span class="material-icons text-[10px]">{{ isProfileEditOpen() ? 'close' : 'edit' }}</span>
+                        <span>{{ isProfileEditOpen() ? 'Fechar' : 'Editar' }}</span>
+                      </button>
+                    </div>
+
+                    <!-- Profile Details Grid -->
+                    <div class="grid grid-cols-2 gap-2 text-[9px] font-sans">
+                      <div class="p-2.5 rounded-lg border flex flex-col justify-between"
+                           [class]="isLightTheme() ? 'bg-slate-50 border-slate-100/60 text-slate-800' : 'bg-[#071426]/30 border-[#10213b]/20 text-slate-200'">
+                        <span class="text-[7.5px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Setor</span>
+                        <span class="font-black uppercase truncate">
+                          {{ logged.sector || 'Geral' }}
+                        </span>
+                      </div>
+                      <div class="p-2.5 rounded-lg border flex flex-col justify-between"
+                           [class]="isLightTheme() ? 'bg-slate-50 border-slate-100/60 text-slate-800' : 'bg-[#071426]/30 border-[#10213b]/20 text-slate-200'">
+                        <span class="text-[7.5px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Turno</span>
+                        <span class="font-black uppercase truncate text-emerald-500">
+                          {{ logged.shift }}
+                        </span>
+                      </div>
+                      <div class="p-2.5 rounded-lg border flex flex-col justify-between"
+                           [class]="isLightTheme() ? 'bg-slate-50 border-slate-100/60 text-slate-800' : 'bg-[#071426]/30 border-[#10213b]/20 text-slate-200'">
+                        <span class="text-[7.5px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Nascimento</span>
+                        <span class="font-black font-mono truncate">
+                          {{ formatBirthday(logged.birthday) }}
+                        </span>
+                      </div>
+                      <div class="p-2.5 rounded-lg border flex flex-col justify-between"
+                           [class]="isLightTheme() ? 'bg-slate-50 border-slate-100/60 text-slate-800' : 'bg-[#071426]/30 border-[#10213b]/20 text-slate-200'">
+                        <span class="text-[7.5px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Telefone</span>
+                        <span class="font-black font-mono truncate font-sans">
+                          {{ logged.phone || 'Não informado' }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
 
                   <!-- SECTION: FOLGAS SOLICITADAS -->
-                <div class="rounded-lg p-3.5 space-y-2 transition-colors" [class.hidden]="isMobile() && activeSubTab() !== 'portal' && activeSubTab() !== 'escala'"
+                <div class="rounded-[16px] p-4 space-y-3 transition-colors"
                      [class]="isLightTheme() ? 'bg-white border border-slate-200 shadow-md' : 'bg-[#030a14] border border-[#10213b] shadow-lg'">
                   <div class="flex items-center justify-between pb-1 border-b border-[#10213b]/40">
                     <h4 class="font-black text-[11px] uppercase tracking-wider flex items-center gap-1.5"
@@ -3312,10 +3333,32 @@
                   </div>
                 </div>
 
+                <!-- SECTION: TROCAS DE TURNO (PERMUTAS) -->
+                <div class="rounded-[16px] p-4 space-y-3 transition-colors"
+                     [class]="isLightTheme() ? 'bg-white border border-slate-200 shadow-md' : 'bg-[#030a14] border border-[#10213b] shadow-lg'">
+                  <div class="flex items-center gap-1.5 pb-1 border-b border-[#10213b]/40">
+                    <span class="material-icons text-blue-400 text-sm">swap_horiz</span>
+                    <h4 class="font-black text-xs uppercase tracking-wider"
+                        [class]="isLightTheme() ? 'text-slate-800' : 'text-slate-100'">
+                      Trocas de Turno (Permutas)
+                    </h4>
+                  </div>
+                  
+                  <p class="text-[9px] text-slate-500 leading-tight">
+                    Deseja trocar um dia de trabalho com um colega? Escolha uma data no calendário de escala para propor uma troca.
+                  </p>
+
+                  <button (click)="activeSubTab.set('escala')" 
+                          class="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-lg border border-blue-500/20 bg-blue-500/5 hover:bg-blue-500/10 text-blue-400 transition-all cursor-pointer text-[10px] font-black uppercase tracking-wider">
+                    <span class="material-icons text-xs">calendar_today</span>
+                    Ver Calendário para Troca
+                  </button>
+                </div>
+
                 <!-- SECTION: MINHAS DATAS IMPORTANTES -->
                 <div (click)="openEditSpecialDates()" [class.hidden]="isMobile() && activeSubTab() !== 'perfil'"
-                     class="rounded-lg p-3.5 space-y-2 cursor-pointer select-none hover:border-rose-500/30 transition-colors relative group"
-                     [class]="isLightTheme() ? 'bg-slate-50 border border-slate-200 shadow-sm' : 'bg-[#030a14] border border-[#10213b] shadow-xl'"
+                     class="rounded-[16px] p-4 space-y-3 cursor-pointer select-none hover:border-rose-500/30 transition-colors relative group"
+                     [class]="isLightTheme() ? 'bg-white border border-slate-200 shadow-md' : 'bg-[#030a14] border border-[#10213b] shadow-xl'"
                      title="Clique para editar suas datas importantes">
                   <div class="absolute inset-0 bg-rose-500/0 group-active:bg-rose-500/5 transition-colors duration-300 rounded-lg pointer-events-none"></div>
                   <div class="flex items-center justify-between pb-1 border-b border-[#10213b]/40">
@@ -3398,7 +3441,7 @@
                 </div>
 
                 <!-- SECTION: EDITAR PERFIL -->
-                <div [class.hidden]="isMobile() && activeSubTab() !== 'perfil'"
+                <div [class.hidden]="(isMobile() && activeSubTab() !== 'perfil') || !isProfileEditOpen()"
                      [class]="'rounded-lg p-3.5 space-y-3 transition-colors border ' + (isLightTheme() ? 'bg-white border-slate-200 shadow-sm text-slate-900' : 'bg-[#030a14] border-[#10213b]/60 shadow-xl text-white')">
                   <div class="flex items-center pb-2 border-b border-[#10213b]/30">
                     <div class="flex items-center gap-2">
@@ -3470,130 +3513,300 @@
 
               </div>
 
-              <!-- RIGHT CONTENT: UNIFIED CALENDAR & AGENDA command center -->
-              <div class="lg:col-span-8 space-y-3">
-
+              <!-- RIGHT COLUMN: MONTHLY CALENDAR -->
+              <div class="lg:col-span-8 space-y-3" [class.hidden]="isMobile() && activeSubTab() !== 'escala'">
+                
                 <!-- PORTAL COLLABORATOR OFFICIAL REPORT & MONTHLY SCALE (Prontuário) -->
-                <div class="bg-[#030a14] border border-[#10213b] rounded-xl p-2 sm:p-3.5 shadow-md space-y-3 sm:space-y-3.5">
+                <div [class]="'border rounded-xl p-2 sm:p-3.5 shadow-md space-y-3 sm:space-y-3.5 transition-all duration-300 ' + (isLightTheme() ? 'bg-white border-slate-200 text-slate-900 shadow-md' : 'bg-[#030a14] border-[#10213b] text-white shadow-lg')">
 
-                  <!-- Calendário de Escala de Folgas -->
-                  <div class="space-y-4">
-                    <div class="flex items-center justify-between gap-4 flex-wrap">
-                      <div>
-                        <h4 class="font-black text-xs text-slate-900 uppercase tracking-wider flex items-center gap-1.5"
-                            [class.text-slate-800]="isLightTheme()">
-                          <span class="material-icons text-[#10b981] text-sm">calendar_month</span>
-                          Calendário
-                        </h4>
-                        <p class="text-[9px] text-slate-500 mt-1" [class.text-slate-500]="isLightTheme()">
-                          Legenda: Verde (FOLGA), Vermelho (AUSENTE), Azul (TRABALHO).
-                        </p>
-                      </div>
-                      
-                      <!-- Month Navigator -->
-                      <div class="flex items-center gap-1 bg-[#071426] border border-[#10213b] rounded-lg p-1"
-                           [class.bg-slate-100]="isLightTheme()"
-                           [class.border-slate-200]="isLightTheme()">
-                        <button (click)="prevMonth()" class="w-8 h-8 flex items-center justify-center rounded cursor-pointer text-slate-500 hover:text-emerald-400 hover:bg-[#0b1e36] transition-colors border-none outline-none"
-                                [class.hover:bg-white]="isLightTheme()"
-                                title="Mês Anterior">
-                          <span class="material-icons text-sm">chevron_left</span>
-                        </button>
-                        <div class="flex flex-col items-center justify-center min-w-[100px]">
-                          <span class="text-[9px] font-black uppercase text-slate-300 leading-tight"
-                                [class.text-slate-700]="isLightTheme()">
-                            {{ currentMonthName() }}
-                          </span>
-                          <span class="text-[7px] font-bold text-slate-500 font-mono leading-tight">
-                            {{ currentYear() }}
-                          </span>
+                    <!-- Calendário de Escala de Folgas -->
+                    <div class="space-y-4">
+                      <div class="flex items-center justify-between gap-4 flex-wrap">
+                        <div>
+                          <h4 class="font-black text-xs uppercase tracking-wider flex items-center gap-1.5"
+                              [class]="isLightTheme() ? 'text-slate-800' : 'text-[#F8FAFC]'">
+                            <span class="material-icons text-[#10b981] text-sm">calendar_month</span>
+                            Escala de Folgas do Mês
+                          </h4>
+                          <p class="text-[9px] text-slate-500 mt-1" [class.text-slate-500]="isLightTheme()">
+                            Legenda: Verde (FOLGA), Vermelho (AUSENTE), Azul (TRABALHO).
+                          </p>
                         </div>
-                        <button (click)="nextMonth()" class="w-8 h-8 flex items-center justify-center rounded cursor-pointer text-slate-500 hover:text-emerald-400 hover:bg-[#0b1e36] transition-colors border-none outline-none"
-                                [class.hover:bg-white]="isLightTheme()"
-                                title="Próximo Mês">
-                          <span class="material-icons text-sm">chevron_right</span>
-                        </button>
-                      </div>
-                    </div>
-
-                    <!-- Grade de Dias do Calendário -->
-                    <div class="grid grid-cols-7 gap-1 sm:gap-2 text-center text-xs">
-                      <div class="font-black text-slate-500 text-[7px] sm:text-[8px] uppercase tracking-wider">Dom</div>
-                      <div class="font-black text-slate-500 text-[7px] sm:text-[8px] uppercase tracking-wider">Seg</div>
-                      <div class="font-black text-slate-500 text-[7px] sm:text-[8px] uppercase tracking-wider">Ter</div>
-                      <div class="font-black text-slate-500 text-[7px] sm:text-[8px] uppercase tracking-wider">Qua</div>
-                      <div class="font-black text-slate-500 text-[7px] sm:text-[8px] uppercase tracking-wider">Qui</div>
-                      <div class="font-black text-slate-500 text-[7px] sm:text-[8px] uppercase tracking-wider">Sex</div>
-                      <div class="font-black text-slate-500 text-[7px] sm:text-[8px] uppercase tracking-wider">Sáb</div>
-
-                      @for (offset of getOffsetDaysArray(); track offset) {
-                        <div class="bg-transparent border border-transparent p-1.5 sm:p-2"></div>
-                      }
-
-                      @for (day of daysInMonth(); track day) {
-                        @let events = getSpecialEventsForDay(logged, day);
-                        @let dayInfo = getCollaboratorDayScheduleInfo(logged, day);
-                        @let count = getFolgaRequestCount(day);
-
-                        <div [class]="getCollaboratorCalendarDayStaticClass(logged, day, count)"
-                             [class.opacity-45]="isPastDay(day)"
-                             [class.saturate-[0.45]]="isPastDay(day)"
-                             class="transition-all duration-300">
-                          
-                          <div class="flex items-center justify-between w-full shrink-0">
-                            <span class="font-extrabold font-mono text-[10px] sm:text-[12px] h-5 w-5 sm:h-6 sm:w-6 flex items-center justify-center rounded-full"
-                                  [class.bg-emerald-500]="isToday(day)"
-                                  [class.text-white]="isToday(day)"
-                                  [class.bg-emerald-500/20]="dayInfo.status === 'folga' && !isToday(day)"
-                                  [class.text-emerald-400]="dayInfo.status === 'folga' && !isLightTheme() && !isToday(day)"
-                                  [class.text-emerald-800]="dayInfo.status === 'folga' && isLightTheme() && !isToday(day)"
-                                  [class.bg-rose-500/20]="dayInfo.status === 'licenca' && !isToday(day)"
-                                  [class.text-rose-400]="dayInfo.status === 'licenca' && !isLightTheme() && !isToday(day)"
-                                  [class.text-rose-800]="dayInfo.status === 'licenca' && isLightTheme() && !isToday(day)"
-                                  [class.bg-slate-700/30]="dayInfo.status === 'trabalho' && !isLightTheme() && !isToday(day)"
-                                  [class.bg-slate-200/50]="dayInfo.status === 'trabalho' && isLightTheme() && !isToday(day)"
-                                  [class.text-slate-300]="dayInfo.status === 'trabalho' && !isLightTheme() && !isToday(day)"
-                                  [class.text-slate-700]="dayInfo.status === 'trabalho' && isLightTheme() && !isToday(day)">
-                              {{ day }}
+                        
+                        <!-- Month Navigator -->
+                        <div class="flex items-center gap-1 bg-[#071426] border border-[#10213b] rounded-lg p-1"
+                             [class.bg-slate-100]="isLightTheme()"
+                             [class.border-slate-200]="isLightTheme()">
+                          <button (click)="prevMonth()" class="w-8 h-8 flex items-center justify-center rounded cursor-pointer text-slate-500 hover:text-emerald-400 hover:bg-[#0b1e36] transition-colors border-none outline-none"
+                                  [class.hover:bg-white]="isLightTheme()"
+                                  title="Mês Anterior">
+                            <span class="material-icons text-sm">chevron_left</span>
+                          </button>
+                          <div class="flex flex-col items-center justify-center min-w-[100px]">
+                            <span class="text-[9px] font-black uppercase text-slate-300 leading-tight"
+                                  [class.text-slate-700]="isLightTheme()">
+                              {{ currentMonthName() }}
                             </span>
-                            @if (events.length > 0) {
-                              <div class="flex items-center gap-0.5">
-                                @for (ev of events; track ev.tooltip) {
-                                  <span class="material-icons text-[9px] sm:text-[11px] select-none" [style.color]="ev.color" [title]="ev.tooltip">{{ ev.icon }}</span>
-                                }
-                              </div>
-                            }
-                          </div>
-
-                          <div class="flex flex-col items-start w-full gap-0.5 shrink-0 select-none mt-0.5 sm:mt-1 leading-none">
-                            <span class="text-[7.5px] sm:text-[8.5px] font-black uppercase tracking-tight block max-w-full truncate leading-none"
-                                  [class.text-emerald-300]="isToday(day) && !isLightTheme()"
-                                  [class.text-emerald-950]="isToday(day) && isLightTheme()"
-                                  [class.text-emerald-400]="dayInfo.status === 'folga' && !isToday(day)"
-                                  [class.text-rose-400]="dayInfo.status === 'licenca' && !isToday(day)"
-                                  [class.text-slate-300]="dayInfo.status === 'trabalho' && !isLightTheme() && !isToday(day)"
-                                  [class.text-slate-700]="dayInfo.status === 'trabalho' && isLightTheme() && !isToday(day)">
-                              <span class="hidden sm:inline">{{ dayInfo.status === 'folga' ? 'FOLGA' : (dayInfo.status === 'licenca' || dayInfo.status === 'afastamento' ? 'AUSENTE' : 'TRABALHO') }}</span>
-                              <span class="inline sm:hidden">{{ dayInfo.status === 'folga' ? 'FOLGA' : (dayInfo.status === 'licenca' || dayInfo.status === 'afastamento' ? 'AUSENTE' : 'TRABALHO') }}</span>
+                            <span class="text-[7px] font-bold text-slate-500 font-mono leading-tight">
+                              {{ currentYear() }}
                             </span>
                           </div>
-
-                          <div class="w-full text-left pt-1 border-t shrink-0 select-none mt-1 leading-none hidden sm:flex items-center justify-between"
-                               [class.border-[#10213b]/20]="!isToday(day)"
-                               [class.border-emerald-500/30]="isToday(day) && !isLightTheme()"
-                               [class.border-emerald-300/40]="isToday(day) && isLightTheme()">
-                            <span class="text-[8.5px] font-bold font-mono"
-                                  [class.text-slate-400]="!isToday(day)"
-                                  [class.text-emerald-300/85]="isToday(day) && !isLightTheme()"
-                                  [class.text-emerald-900/90]="isToday(day) && isLightTheme()">{{ dayInfo.subLabel }}</span>
-                          </div>
+                          <button (click)="nextMonth()" class="w-8 h-8 flex items-center justify-center rounded cursor-pointer text-slate-500 hover:text-emerald-400 hover:bg-[#0b1e36] transition-colors border-none outline-none"
+                                  [class.hover:bg-white]="isLightTheme()"
+                                  title="Próximo Mês">
+                            <span class="material-icons text-sm">chevron_right</span>
+                          </button>
                         </div>
-                      }
+                      </div>
+
+                      <!-- Grade de Dias do Calendário -->
+                      <div class="grid grid-cols-7 gap-1 sm:gap-2 text-center text-xs">
+                        <div class="font-black text-slate-500 text-[7px] sm:text-[8px] uppercase tracking-wider">Dom</div>
+                        <div class="font-black text-slate-500 text-[7px] sm:text-[8px] uppercase tracking-wider">Seg</div>
+                        <div class="font-black text-slate-500 text-[7px] sm:text-[8px] uppercase tracking-wider">Ter</div>
+                        <div class="font-black text-slate-500 text-[7px] sm:text-[8px] uppercase tracking-wider">Qua</div>
+                        <div class="font-black text-slate-500 text-[7px] sm:text-[8px] uppercase tracking-wider">Qui</div>
+                        <div class="font-black text-slate-500 text-[7px] sm:text-[8px] uppercase tracking-wider">Sex</div>
+                        <div class="font-black text-slate-500 text-[7px] sm:text-[8px] uppercase tracking-wider">Sáb</div>
+
+                        @for (offset of getOffsetDaysArray(); track offset) {
+                          <div class="bg-transparent border border-transparent p-1.5 sm:p-2"></div>
+                        }
+
+                        @for (day of daysInMonth(); track day) {
+                          @let events = getSpecialEventsForDay(logged, day);
+                          @let dayInfo = getCollaboratorDayScheduleInfo(logged, day);
+                          @let count = getFolgaRequestCount(day);
+
+                          <div [class]="getCollaboratorCalendarDayStaticClass(logged, day, count)"
+                               [class.opacity-45]="isPastDay(day)"
+                               [class.saturate-[0.45]]="isPastDay(day)"
+                               class="transition-all duration-300">
+                            
+                            <div class="flex items-center justify-between w-full shrink-0">
+                              <span class="font-extrabold font-mono text-[10px] sm:text-[12px] h-5 w-5 sm:h-6 sm:w-6 flex items-center justify-center rounded-full"
+                                    [class.bg-emerald-500]="isToday(day)"
+                                    [class.text-white]="isToday(day)"
+                                    [class.bg-emerald-500/20]="dayInfo.status === 'folga' && !isToday(day)"
+                                    [class.text-emerald-400]="dayInfo.status === 'folga' && !isLightTheme() && !isToday(day)"
+                                    [class.text-emerald-800]="dayInfo.status === 'folga' && isLightTheme() && !isToday(day)"
+                                    [class.bg-rose-500/20]="dayInfo.status === 'licenca' && !isToday(day)"
+                                    [class.text-rose-400]="dayInfo.status === 'licenca' && !isLightTheme() && !isToday(day)"
+                                    [class.text-rose-800]="dayInfo.status === 'licenca' && isLightTheme() && !isToday(day)"
+                                    [class.bg-slate-700/30]="dayInfo.status === 'trabalho' && !isLightTheme() && !isToday(day)"
+                                    [class.bg-slate-200/50]="dayInfo.status === 'trabalho' && isLightTheme() && !isToday(day)"
+                                    [class.text-slate-300]="dayInfo.status === 'trabalho' && !isLightTheme() && !isToday(day)"
+                                    [class.text-slate-700]="dayInfo.status === 'trabalho' && isLightTheme() && !isToday(day)">
+                                {{ day }}
+                              </span>
+                              @if (events.length > 0) {
+                                <div class="flex items-center gap-0.5">
+                                  @for (ev of events; track ev.tooltip) {
+                                    <span class="material-icons text-[9px] sm:text-[11px] select-none" [style.color]="ev.color" [title]="ev.tooltip">{{ ev.icon }}</span>
+                                  }
+                                </div>
+                              }
+                            </div>
+
+                            <div class="flex flex-col items-start w-full gap-0.5 shrink-0 select-none mt-0.5 sm:mt-1 leading-none">
+                              <span class="text-[7.5px] sm:text-[8.5px] font-black uppercase tracking-tight block max-w-full truncate leading-none"
+                                    [class.text-emerald-300]="isToday(day) && !isLightTheme()"
+                                    [class.text-emerald-950]="isToday(day) && isLightTheme()"
+                                    [class.text-emerald-400]="dayInfo.status === 'folga' && !isToday(day)"
+                                    [class.text-rose-400]="dayInfo.status === 'licenca' && !isToday(day)"
+                                    [class.text-slate-300]="dayInfo.status === 'trabalho' && !isLightTheme() && !isToday(day)"
+                                    [class.text-slate-700]="dayInfo.status === 'trabalho' && isLightTheme() && !isToday(day)">
+                                <span class="hidden sm:inline">{{ dayInfo.status === 'folga' ? 'FOLGA' : (dayInfo.status === 'licenca' || dayInfo.status === 'afastamento' ? 'AUSENTE' : 'TRABALHO') }}</span>
+                                <span class="inline sm:hidden">{{ dayInfo.status === 'folga' ? 'FOLGA' : (dayInfo.status === 'licenca' || dayInfo.status === 'afastamento' ? 'AUSENTE' : 'TRABALHO') }}</span>
+                              </span>
+                            </div>
+
+                            <div class="w-full text-left pt-1 border-t shrink-0 select-none mt-1 leading-none hidden sm:flex items-center justify-between"
+                                 [class.border-[#10213b]/20]="!isToday(day)"
+                                 [class.border-emerald-500/30]="isToday(day) && !isLightTheme()"
+                                 [class.border-emerald-300/40]="isToday(day) && isLightTheme()">
+                              <span class="text-[8.5px] font-bold font-mono"
+                                    [class.text-slate-400]="!isToday(day)"
+                                    [class.text-emerald-300/85]="isToday(day) && !isLightTheme()"
+                                    [class.text-emerald-900/90]="isToday(day) && isLightTheme()">{{ dayInfo.subLabel }}</span>
+                            </div>
+                          </div>
+                        }
+                      </div>
                     </div>
+                  </div>
+
+              </div>
+
+              <!-- SECTION: FERRAMENTA DIÁRIA (TRABALHO E FOLGA NO MESMO DIA) -->
+              <div id="team-daily-schedule-tool"
+                   [class.hidden]="!isMobile() || activeSubTab() !== 'equipe'"
+                   [class]="'w-full border rounded-[16px] flex flex-col p-4 gap-4 transition-all duration-300 mb-4 ' + (isLightTheme() ? 'bg-white border-slate-200 text-slate-900 shadow-md' : 'bg-[#030a14] border-[#10213b] text-white shadow-lg')">
+                
+                <!-- HEADER WITH TITLE AND DAY SWITCHER -->
+                <div id="team-daily-header" class="flex items-center justify-between pb-2 border-b" [class]="isLightTheme() ? 'border-slate-150' : 'border-[#10213b]/30'">
+                  <div class="flex items-center gap-1.5">
+                    <span class="material-icons text-emerald-400 text-sm">event_note</span>
+                    <span [class]="'text-[12px] font-black uppercase tracking-wide ' + (isLightTheme() ? 'text-slate-850' : 'text-[#F8FAFC]')">
+                      Escala Diária do Time
+                    </span>
+                  </div>
+
+                  <!-- Quick Day Switcher -->
+                  <div id="team-day-switcher" class="flex items-center gap-1.5 bg-[#071426] border border-[#10213b]/40 rounded-lg p-0.5"
+                       [class.bg-slate-50]="isLightTheme()"
+                       [class.border-slate-200]="isLightTheme()">
+                    <button id="btn-team-day-prev" (click)="prevCalendarDay()" 
+                            class="w-6 h-6 flex items-center justify-center rounded cursor-pointer text-slate-500 hover:text-emerald-400 hover:bg-[#0b1e36] transition-colors border-none outline-none"
+                            [class.hover:bg-white]="isLightTheme()"
+                            [class.opacity-30]="selectedCalendarDay() <= 1"
+                            [disabled]="selectedCalendarDay() <= 1"
+                            title="Dia Anterior">
+                      <span class="material-icons text-xs">chevron_left</span>
+                    </button>
+                    <div id="team-day-display" class="flex items-center justify-center min-w-[50px]">
+                      <span class="text-[10px] font-black font-mono text-slate-300"
+                            [class.text-slate-700]="isLightTheme()">
+                        Dia {{ selectedCalendarDay() < 10 ? '0' + selectedCalendarDay() : selectedCalendarDay() }}
+                      </span>
+                    </div>
+                    <button id="btn-team-day-next" (click)="nextCalendarDay()" 
+                            class="w-6 h-6 flex items-center justify-center rounded cursor-pointer text-slate-500 hover:text-emerald-400 hover:bg-[#0b1e36] transition-colors border-none outline-none"
+                            [class.hover:bg-white]="isLightTheme()"
+                            [class.opacity-30]="selectedCalendarDay() >= daysInMonth().length"
+                            [disabled]="selectedCalendarDay() >= daysInMonth().length"
+                            title="Próximo Dia">
+                      <span class="material-icons text-xs">chevron_right</span>
+                    </button>
                   </div>
                 </div>
 
+                <!-- FILTER SELECTOR PILLS -->
+                <div id="team-filter-container" class="flex flex-wrap items-center gap-1 pb-1">
+                  <button id="btn-filter-meu-turno" (click)="coworkersFilter.set('MEU_TURNO')"
+                          class="px-2 py-1 rounded-lg border text-[8px] font-black uppercase tracking-wider transition-all duration-300 cursor-pointer shadow-sm select-none"
+                          [class]="coworkersFilter() === 'MEU_TURNO' ? 
+                                   (isLightTheme() ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-emerald-500 text-emerald-950 border-emerald-500 font-black') : 
+                                   (isLightTheme() ? 'bg-white border-slate-200 text-slate-500 hover:text-slate-800' : 'bg-[#071426]/40 border-[#10213b]/35 text-slate-400 hover:text-white')">
+                    Meu Turno ({{ logged.shift || 'N/A' }})
+                  </button>
+                  <button id="btn-filter-outros" (click)="coworkersFilter.set('OUTROS')"
+                          class="px-2 py-1 rounded-lg border text-[8px] font-black uppercase tracking-wider transition-all duration-300 cursor-pointer shadow-sm select-none"
+                          [class]="coworkersFilter() === 'OUTROS' ? 
+                                   (isLightTheme() ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-emerald-500 text-emerald-950 border-emerald-500 font-black') : 
+                                   (isLightTheme() ? 'bg-white border-slate-200 text-slate-500 hover:text-slate-800' : 'bg-[#071426]/40 border-[#10213b]/35 text-slate-400 hover:text-white')">
+                    Outros
+                  </button>
+                  <button id="btn-filter-manha-tarde" (click)="coworkersFilter.set('MANHA_TARDE')"
+                          class="px-2 py-1 rounded-lg border text-[8px] font-black uppercase tracking-wider transition-all duration-300 cursor-pointer shadow-sm select-none"
+                          [class]="coworkersFilter() === 'MANHA_TARDE' ? 
+                                   (isLightTheme() ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-emerald-500 text-emerald-950 border-emerald-500 font-black') : 
+                                   (isLightTheme() ? 'bg-white border-slate-200 text-slate-500 hover:text-slate-800' : 'bg-[#071426]/40 border-[#10213b]/35 text-slate-400 hover:text-white')">
+                    Manhã/Tarde
+                  </button>
+                  <button id="btn-filter-todos" (click)="coworkersFilter.set('TODOS')"
+                          class="px-2 py-1 rounded-lg border text-[8px] font-black uppercase tracking-wider transition-all duration-300 cursor-pointer shadow-sm select-none"
+                          [class]="coworkersFilter() === 'TODOS' ? 
+                                   (isLightTheme() ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-emerald-500 text-emerald-950 border-emerald-500 font-black') : 
+                                   (isLightTheme() ? 'bg-white border-slate-200 text-slate-500 hover:text-slate-800' : 'bg-[#071426]/40 border-[#10213b]/35 text-slate-400 hover:text-white')">
+                    Todos
+                  </button>
+                </div>
 
+                <!-- SUB TABS: TRABALHANDO vs FOLGANDO -->
+                <div id="team-subtabs-container" class="grid grid-cols-2 p-1 rounded-xl" [class]="isLightTheme() ? 'bg-slate-100' : 'bg-[#071426]'">
+                  <button id="btn-team-tab-trabalhando" (click)="teamDailyTab.set('trabalhando')"
+                          class="py-2.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all duration-300 cursor-pointer flex items-center justify-center gap-1.5 border-none outline-none shadow-sm active:scale-95"
+                          [class]="teamDailyTab() === 'trabalhando' ? 
+                                   (isLightTheme() ? 'bg-white text-slate-850 shadow-sm border-b border-slate-200' : 'bg-emerald-500 text-emerald-950') : 
+                                   (isLightTheme() ? 'text-slate-500 hover:text-slate-700' : 'text-slate-400 hover:text-slate-200')">
+                    <span class="material-icons text-xs">work</span>
+                    Trabalhando ({{ getTodayTeamCollaborators().length }})
+                  </button>
+                  <button id="btn-team-tab-folgando" (click)="teamDailyTab.set('folgando')"
+                          class="py-2.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all duration-300 cursor-pointer flex items-center justify-center gap-1.5 border-none outline-none shadow-sm active:scale-95"
+                          [class]="teamDailyTab() === 'folgando' ? 
+                                   (isLightTheme() ? 'bg-white text-slate-850 shadow-sm border-b border-slate-200' : 'bg-amber-500 text-amber-950') : 
+                                   (isLightTheme() ? 'text-slate-500 hover:text-slate-700' : 'text-slate-400 hover:text-slate-200')">
+                    <span class="material-icons text-xs">beach_access</span>
+                    Folgando ({{ getCollaboratorsOnVacationForDay(selectedCalendarDay()).length }})
+                  </button>
+                </div>
+
+                <!-- LIST / GRID OF COLLABORATORS FOR ACTIVE SUB-TAB -->
+                <div id="team-daily-list-wrapper">
+                  @if (teamDailyTab() === 'trabalhando') {
+                    @let activeCollabs = getTodayTeamCollaborators();
+                    @if (activeCollabs.length > 0) {
+                      <div id="team-active-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-[300px] overflow-y-auto pr-1">
+                        @for (col of activeCollabs; track col.id) {
+                          <div [id]="'active-collab-' + col.id" 
+                               class="flex items-center justify-between gap-2.5 p-2.5 border rounded-xl"
+                               [class]="isLightTheme() ? 'border-slate-150 bg-slate-50/50' : 'border-[#10213b]/60 bg-[#071426]/30'">
+                            <div class="flex items-center gap-2.5 min-w-0">
+                              <img [src]="getCollabPhoto(col)" alt="Avatar" referrerpolicy="no-referrer"
+                                   class="w-8 h-8 rounded-full object-cover border shrink-0"
+                                   [class]="isLightTheme() ? 'border-slate-200' : 'border-[#10213b]'">
+                              <div class="min-w-0">
+                                <p [class]="'text-[10px] font-black truncate ' + (isLightTheme() ? 'text-slate-800' : 'text-white')">
+                                  {{ col.name }}
+                                </p>
+                                <p [class]="'text-[8px] font-bold uppercase tracking-wider truncate ' + (isLightTheme() ? 'text-slate-500' : 'text-slate-400')">
+                                  {{ col.role }} &bull; {{ col.sector || 'Geral' }}
+                                </p>
+                              </div>
+                            </div>
+                            <span class="text-[7px] font-black font-mono px-1.5 py-0.5 rounded border uppercase shrink-0 transition-colors"
+                                  [class]="isLightTheme() ? 'text-emerald-700 bg-emerald-50 border-emerald-200' : 'text-emerald-400 bg-emerald-950/20 border-emerald-500/20'">
+                              {{ getCollabShiftOnDay(col, selectedCalendarDay()) }}
+                            </span>
+                          </div>
+                        }
+                      </div>
+                    } @else {
+                      <div id="team-active-empty" class="text-center py-6 text-[10px] text-slate-500 uppercase tracking-wider border border-dashed rounded-xl"
+                           [class]="isLightTheme() ? 'border-slate-200' : 'border-[#10213b]/40'">
+                        Nenhum colaborador trabalhando neste dia
+                      </div>
+                    }
+                  }
+
+                  @if (teamDailyTab() === 'folgando') {
+                    @let offCollabs = getCollaboratorsOnVacationForDay(selectedCalendarDay());
+                    @if (offCollabs.length > 0) {
+                      <div id="team-off-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-[300px] overflow-y-auto pr-1">
+                        @for (col of offCollabs; track col.id) {
+                          <div [id]="'off-collab-' + col.id"
+                               class="flex items-center justify-between gap-2.5 p-2.5 border rounded-xl"
+                               [class]="isLightTheme() ? 'border-slate-150 bg-slate-50/50' : 'border-[#10213b]/60 bg-[#071426]/30'">
+                            <div class="flex items-center gap-2.5 min-w-0">
+                              <img [src]="getCollabPhoto(col)" alt="Avatar" referrerpolicy="no-referrer"
+                                   class="w-8 h-8 rounded-full object-cover border shrink-0"
+                                   [class]="isLightTheme() ? 'border-slate-200' : 'border-[#10213b]'">
+                              <div class="min-w-0">
+                                <p [class]="'text-[10px] font-black truncate ' + (isLightTheme() ? 'text-slate-800' : 'text-white')">
+                                  {{ col.name }}
+                                </p>
+                                <p [class]="'text-[8px] font-bold uppercase tracking-wider truncate ' + (isLightTheme() ? 'text-slate-500' : 'text-slate-400')">
+                                  {{ col.role }} &bull; {{ col.sector || 'Geral' }}
+                                </p>
+                              </div>
+                            </div>
+                            <span class="text-[7px] font-black font-mono px-1.5 py-0.5 rounded border uppercase shrink-0 transition-colors"
+                                  [class]="isLightTheme() ? 'text-amber-700 bg-amber-50 border-amber-200' : 'text-amber-400 bg-amber-950/20 border-amber-500/20'">
+                              FOLGA
+                            </span>
+                          </div>
+                        }
+                      </div>
+                    } @else {
+                      <div id="team-off-empty" class="text-center py-6 text-[10px] text-slate-500 uppercase tracking-wider border border-dashed rounded-xl"
+                           [class]="isLightTheme() ? 'border-slate-200' : 'border-[#10213b]/40'">
+                        Nenhum colaborador de folga neste dia
+                      </div>
+                    }
+                  }
+                </div>
 
               </div>
 
@@ -3667,52 +3880,54 @@
     <nav class="md:hidden flex items-center justify-around bg-[#030a14] border-t border-[#10213b] px-1 py-1 pb-[max(env(safe-area-inset-bottom),0.5rem)] shrink-0 relative z-[60] shadow-[0_-4px_15px_rgba(0,0,0,0.5)]"
          [class.bg-white]="isLightTheme()" [class.border-slate-200]="isLightTheme()" [class.shadow-[0_-4px_15px_rgba(0,0,0,0.05)]]="isLightTheme()">
       
-      <!-- ESCALA -->
-      <button (click)="activeSubTab.set('escala')"
-              class="flex flex-col items-center justify-center p-1.5 flex-1 gap-1 rounded-lg transition-all border-none outline-none bg-transparent cursor-pointer active:scale-95 active:bg-slate-500/10"
-              [class]="(activeSubTab() === 'portal' || activeSubTab() === 'escala' || activeSubTab() === 'matrix') ? 
+      <!-- INÍCIO -->
+      <button (click)="activeSubTab.set('portal')"
+              class="flex flex-col items-center justify-center p-1 flex-1 gap-0.5 rounded-lg transition-all border-none outline-none bg-transparent cursor-pointer active:scale-95 active:bg-slate-500/10"
+              [class]="activeSubTab() === 'portal' ? 
                        (isLightTheme() ? 'text-emerald-650 font-bold bg-emerald-50/60' : 'text-emerald-400 font-bold bg-emerald-500/10') : 
                        (isLightTheme() ? 'text-slate-500 hover:text-slate-700' : 'text-slate-400 hover:text-slate-200')">
-        <span class="material-icons text-lg font-bold">calendar_month</span>
-        <span class="text-[8.5px] font-black uppercase tracking-wider">Escala</span>
+        <span class="material-icons text-base">home</span>
+        <span class="text-[8px] font-black uppercase tracking-wider">Início</span>
+      </button>
+
+      <!-- ESCALA -->
+      <button (click)="activeSubTab.set('escala')"
+              class="flex flex-col items-center justify-center p-1 flex-1 gap-0.5 rounded-lg transition-all border-none outline-none bg-transparent cursor-pointer active:scale-95 active:bg-slate-500/10"
+              [class]="activeSubTab() === 'escala' ? 
+                       (isLightTheme() ? 'text-emerald-650 font-bold bg-emerald-50/60' : 'text-emerald-400 font-bold bg-emerald-500/10') : 
+                       (isLightTheme() ? 'text-slate-500 hover:text-slate-700' : 'text-slate-400 hover:text-slate-200')">
+        <span class="material-icons text-base font-bold">calendar_month</span>
+        <span class="text-[8px] font-black uppercase tracking-wider">Escala</span>
       </button>
 
       <!-- PERFIL -->
       <button (click)="activeSubTab.set('perfil')"
-              class="flex flex-col items-center justify-center p-1.5 flex-1 gap-1 rounded-lg transition-all border-none outline-none bg-transparent cursor-pointer active:scale-95 active:bg-slate-500/10"
+              class="flex flex-col items-center justify-center p-1 flex-1 gap-0.5 rounded-lg transition-all border-none outline-none bg-transparent cursor-pointer active:scale-95 active:bg-slate-500/10"
               [class]="activeSubTab() === 'perfil' ? 
                        (isLightTheme() ? 'text-emerald-650 font-bold bg-emerald-50/60' : 'text-emerald-400 font-bold bg-emerald-500/10') : 
                        (isLightTheme() ? 'text-slate-500 hover:text-slate-700' : 'text-slate-400 hover:text-slate-200')">
-        <span class="material-icons text-lg">account_circle</span>
-        <span class="text-[8.5px] font-black uppercase tracking-wider">Perfil</span>
+        <span class="material-icons text-base">account_circle</span>
+        <span class="text-[8px] font-black uppercase tracking-wider">Perfil</span>
       </button>
 
       <!-- EQUIPE -->
       <button (click)="activeSubTab.set('equipe')"
-              class="flex flex-col items-center justify-center p-1.5 flex-1 gap-1 rounded-lg transition-all border-none outline-none bg-transparent cursor-pointer active:scale-95 active:bg-slate-500/10"
+              class="flex flex-col items-center justify-center p-1 flex-1 gap-0.5 rounded-lg transition-all border-none outline-none bg-transparent cursor-pointer active:scale-95 active:bg-slate-500/10"
               [class]="(activeSubTab() === 'equipe' || activeSubTab() === 'team') ? 
                        (isLightTheme() ? 'text-emerald-650 font-bold bg-emerald-50/60' : 'text-emerald-400 font-bold bg-emerald-500/10') : 
                        (isLightTheme() ? 'text-slate-500 hover:text-slate-700' : 'text-slate-400 hover:text-slate-200')">
-        <span class="material-icons text-lg">groups</span>
-        <span class="text-[8.5px] font-black uppercase tracking-wider">Equipe</span>
+        <span class="material-icons text-base">groups</span>
+        <span class="text-[8px] font-black uppercase tracking-wider">Equipe</span>
       </button>
 
       <!-- INDICADORES -->
       <button (click)="activeSubTab.set('indicadores')"
-              class="flex flex-col items-center justify-center p-1.5 flex-1 gap-1 rounded-lg transition-all border-none outline-none bg-transparent cursor-pointer active:scale-95 active:bg-slate-500/10"
+              class="flex flex-col items-center justify-center p-1 flex-1 gap-0.5 rounded-lg transition-all border-none outline-none bg-transparent cursor-pointer active:scale-95 active:bg-slate-500/10"
               [class]="activeSubTab() === 'indicadores' ? 
                        (isLightTheme() ? 'text-emerald-650 font-bold bg-emerald-50/60' : 'text-emerald-400 font-bold bg-emerald-500/10') : 
                        (isLightTheme() ? 'text-slate-500 hover:text-slate-700' : 'text-slate-400 hover:text-slate-200')">
-        <span class="material-icons text-lg">analytics</span>
-        <span class="text-[8.5px] font-black uppercase tracking-wider">Indicadores</span>
-      </button>
-
-      <!-- SAIR -->
-      <button (click)="logout()"
-              class="flex flex-col items-center justify-center p-1.5 flex-1 gap-1 rounded-lg transition-all border-none outline-none bg-transparent cursor-pointer active:scale-95 active:bg-rose-500/10"
-              [class]="isLightTheme() ? 'text-slate-500 hover:text-rose-600 hover:bg-rose-50' : 'text-slate-400 hover:text-rose-400 hover:bg-rose-950/20'">
-        <span class="material-icons text-lg">logout</span>
-        <span class="text-[8.5px] font-black uppercase tracking-wider">Sair</span>
+        <span class="material-icons text-base">analytics</span>
+        <span class="text-[8px] font-black uppercase tracking-wider">Indicadores</span>
       </button>
 
     </nav>

@@ -73,7 +73,7 @@ export interface Collaborator {
   score: number;
   photoUrl?: string;
   phone?: string;
-  scale: { [day: number]: string }; // Day 1 to 30 of June new Date().getFullYear()
+  scale: Record<number, string>; // Day 1 to 30 of June new Date().getFullYear()
   photo?: string;
   birthday?: string; // Format: "YYYY-MM-DD"
   specialDates?: SpecialDate[];
@@ -542,7 +542,7 @@ export class ScaleService {
         this.collaborators.set([]);
       } else {
         // Group scales by collaborator_id
-        const scaleMap: { [collabId: string]: { [day: number]: string } } = {};
+        const scaleMap: Record<string, Record<number, string>> = {};
         if (escalaData) {
           escalaData.forEach((row: any) => {
             if (!scaleMap[row.collaborator_id]) {
@@ -930,7 +930,7 @@ export class ScaleService {
     const id = 'collab_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
     
     // Initialize standard scale (5 days work, 2 days off) dynamically for selected month and year
-    const initialScale: { [day: number]: string } = {};
+    const initialScale: Record<number, string> = {};
     for (let d = 1; d <= 31; d++) {
       const date = new Date(this.activeYear(), this.activeMonth() - 1, d);
       const dayOfWeek = date.getDay(); // 0 is Sunday, 6 is Saturday
@@ -1129,7 +1129,7 @@ export class ScaleService {
     this.isProcessing.set(true);
 
     const updatedList = list.map(collab => {
-      const emptyScale: { [day: number]: string } = {};
+      const emptyScale: Record<number, string> = {};
       for (let d = 1; d <= 31; d++) {
         emptyScale[d] = '-';
       }
@@ -1519,7 +1519,7 @@ export class ScaleService {
 
       // 1. Reset scale and generate Dobradinhas for Operators
       let updatedList = list.map((collab, index) => {
-        const updatedScale: { [day: number]: string } = {};
+        const updatedScale: Record<number, string> = {};
         for (let d = 1; d <= 31; d++) {
           updatedScale[d] = '-';
         }

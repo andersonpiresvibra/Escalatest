@@ -32,7 +32,7 @@ export interface Collaborator {
   phone?: string;
   photoUrl?: string;
   photo?: string;
-  scale?: { [day: number]: string };
+  scale?: Record<number, string>;
   specialDates?: { description: string; date: string; priority: number }[];
   folgaRequests?: { date: string; isPreSelected?: boolean }[];
 }

@@ -225,13 +225,15 @@ export class App {
   }
 
   // Sub tab navigation: 'matrix' | 'ger.turnos' | 'siglas' | 'team' | 'team-mgmt' | 'portal' | 'dashboard' | 'escala' | 'perfil' | 'equipe' | 'indicadores'
-  public activeSubTab = signal<'matrix' | 'ger.turnos' | 'siglas' | 'team' | 'team-mgmt' | 'portal' | 'dashboard' | 'escala' | 'perfil' | 'equipe' | 'indicadores'>('matrix');
+  public activeSubTab = signal<'matrix' | 'ger.turnos' | 'siglas' | 'team' | 'team-mgmt' | 'portal' | 'dashboard' | 'escala' | 'perfil' | 'equipe' | 'indicadores' | 'solicitacoes'>('portal');
   
   public teamViewMode = signal<'gallery' | 'mgmt'>('gallery');
   public editingCollab = signal<Collaborator | null>(null);
   public isPortalCollabListOpen = signal<boolean>(false);
   public isPortalRulesOpen = signal<boolean>(false);
   public isPortalEditingDates = signal<boolean>(false);
+  public isProfileEditOpen = signal<boolean>(false);
+  public teamDailyTab = signal<'trabalhando' | 'folgando'>('trabalhando');
 
   // Login e Fluxo de Primeiro Acesso
   public loginNameInput = signal<string>('');
@@ -533,7 +535,7 @@ export class App {
 
   // Chatbot Bob Signals & Methods
   public isBobChatOpen = signal<boolean>(false);
-  public bobChatMessages = signal<Array<{ sender: 'user' | 'bob'; text: string; timestamp: Date }>>([]);
+  public bobChatMessages = signal<{ sender: 'user' | 'bob'; text: string; timestamp: Date }[]>([]);
   public bobChatInput = signal<string>('');
   public isBobTyping = signal<boolean>(false);
 
@@ -1146,7 +1148,7 @@ export class App {
 
   // Row-level inline editing signals
   editingRowCollabId = signal<string | null>(null);
-  editingRowScaleDraft = signal<{ [day: number]: string }>({});
+  editingRowScaleDraft = signal<Record<number, string>>({});
 
   // Filter systems
   collabSearchQuery = signal<string>('');
@@ -1192,7 +1194,7 @@ export class App {
   // Computed stats counters
   collaboratorsCountByShift = computed(() => {
     const collabs = this.scaleService.collaborators();
-    const counts: { [key: string]: number } = { 'MANHÃ': 0, 'TARDE': 0, 'MADRUGADA': 0, 'ADMINISTRATIVO': 0, 'NOITE': 0 };
+    const counts: Record<string, number> = { 'MANHÃ': 0, 'TARDE': 0, 'MADRUGADA': 0, 'ADMINISTRATIVO': 0, 'NOITE': 0 };
     collabs.forEach(c => {
       const s = (c.shift || '').toUpperCase().trim();
       if (s.startsWith('MANHÃ') || s.startsWith('MANHA') || s === 'M') {
@@ -1218,7 +1220,7 @@ export class App {
     const days = this.daysInMonth();
     const collabs = this.filteredCollaborators();
     
-    const availableCountByDay: { [day: number]: number } = {};
+    const availableCountByDay: Record<number, number> = {};
     
     days.forEach(day => {
       let count = 0;
@@ -1246,9 +1248,9 @@ export class App {
     const siglas = this.scaleService.siglaTypes();
     
     // Grouping
-    const working: Array<{collab: any, shift: any, val: string, energy: number}> = [];
-    const absent: Array<{collab: any, sigla: any, val: string}> = [];
-    const unknown: Array<{collab: any, val: string}> = [];
+    const working: {collab: any, shift: any, val: string, energy: number}[] = [];
+    const absent: {collab: any, sigla: any, val: string}[] = [];
+    const unknown: {collab: any, val: string}[] = [];
 
     const getEnergy = (collab: any, targetDay: number) => {
       let streak = 0;
@@ -1276,7 +1278,7 @@ export class App {
       }
     });
 
-    const workingByShift: { [shiftCode: string]: { shift: any, items: typeof working } } = {};
+    const workingByShift: Record<string, { shift: any, items: typeof working }> = {};
     working.forEach(w => {
       const code = w.shift ? w.shift.code : w.val;
       if (!workingByShift[code]) {
@@ -1285,7 +1287,7 @@ export class App {
       workingByShift[code].items.push(w);
     });
 
-    const absentBySigla: { [siglaCode: string]: { sigla: any, items: typeof absent } } = {};
+    const absentBySigla: Record<string, { sigla: any, items: typeof absent }> = {};
     absent.forEach(a => {
       const code = a.sigla ? a.sigla.code : a.val;
       if (!absentBySigla[code]) {
@@ -1306,7 +1308,7 @@ export class App {
 
   collaboratorsCountBySector = computed(() => {
     const collabs = this.scaleService.collaborators();
-    const counts: { [key: string]: number } = {
+    const counts: Record<string, number> = {
       'GERAL': 0,
       'GESTÃO': 0,
       'CENTRAL': 0,
@@ -1392,7 +1394,7 @@ export class App {
         const parts = currentVal.split('-');
         const year = parts[0] || '2026';
         const month = parts[1] || '01';
-        let newDay = dayValue.padStart(2, '0');
+        const newDay = dayValue.padStart(2, '0');
         // If we selected 31, but month doesn't support it, maybe change month? No, the rule is to disable months when 31 is selected.
         // Wait, if we change the day to 31, and current month is Feb, we should probably change the month to Jan so we don't have an invalid date.
         let newMonth = month;
@@ -1417,7 +1419,7 @@ export class App {
         const currentVal = newDates[index].date || '2026-01-01';
         const parts = currentVal.split('-');
         const year = parts[0] || '2026';
-        let day = parts[2] || '01';
+        const day = parts[2] || '01';
         
         if (this.isMonthDisabled(monthValue, day)) {
             // Cannot select this month! Wait, we disable it in UI so user can't click it. But just in case:
@@ -1694,7 +1696,7 @@ export class App {
   dailyWorkingCounts = computed(() => {
     const collabs = this.filteredCollaborators();
     const days = this.daysInMonth();
-    const counts: { [day: number]: number } = {};
+    const counts: Record<number, number> = {};
     
     days.forEach(day => {
       let count = 0;
@@ -2268,7 +2270,7 @@ export class App {
     const sort = this.adminSortOrder();
     const onlyNight = this.onlyNightShift();
 
-    let list = this.scaleService.collaborators().filter(c => {
+    const list = this.scaleService.collaborators().filter(c => {
       if (onlyNight) {
         const cShift = (c.shift || '').toUpperCase().trim();
         const isNight = cShift === 'MADRUGADA' || cShift === 'NOITE' || cShift === 'N';
@@ -2529,7 +2531,7 @@ export class App {
     return stretches.reduce((prev, current) => (current.daysCount > prev.daysCount) ? current : prev, stretches[0]);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   getArray(n: number): number[] {
     return Array.from({length: Math.max(1, n)}, (_, i) => i + 1);
   }
@@ -3723,7 +3725,32 @@ export class App {
       photoUrl: photoUrl && photoUrl.trim() ? photoUrl.trim() : collab.photoUrl
     };
     this.scaleService.updateCollaborator(updated);
+    this.isProfileEditOpen.set(false);
     this.showToast('Perfil atualizado com sucesso!');
+  }
+
+  formatBirthday(birthday?: string): string {
+    if (!birthday) return 'Não informada';
+    const parts = birthday.split('-');
+    if (parts.length === 3) {
+      return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    }
+    return birthday;
+  }
+
+  prevCalendarDay(): void {
+    const cur = this.selectedCalendarDay();
+    if (cur > 1) {
+      this.selectedCalendarDay.set(cur - 1);
+    }
+  }
+
+  nextCalendarDay(): void {
+    const cur = this.selectedCalendarDay();
+    const max = this.daysInMonth().length;
+    if (cur < max) {
+      this.selectedCalendarDay.set(cur + 1);
+    }
   }
 
   registerCollaborator(
@@ -4863,7 +4890,7 @@ Verifique se os nomes no PDF correspondem aos nomes no sistema.`;
               
               if (strs.includes('1') && strs.includes('15') && strs.includes('31')) {
                  let currentDay = 1;
-                 let tempXs: number[] = [];
+                 const tempXs: number[] = [];
                  for(let i=0; i<items.length; i++) {
                     if (items[i].str.trim() === currentDay.toString()) {
                        tempXs[currentDay] = items[i].transform[4];

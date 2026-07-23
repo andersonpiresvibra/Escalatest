@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/consistent-indexed-object-style */
+ 
 /* eslint-disable @typescript-eslint/no-empty-function */
 
 // Server-side polyfills for Node.js environment during SSR and prerendering
