@@ -2734,10 +2734,77 @@
                           Carregando previsão do tempo hora a hora para Guarulhos...
                         </div>
                       } @else {
-                        <div class="grid grid-cols-1 xl:grid-cols-12 gap-4 items-stretch">
+                        <div class="flex flex-col gap-4 items-stretch">
                           
-                          <!-- GRÁFICO ESTILO CLIMA TEMPO COM CORES VIVAS NEON (ESQUERDA) -->
-                          <div class="xl:col-span-8 flex flex-col justify-between p-3 rounded-2xl border transition-all duration-300 relative overflow-hidden"
+                          <!-- CARD DE DETALHES DE CLIMA NEON INTERATIVO -->
+                          <div class="flex flex-col justify-between p-3.5 rounded-2xl border transition-all duration-300 relative overflow-hidden"
+                               [class]="isLightTheme() ? 'bg-white border-slate-200 text-slate-800' : 'bg-[#040c1a] border-[#0f1d3a] text-slate-200 shadow-[0_0_15px_rgba(236,72,153,0.05)]'">
+                            
+                            @if (activeWeatherItem(); as active) {
+                              <div>
+                                <!-- Header do Card -->
+                                <div class="flex items-center justify-between mb-2 pb-1.5 border-b border-slate-700/20">
+                                  <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Previsão Detalhada</span>
+                                  <span class="w-1.5 h-1.5 rounded-full bg-[#ff007f] animate-ping"></span>
+                                </div>
+
+                                <!-- Grid de 2 Colunas (Esquerda / Direita) -->
+                                <div class="grid grid-cols-2 gap-3 items-center py-1">
+                                  
+                                  <!-- Coluna da Esquerda: Ícone animado, Legenda, Temperatura -->
+                                  <div class="flex items-center gap-2.5">
+                                    <!-- Ícone Animado Neon (animação de pulso e brilho sutil) -->
+                                    <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border relative transition-all duration-300"
+                                         [class]="isLightTheme() ? 'bg-slate-50 border-slate-200 text-slate-600' : 'bg-gradient-to-br from-[#06152a] to-[#040c1a] border-[#0f1d3a] shadow-[0_0_10px_rgba(6,182,212,0.15)]'">
+                                      <span class="material-icons text-xl relative z-10 animate-pulse"
+                                            [class.text-amber-400]="active.icon === 'wb_sunny'"
+                                            [class.text-indigo-300]="active.icon === 'nights_stay'"
+                                            [class.text-slate-400]="active.icon === 'cloud' || active.icon === 'partly_cloudy_day'"
+                                            [class.text-cyan-400]="active.icon === 'water_drop' || active.icon === 'umbrella' || active.icon === 'grain'"
+                                            [class.text-amber-500]="active.icon === 'thunderstorm'">
+                                        {{ active.icon }}
+                                      </span>
+                                      <!-- Neon Ring Background Glow -->
+                                      <span class="absolute inset-0 rounded-xl opacity-20 blur-xs animate-pulse"
+                                            [class.bg-amber-400]="active.icon === 'wb_sunny'"
+                                            [class.bg-indigo-400]="active.icon === 'nights_stay'"
+                                            [class.bg-cyan-400]="active.icon === 'water_drop' || active.icon === 'umbrella' || active.icon === 'grain'"></span>
+                                    </div>
+
+                                    <div class="flex flex-col min-w-0">
+                                      <span class="text-[10px] font-black uppercase tracking-wide text-[#34d399] truncate">
+                                        {{ active.conditionText }}
+                                      </span>
+                                      <span class="text-2xl font-black font-mono tracking-tighter" [class.text-white]="!isLightTheme()" [class.text-slate-800]="isLightTheme()">
+                                        {{ active.temp }}°C
+                                      </span>
+                                    </div>
+                                  </div>
+
+                                  <!-- Coluna da Direita: Data abreviada e Hora -->
+                                  <div class="flex flex-col items-end justify-center text-right border-l border-slate-700/20 pl-3">
+                                    <div class="flex items-center gap-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                      <span>Data:</span>
+                                      <span class="font-mono text-cyan-400 font-black">({{ active.dateLabel.slice(0, 5) }})</span>
+                                    </div>
+                                    <div class="flex items-center gap-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">
+                                      <span>Hora:</span>
+                                      <span class="font-mono text-[#ff007f] font-black">{{ active.timeLabel }}</span>
+                                    </div>
+                                  </div>
+
+                                </div>
+                              </div>
+                            } @else {
+                              <div class="flex flex-col items-center justify-center py-6 text-xs text-slate-500 italic">
+                                Nenhuma previsão selecionada
+                              </div>
+                            }
+
+                          </div>
+
+                          <!-- GRÁFICO ESTILO CLIMA TEMPO COM CORES VIVAS NEON -->
+                          <div class="flex flex-col justify-between p-3 rounded-2xl border transition-all duration-300 relative overflow-hidden"
                                [class]="isLightTheme() ? 'bg-slate-50/50 border-slate-200' : 'bg-[#030914] border-[#0f1d3a] shadow-[0_0_15px_rgba(6,182,212,0.05)]'">
                             
                             <!-- Header do Gráfico -->
@@ -2887,95 +2954,12 @@
                                 </svg>
                               </div>
                             </div>
-                          </div>
 
-                          <!-- CARD DE DETALHES DE CLIMA NEON INTERATIVO (DIREITA) -->
-                          <div class="xl:col-span-4 flex flex-col justify-between p-3.5 rounded-2xl border transition-all duration-300 relative overflow-hidden"
-                               [class]="isLightTheme() ? 'bg-white border-slate-200 text-slate-800' : 'bg-[#040c1a] border-[#0f1d3a] text-slate-200 shadow-[0_0_15px_rgba(236,72,153,0.05)]'">
-                            
-                            @if (activeWeatherItem(); as active) {
-                              <div>
-                                <!-- Top do Card -->
-                                <div class="flex items-center justify-between mb-2">
-                                  <div class="flex flex-col">
-                                    <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Previsão Detalhada</span>
-                                    <div class="flex items-center gap-1.5 mt-0.5">
-                                      <span class="text-xs font-black font-mono text-[#ff007f]">{{ active.timeLabel }}</span>
-                                      <span class="text-[9px] font-bold text-slate-500 font-mono">• {{ active.dateLabel }}</span>
-                                    </div>
-                                  </div>
-                                  
-                                  <!-- Ícone Grande Decorativo Neon -->
-                                  <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border relative transition-all duration-300"
-                                       [class]="isLightTheme() ? 'bg-slate-50 border-slate-200 text-slate-600' : 'bg-gradient-to-br from-[#06152a] to-[#040c1a] border-[#0f1d3a] shadow-[0_0_10px_rgba(6,182,212,0.15)]'">
-                                    <span class="material-icons text-lg relative z-10 animate-bounce"
-                                          [class.text-amber-400]="active.icon === 'wb_sunny'"
-                                          [class.text-indigo-300]="active.icon === 'nights_stay'"
-                                          [class.text-slate-400]="active.icon === 'cloud' || active.icon === 'partly_cloudy_day'"
-                                          [class.text-cyan-400]="active.icon === 'water_drop' || active.icon === 'umbrella' || active.icon === 'grain'"
-                                          [class.text-amber-500]="active.icon === 'thunderstorm'">
-                                      {{ active.icon }}
-                                    </span>
-                                    <!-- Neon Ring Background Glow -->
-                                    <span class="absolute inset-0 rounded-xl opacity-20 blur-xs transition-opacity duration-300"
-                                          [class.bg-amber-400]="active.icon === 'wb_sunny'"
-                                          [class.bg-indigo-400]="active.icon === 'nights_stay'"
-                                          [class.bg-cyan-400]="active.icon === 'water_drop' || active.icon === 'umbrella' || active.icon === 'grain'"></span>
-                                  </div>
-                                </div>
-
-                                <!-- Temperatura e Condição -->
-                                <div class="flex items-baseline gap-1.5 mb-2">
-                                  <span class="text-2xl font-black font-mono tracking-tighter" [class.text-white]="!isLightTheme()" [class.text-slate-800]="isLightTheme()">
-                                    {{ active.temp }}°C
-                                  </span>
-                                  <span class="text-xs font-black uppercase tracking-wide text-[#34d399] truncate">
-                                    {{ active.conditionText }}
-                                  </span>
-                                </div>
-
-                                <!-- Grid de Métricas Técnicas Neon -->
-                                <div class="grid grid-cols-2 gap-2 mt-2">
-                                  
-                                  <!-- Umidade -->
-                                  <div class="p-2 rounded-xl border flex flex-col justify-between transition-all"
-                                       [class]="isLightTheme() ? 'bg-slate-50 border-slate-100' : 'bg-[#061427]/60 border-[#10213b] hover:border-indigo-500/30'">
-                                    <div class="flex items-center gap-1.5 text-slate-400 mb-0.5">
-                                      <span class="material-icons text-[11px] text-indigo-400">opacity</span>
-                                      <span class="text-[8px] font-bold uppercase tracking-wider">Umidade</span>
-                                    </div>
-                                    <span class="text-xs font-black font-mono" [class.text-white]="!isLightTheme()">{{ active.humidity }}%</span>
-                                    <div class="w-full bg-slate-700/20 rounded-full h-1 mt-1 overflow-hidden">
-                                      <div class="bg-indigo-400 h-full rounded-full shadow-[0_0_6px_rgba(129,140,248,0.8)]" [style.width]="active.humidity + '%'"></div>
-                                    </div>
-                                  </div>
-
-                                  <!-- Chuva -->
-                                  <div class="p-2 rounded-xl border flex flex-col justify-between transition-all"
-                                       [class]="isLightTheme() ? 'bg-slate-50 border-slate-100' : 'bg-[#061427]/60 border-[#10213b] hover:border-cyan-500/30'">
-                                    <div class="flex items-center gap-1.5 text-slate-400 mb-0.5">
-                                      <span class="material-icons text-[11px] text-cyan-400">water_drop</span>
-                                      <span class="text-[8px] font-bold uppercase tracking-wider">Prob. Chuva</span>
-                                    </div>
-                                    <span class="text-xs font-black font-mono" [class.text-white]="!isLightTheme()">{{ active.rainProb }}%</span>
-                                    <div class="w-full bg-slate-700/20 rounded-full h-1 mt-1 overflow-hidden">
-                                      <div class="bg-cyan-400 h-full rounded-full shadow-[0_0_6px_rgba(34,211,238,0.8)]" [style.width]="active.rainProb + '%'"></div>
-                                    </div>
-                                  </div>
-
-                                </div>
-                              </div>
-                              
-                              <div class="mt-3 pt-1.5 border-t border-[#10213b]/40 flex items-center justify-between text-[8px] font-bold text-slate-500 uppercase tracking-widest">
-                                <span>Clique nos nós do gráfico para explorar as horas</span>
-                                <span class="material-icons text-[10px] animate-pulse text-[#ff007f]">ads_click</span>
-                              </div>
-                            } @else {
-                              <div class="flex flex-col items-center justify-center py-6 text-xs text-slate-500 italic">
-                                Nenhuma previsão selecionada
-                              </div>
-                            }
-
+                            <!-- Rodapé de Instrução do Gráfico -->
+                            <div class="mt-2 pt-1.5 border-t border-[#10213b]/40 flex items-center justify-between text-[8px] font-bold text-slate-500 uppercase tracking-widest">
+                              <span>Clique nos nós do gráfico para explorar as horas</span>
+                              <span class="material-icons text-[10px] animate-pulse text-[#ff007f]">ads_click</span>
+                            </div>
                           </div>
 
                         </div>

@@ -394,13 +394,37 @@ export class App {
   });
 
   public activeWeatherItem = computed(() => {
+    this.currentTimeString(); // Trigger reactivity on clock updates
     const list = this.shiftWeatherList();
-    if (list.length === 0) return null;
+    const raw = this.rawHourlyWeather();
+    if (list.length === 0 && raw.length === 0) return null;
+
     const idx = this.selectedWeatherHourIdx();
     if (idx !== null && idx >= 0 && idx < list.length) {
       return list[idx];
     }
-    return list[0];
+
+    // Default state: real-time current date and time
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentMinutes = String(now.getMinutes()).padStart(2, '0');
+    const timeLabel = `${String(currentHour).padStart(2, '0')}:${currentMinutes}`;
+    const dateLabel = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+    // Find weather forecast item for current hour
+    let currentMatch = list.find(item => item.hour === currentHour);
+    if (!currentMatch && raw.length > 0) {
+      currentMatch = raw.find(item => item.hour === currentHour);
+    }
+    if (!currentMatch) {
+      currentMatch = list[0] || raw[0];
+    }
+
+    return {
+      ...currentMatch,
+      timeLabel,
+      dateLabel
+    };
   });
 
   public async fetchWeatherForecast(): Promise<void> {
