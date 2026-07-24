@@ -4948,7 +4948,9 @@ export class App {
       (window.self !== window.top) // If inside an iframe (AI Studio preview iframe)
     );
 
-    if (isDevelopment) {
+    const devLoggedOut = safeGetSessionStorage('dev_logged_out') === 'true';
+
+    if (isDevelopment && !devLoggedOut) {
       const collabs = this.scaleService.collaborators();
       if (collabs.length > 0) {
         const devCollab = collabs.find(c => this.isAdmin(c)) || collabs[0];
