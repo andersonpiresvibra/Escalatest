@@ -2,7 +2,7 @@ import { Injectable, signal, WritableSignal } from '@angular/core';
 import { initializeApp } from 'firebase/app';
 import { initializeFirestore, getFirestore, collection, doc, onSnapshot, setDoc, deleteDoc } from 'firebase/firestore';
 import { firebaseConfig } from './firebase-config';
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from './supabase-client';
 import { supabaseEnv } from './supabase-env';
 
 declare const process: any;

@@ -316,7 +316,7 @@ export class App {
   public dayDetailsActiveTab = signal<'seu_turno' | 'turno_posterior' | 'geral'>('seu_turno');
   public selectedCalendarDay = signal<number>(new Date().getDate());
   public hidePastDays = signal<boolean>(true);
-  public coworkersFilter = signal<'MEU_TURNO' | 'OUTROS' | 'MANHA_TARDE' | 'TODOS'>('MEU_TURNO');
+  public coworkersFilter = signal<'MEU_TURNO' | 'TURNO_ANTERIOR' | 'TURNO_POSTERIOR' | 'TODOS'>('MEU_TURNO');
 
   // Weather Sub-Header Signals & Methods (Guarulhos Base)
   public rawHourlyWeather = signal<HourlyWeatherItem[]>([]);
@@ -1818,24 +1818,17 @@ export class App {
   // Notifications State
   notifications = signal<AppNotification[]>([
     {
-      id: 'n_1',
+      id: 'n_update_1',
       type: 'publish',
-      message: 'Escala oficial de trabalho publicada para Junho de this.currentYear().',
-      timestamp: 'Hoje, 10:15',
+      message: 'Atualização de melhorias realizada em 23/07/2026 às 20:00: Novo visual do dashboard e otimização do gráfico de temperatura.',
+      timestamp: '23/07/2026, 20:00',
       read: false
     },
     {
-      id: 'n_2',
-      type: 'alert',
-      message: 'Aviso: Baixo efetivo no turno da Noite para o Setor Aeródromo.',
-      timestamp: 'Hoje, 08:30',
-      read: false
-    },
-    {
-      id: 'n_3',
-      type: 'trade',
-      message: 'Everton Souza solicitou uma permuta de turno com Carlos Alberto para o dia 12.',
-      timestamp: 'Ontem, 16:45',
+      id: 'n_update_2',
+      type: 'publish',
+      message: 'Conexão em tempo real estabelecida com sucesso com o banco de dados Supabase.',
+      timestamp: '23/07/2026, 16:54',
       read: true
     }
   ]);
@@ -2202,8 +2195,23 @@ export class App {
     this.showToast(`Perfil alterado para: ${role === 'LIDER' ? 'LÍDER DE TURNO' : role}`);
   }
 
+  normalizeShift(s: string): string {
+    const upper = (s || '').toUpperCase().trim();
+    if (upper === 'M' || upper === 'MANHÃ' || upper === 'MANHA') return 'M';
+    if (upper === 'T' || upper === 'TARDE') return 'T';
+    if (upper === 'N' || upper === 'NOITE' || upper === 'MADRUGADA') return 'N';
+    if (upper === 'ADM' || upper === 'ADMINISTRATIVO') return 'ADM';
+    return upper;
+  }
+
+  normalizeRole(r: string): string {
+    const upper = (r || '').toUpperCase().trim();
+    if (upper === 'LIDER' || upper === 'LÍDER' || upper === 'LÍDER DE TURNO') return 'LIDER';
+    return upper;
+  }
+
   // Presentation Mode: Focus only on Night Shift ("Noite / Madrugada / N")
-  onlyNightShift = signal<boolean>(true);
+  onlyNightShift = signal<boolean>(false);
 
   unlockAllShifts(pin: string) {
     const cleanPin = (pin || '').trim().toLowerCase();
@@ -2236,14 +2244,20 @@ export class App {
         if (!isNight) return false;
       }
 
-      const matchesSearch = c.name.toLowerCase().includes(query) || c.group.toLowerCase().includes(query);
+      const matchesSearch = !query || 
+        (c.name || '').toLowerCase().includes(query) || 
+        (c.group || '').toLowerCase().includes(query) ||
+        (c.role || '').toLowerCase().includes(query) ||
+        (c.shift || '').toLowerCase().includes(query) ||
+        (c.sector || '').toLowerCase().includes(query);
+
       const matchesRole = role === 'TODOS' || 
-        (c.role || '').toUpperCase().trim() === role.toUpperCase().trim();
+        this.normalizeRole(c.role) === this.normalizeRole(role);
       const normCollabSector = (c.sector || '').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
       const normFilterSector = sector.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
       const matchesSector = sector === 'TODOS' || normCollabSector === normFilterSector;
       const matchesShift = shift === 'TODOS' || 
-        (c.shift || '').toUpperCase().trim() === shift.toUpperCase().trim();
+        this.normalizeShift(c.shift) === this.normalizeShift(shift);
       return matchesSearch && matchesRole && matchesSector && matchesShift;
     });
 
@@ -2265,7 +2279,7 @@ export class App {
       const wB = getWeight(b);
       if (wA !== wB) return wA - wB;
       // Secondary sort alphabetically
-      return a.name.localeCompare(b.name, 'pt-BR');
+      return (a.name || '').localeCompare(b.name || '', 'pt-BR');
     });
 
     return sorted;
@@ -2346,31 +2360,24 @@ export class App {
     const role = this.adminFilterRole();
     const shift = this.adminFilterShift();
     const sort = this.adminSortOrder();
-    const onlyNight = this.onlyNightShift();
 
     const list = this.scaleService.collaborators().filter(c => {
-      if (onlyNight) {
-        const cShift = (c.shift || '').toUpperCase().trim();
-        const isNight = cShift === 'MADRUGADA' || cShift === 'NOITE' || cShift === 'N';
-        if (!isNight) return false;
-      }
-
       const matchesSearch = !query || 
-        c.name.toLowerCase().includes(query) || 
-        c.role.toLowerCase().includes(query) || 
-        c.shift.toLowerCase().includes(query) || 
-        c.sector.toLowerCase().includes(query);
+        (c.name || '').toLowerCase().includes(query) || 
+        (c.role || '').toLowerCase().includes(query) || 
+        (c.shift || '').toLowerCase().includes(query) || 
+        (c.sector || '').toLowerCase().includes(query);
 
       const matchesRole = role === 'TODOS' || 
-        (c.role || '').toUpperCase().trim() === role.toUpperCase().trim();
+        this.normalizeRole(c.role) === this.normalizeRole(role);
       const matchesShift = shift === 'TODOS' || 
-        (c.shift || '').toUpperCase().trim() === shift.toUpperCase().trim();
+        this.normalizeShift(c.shift) === this.normalizeShift(shift);
 
       return matchesSearch && matchesRole && matchesShift;
     });
 
     list.sort((a, b) => {
-      const nameA = a.name.localeCompare(b.name, 'pt-BR');
+      const nameA = (a.name || '').localeCompare(b.name || '', 'pt-BR');
       return sort === 'asc' ? nameA : -nameA;
     });
 
@@ -3297,7 +3304,11 @@ export class App {
 
   // Get real-time statistics for shift types
   getCollaboratorCountForShift(shiftCode: string): number {
-    return this.scaleService.collaborators().filter(c => c.shift === shiftCode).length;
+    const scUpper = shiftCode.toUpperCase().trim();
+    return this.scaleService.collaborators().filter(c => {
+      const cCode = this.getShiftCode(c.shift).toUpperCase().trim();
+      return cCode === scUpper || this.normalizeShift(c.shift) === this.normalizeShift(shiftCode);
+    }).length;
   }
 
   getScheduledDaysCountForShift(shiftCode: string): number {
@@ -4445,6 +4456,26 @@ export class App {
     });
   }
 
+  getPreviousShiftLabel(): string {
+    const logged = this.getLoggedCollab();
+    if (!logged) return 'ANTERIOR';
+    const shift = (logged.shift || '').trim().toUpperCase();
+    if (shift === 'MANHÃ' || shift === 'MANHA') return 'NOITE';
+    if (shift === 'TARDE') return 'MANHÃ';
+    if (shift === 'NOITE') return 'TARDE';
+    return 'MANHÃ'; // Fallback
+  }
+
+  getPosteriorShiftLabel(): string {
+    const logged = this.getLoggedCollab();
+    if (!logged) return 'POSTERIOR';
+    const shift = (logged.shift || '').trim().toUpperCase();
+    if (shift === 'MANHÃ' || shift === 'MANHA') return 'TARDE';
+    if (shift === 'TARDE') return 'NOITE';
+    if (shift === 'NOITE') return 'MANHÃ';
+    return 'TARDE'; // Fallback
+  }
+
   getTodayTeamCollaborators(): any[] {
     const logged = this.getLoggedCollab();
     if (!logged) return [];
@@ -4461,11 +4492,13 @@ export class App {
       const loggedBaseShift = (logged.shift || '').trim().toUpperCase();
 
       if (filter === 'MEU_TURNO') {
-        return cBaseShift === loggedBaseShift;
-      } else if (filter === 'OUTROS') {
-        return cBaseShift !== loggedBaseShift;
-      } else if (filter === 'MANHA_TARDE') {
-        return cBaseShift === 'MANHÃ' || cBaseShift === 'MANHA' || cBaseShift === 'TARDE';
+        return cBaseShift === loggedBaseShift || (loggedBaseShift === 'MANHÃ' && cBaseShift === 'MANHA') || (loggedBaseShift === 'MANHA' && cBaseShift === 'MANHÃ');
+      } else if (filter === 'TURNO_ANTERIOR') {
+        const prevShift = this.getPreviousShiftLabel().toUpperCase();
+        return cBaseShift === prevShift || (prevShift === 'MANHÃ' && cBaseShift === 'MANHA') || (prevShift === 'MANHA' && cBaseShift === 'MANHÃ');
+      } else if (filter === 'TURNO_POSTERIOR') {
+        const postShift = this.getPosteriorShiftLabel().toUpperCase();
+        return cBaseShift === postShift || (postShift === 'MANHÃ' && cBaseShift === 'MANHA') || (postShift === 'MANHA' && cBaseShift === 'MANHÃ');
       }
 
       // 'TODOS'
@@ -4489,11 +4522,13 @@ export class App {
       const loggedBaseShift = (logged.shift || '').trim().toUpperCase();
 
       if (filter === 'MEU_TURNO') {
-        return cBaseShift === loggedBaseShift;
-      } else if (filter === 'OUTROS') {
-        return cBaseShift !== loggedBaseShift;
-      } else if (filter === 'MANHA_TARDE') {
-        return cBaseShift === 'MANHÃ' || cBaseShift === 'MANHA' || cBaseShift === 'TARDE';
+        return cBaseShift === loggedBaseShift || (loggedBaseShift === 'MANHÃ' && cBaseShift === 'MANHA') || (loggedBaseShift === 'MANHA' && cBaseShift === 'MANHÃ');
+      } else if (filter === 'TURNO_ANTERIOR') {
+        const prevShift = this.getPreviousShiftLabel().toUpperCase();
+        return cBaseShift === prevShift || (prevShift === 'MANHÃ' && cBaseShift === 'MANHA') || (prevShift === 'MANHA' && cBaseShift === 'MANHÃ');
+      } else if (filter === 'TURNO_POSTERIOR') {
+        const postShift = this.getPosteriorShiftLabel().toUpperCase();
+        return cBaseShift === postShift || (postShift === 'MANHÃ' && cBaseShift === 'MANHA') || (postShift === 'MANHA' && cBaseShift === 'MANHÃ');
       }
 
       // 'TODOS'

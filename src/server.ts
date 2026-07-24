@@ -227,6 +227,65 @@ export async function getSystemCollaborators(activeMonth: number, activeYear: nu
   });
 }
 
+// API proxy for Supabase client requests to avoid CORS and "Failed to fetch" browser issues
+app.all('/api/supabase-proxy', async (req, res) => {
+  try {
+    const targetUrlStr = req.query['url'];
+    if (!targetUrlStr || typeof targetUrlStr !== 'string') {
+      res.status(400).send('Missing url query parameter');
+      return;
+    }
+
+    const targetUrl = new URL(targetUrlStr);
+    if (!targetUrl.hostname.endsWith('supabase.co')) {
+      res.status(403).send('Forbidden target host');
+      return;
+    }
+
+    const headers: Record<string, string> = {};
+    const bannedHeaders = ['host', 'connection', 'keep-alive', 'content-length', 'accept-encoding'];
+    Object.keys(req.headers).forEach((key) => {
+      if (!bannedHeaders.includes(key.toLowerCase()) && req.headers[key]) {
+        headers[key] = String(req.headers[key]);
+      }
+    });
+
+    if (!headers['apikey']) {
+      headers['apikey'] = supabaseKey;
+    }
+    if (!headers['authorization']) {
+      headers['authorization'] = `Bearer ${supabaseKey}`;
+    }
+
+    const options: RequestInit = {
+      method: req.method,
+      headers,
+    };
+
+    if (req.method !== 'GET' && req.method !== 'HEAD') {
+      if (req.body !== undefined) {
+        options.body = typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
+      }
+    }
+
+    const response = await fetch(targetUrlStr, options);
+    
+    response.headers.forEach((value, key) => {
+      const bannedResponseHeaders = ['content-encoding', 'transfer-encoding', 'connection'];
+      if (!bannedResponseHeaders.includes(key.toLowerCase())) {
+        res.setHeader(key, value);
+      }
+    });
+
+    res.status(response.status);
+    const bodyText = await response.text();
+    res.send(bodyText);
+  } catch (error) {
+    console.error('Error in Supabase Proxy:', error);
+    res.status(500).send('Proxy error: ' + (error as Error).message);
+  }
+});
+
 // POST endpoint for Bob chatbot
 app.post('/api/chat', async (req, res) => {
   try {

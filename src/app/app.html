@@ -551,7 +551,7 @@
             <div class="grid grid-cols-1 xl:grid-cols-12 gap-4 items-stretch">
               
               <!-- GRÁFICO ESTILO CLIMA TEMPO COM CORES VIVAS NEON (ESQUERDA) -->
-              <div class="xl:col-span-8 flex flex-col justify-between p-3 rounded-2xl border transition-all duration-300 relative overflow-hidden"
+              <section id="weather_trend_section" class="xl:col-span-8 flex flex-col justify-between p-3 rounded-2xl border transition-all duration-300 relative overflow-hidden"
                    [class]="isLightTheme() ? 'bg-slate-50/50 border-slate-200' : 'bg-[#030914] border-[#0f1d3a] shadow-[0_0_15px_rgba(6,182,212,0.05)]'">
                 
                 <!-- Header do Gráfico -->
@@ -701,10 +701,10 @@
                     </svg>
                   </div>
                 </div>
-              </div>
+              </section>
 
               <!-- CARD DE DETALHES DE CLIMA NEON INTERATIVO (DIREITA) -->
-              <div class="xl:col-span-4 flex flex-col justify-between p-3.5 rounded-2xl border transition-all duration-300 relative overflow-hidden"
+              <section id="detailed_forecast_section" class="xl:col-span-4 flex flex-col justify-between p-3.5 rounded-2xl border transition-all duration-300 relative overflow-hidden"
                    [class]="isLightTheme() ? 'bg-white border-slate-200 text-slate-800' : 'bg-[#040c1a] border-[#0f1d3a] text-slate-200 shadow-[0_0_15px_rgba(236,72,153,0.05)]'">
                 
                 @if (activeWeatherItem(); as active) {
@@ -790,7 +790,7 @@
                   </div>
                 }
 
-              </div>
+              </section>
 
             </div>
           }
@@ -1401,8 +1401,8 @@
           <!-- FIXED HEADER -->
           <div class="px-3 md:px-4 py-2 border-b border-[#10213b] flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0" style="height: 44px; background-color: #10B981; color: #ffffff;">
             <div>
-              <h3 class="font-black text-sm uppercase tracking-tight text-white flex items-center gap-1.5">
-                <span class="material-icons text-white">tune</span>
+              <h3 id="shifts_panel_heading" style="color: #ffffff !important;" class="font-black text-sm uppercase tracking-tight text-white flex items-center gap-1.5">
+                <span id="shifts_panel_icon" class="material-icons text-white" style="color: #ffffff !important;">tune</span>
                 Painel de Gerenciamento de Turnos
               </h3>
             </div>
@@ -3096,63 +3096,55 @@
                     <!-- ENERGIA & CICLO (GRID DE 2 COLUNAS) -->
                     <div class="grid grid-cols-2 gap-3 w-full">
                       <!-- LADO ESQUERDO: SCORE DE ENERGIA -->
-                      <div [class]="'rounded-[12px] p-3 flex flex-col items-center text-center gap-1.5 border transition-all duration-300 ' + (offStats.isOffToday ? 'justify-center py-6 ' : 'justify-between ') + (isLightTheme() ? 'bg-slate-50 border-slate-200' : 'bg-[#1E293B] border-[#334155]')">
-                        @if (offStats.isOffToday) {
-                          <div class="flex flex-col items-center justify-center py-6">
-                            <span [class]="'text-sm font-black uppercase tracking-widest animate-pulse ' + (isLightTheme() ? 'text-emerald-600' : 'text-emerald-400')">
-                              Carregando
+                      <div [class]="'rounded-[12px] p-3 flex flex-col items-center text-center gap-1.5 border transition-all duration-300 justify-between ' + (isLightTheme() ? 'bg-slate-50 border-slate-200' : 'bg-[#1E293B] border-[#334155]')">
+                        <span class="text-[10px] font-bold tracking-wider uppercase text-slate-500 font-sans">Energia</span>
+                        
+                        <!-- Semicircular Gauge SVG -->
+                        <div class="relative w-[90px] h-[45px] flex items-center justify-center shrink-0 mt-1">
+                          <svg class="w-full h-full" viewBox="0 0 100 52">
+                            <path d="M 12 48 A 38 38 0 0 1 20 28"
+                                  fill="none"
+                                  stroke-width="6"
+                                  stroke-linecap="round"
+                                  [style.stroke]="getArcStrokeColor(1, logged)" />
+                            <path d="M 22 26 A 38 38 0 0 1 38 15"
+                                  fill="none"
+                                  stroke-width="6"
+                                  stroke-linecap="round"
+                                  [style.stroke]="getArcStrokeColor(2, logged)" />
+                            <path d="M 41 14 A 38 38 0 0 1 59 14"
+                                  fill="none"
+                                  stroke-width="6"
+                                  stroke-linecap="round"
+                                  [style.stroke]="getArcStrokeColor(3, logged)" />
+                            <path d="M 62 15 A 38 38 0 0 1 78 26"
+                                  fill="none"
+                                  stroke-width="6"
+                                  stroke-linecap="round"
+                                  [style.stroke]="getArcStrokeColor(4, logged)" />
+                            <path d="M 80 28 A 38 38 0 0 1 87 48"
+                                  fill="none"
+                                  stroke-width="6"
+                                  stroke-linecap="round"
+                                  [style.stroke]="getArcStrokeColor(5, logged)" />
+                          </svg>
+                          <div class="absolute bottom-0 inset-x-0 flex flex-col items-center justify-end">
+                            <span [class]="'text-[14px] font-black font-mono leading-none ' + (isLightTheme() ? 'text-slate-800' : 'text-[#F8FAFC]')">
+                              {{ getEnergyPercent(seqStats, logged) }}%
                             </span>
                           </div>
-                        } @else {
-                          <span class="text-[10px] font-bold tracking-wider uppercase text-slate-500 font-sans">Energia</span>
-                          
-                          <!-- Semicircular Gauge SVG -->
-                          <div class="relative w-[90px] h-[45px] flex items-center justify-center shrink-0 mt-1">
-                            <svg class="w-full h-full" viewBox="0 0 100 52">
-                              <path d="M 12 48 A 38 38 0 0 1 20 28"
-                                    fill="none"
-                                    stroke-width="6"
-                                    stroke-linecap="round"
-                                    [style.stroke]="getArcStrokeColor(1, logged)" />
-                              <path d="M 22 26 A 38 38 0 0 1 38 15"
-                                    fill="none"
-                                    stroke-width="6"
-                                    stroke-linecap="round"
-                                    [style.stroke]="getArcStrokeColor(2, logged)" />
-                              <path d="M 41 14 A 38 38 0 0 1 59 14"
-                                    fill="none"
-                                    stroke-width="6"
-                                    stroke-linecap="round"
-                                    [style.stroke]="getArcStrokeColor(3, logged)" />
-                              <path d="M 62 15 A 38 38 0 0 1 78 26"
-                                    fill="none"
-                                    stroke-width="6"
-                                    stroke-linecap="round"
-                                    [style.stroke]="getArcStrokeColor(4, logged)" />
-                              <path d="M 80 28 A 38 38 0 0 1 87 48"
-                                    fill="none"
-                                    stroke-width="6"
-                                    stroke-linecap="round"
-                                    [style.stroke]="getArcStrokeColor(5, logged)" />
-                            </svg>
-                            <div class="absolute bottom-0 inset-x-0 flex flex-col items-center justify-end">
-                              <span [class]="'text-[14px] font-black font-mono leading-none ' + (isLightTheme() ? 'text-slate-800' : 'text-[#F8FAFC]')">
-                                {{ getEnergyPercent(seqStats, logged) }}%
-                              </span>
-                            </div>
-                          </div>
+                        </div>
 
-                          <span class="text-[9px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider leading-none truncate max-w-full"
-                                [class]="!seqStats.isWorking ? 
-                                         (isLightTheme() ? 'text-emerald-700 bg-emerald-50 border border-emerald-100' : 'text-emerald-400 bg-emerald-950/30 border border-emerald-500/10') :
-                                         (seqStats.streak === 1 ? (isLightTheme() ? 'text-emerald-700 bg-emerald-50 border border-emerald-100' : 'text-emerald-400 bg-emerald-950/30 border border-emerald-500/10') :
-                                         (seqStats.streak === 2 ? (isLightTheme() ? 'text-blue-700 bg-blue-50 border border-blue-100' : 'text-blue-400 bg-blue-950/30 border border-blue-500/10') :
-                                         (seqStats.streak === 3 ? (isLightTheme() ? 'text-amber-700 bg-amber-50 border border-amber-200' : 'text-amber-400 bg-amber-950/30 border border-amber-500/10') :
-                                         (seqStats.streak === 4 ? (isLightTheme() ? 'text-[#F59E0B] bg-[#F59E0B]/10 border border-[#F59E0B]/25' : 'text-[#F59E0B] bg-[#F59E0B]/10 border border-[#F59E0B]/25') :
-                                         (isLightTheme() ? 'text-rose-700 bg-rose-50 border border-rose-100' : 'text-rose-400 bg-rose-950/30 border border-rose-500/10')))))">
-                            {{ seqStats.isWorking ? seqStats.fatigueLevel : getDescansoChargingState(logged).statusLabel }}
-                          </span>
-                        }
+                        <span class="text-[9px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider leading-none truncate max-w-full"
+                              [class]="!seqStats.isWorking ? 
+                                       (isLightTheme() ? 'text-emerald-700 bg-emerald-50 border border-emerald-100' : 'text-emerald-400 bg-emerald-950/30 border border-emerald-500/10') :
+                                       (seqStats.streak === 1 ? (isLightTheme() ? 'text-emerald-700 bg-emerald-50 border border-emerald-100' : 'text-emerald-400 bg-emerald-950/30 border border-emerald-500/10') :
+                                       (seqStats.streak === 2 ? (isLightTheme() ? 'text-blue-700 bg-blue-50 border border-blue-100' : 'text-blue-400 bg-blue-950/30 border border-blue-500/10') :
+                                       (seqStats.streak === 3 ? (isLightTheme() ? 'text-amber-700 bg-amber-50 border border-amber-200' : 'text-amber-400 bg-amber-950/30 border border-amber-500/10') :
+                                       (seqStats.streak === 4 ? (isLightTheme() ? 'text-[#F59E0B] bg-[#F59E0B]/10 border border-[#F59E0B]/25' : 'text-[#F59E0B] bg-[#F59E0B]/10 border border-[#F59E0B]/25') :
+                                       (isLightTheme() ? 'text-rose-700 bg-rose-50 border border-rose-100' : 'text-rose-400 bg-rose-950/30 border border-rose-500/10')))))">
+                          {{ seqStats.isWorking ? seqStats.fatigueLevel : getDescansoChargingState(logged).statusLabel }}
+                        </span>
                       </div>
 
                       <!-- LADO DIREITO: RASTREADOR DE CICLO -->
@@ -3270,7 +3262,7 @@
                               class="w-full py-3.5 rounded-xl text-[11px] font-black uppercase tracking-wider transition-all duration-300 cursor-pointer flex items-center justify-center gap-2"
                               [class]="turnVacationTab() === 'work' ? (isLightTheme() ? 'bg-white text-slate-850 shadow-md border-b border-slate-200' : 'bg-emerald-500 text-emerald-950 shadow-lg') : (isLightTheme() ? 'text-slate-500 hover:text-slate-700' : 'text-slate-400 hover:text-slate-200')">
                         <span class="material-icons text-sm font-bold">calendar_month</span>
-                        Calendário
+                        Trabalho
                       </button>
                       <button id="btn-tab-folga" (click)="setTurnVacationTab('vacation')"
                               class="w-full py-3.5 rounded-xl text-[11px] font-black uppercase tracking-wider transition-all duration-300 cursor-pointer flex items-center justify-center gap-2"
@@ -3913,35 +3905,39 @@
                   </div>
                 </div>
 
-                <!-- FILTER SELECTOR PILLS -->
-                <div id="team-filter-container" class="flex flex-wrap items-center gap-1 pb-1">
+                <!-- FILTER SELECTOR TABS -->
+                <div id="team-filter-container" class="grid grid-cols-2 sm:grid-cols-4 p-1 rounded-xl gap-1" [class]="isLightTheme() ? 'bg-slate-100' : 'bg-[#071426]'">
                   <button id="btn-filter-meu-turno" (click)="coworkersFilter.set('MEU_TURNO')"
-                          class="px-2 py-1 rounded-lg border text-[8px] font-black uppercase tracking-wider transition-all duration-300 cursor-pointer shadow-sm select-none"
+                          class="py-2.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all duration-300 cursor-pointer flex items-center justify-center gap-1.5 border-none outline-none shadow-xs active:scale-95"
                           [class]="coworkersFilter() === 'MEU_TURNO' ? 
-                                   (isLightTheme() ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-emerald-500 text-emerald-950 border-emerald-500 font-black') : 
-                                   (isLightTheme() ? 'bg-white border-slate-200 text-slate-500 hover:text-slate-800' : 'bg-[#071426]/40 border-[#10213b]/35 text-slate-400 hover:text-white')">
-                    Meu Turno ({{ logged.shift || 'N/A' }})
+                                   (isLightTheme() ? 'bg-white text-slate-850 shadow-md border-b border-slate-200' : 'bg-emerald-500 text-emerald-950 font-black') : 
+                                   (isLightTheme() ? 'text-slate-500 hover:text-slate-700' : 'text-slate-400 hover:text-slate-200')">
+                    <span class="material-icons text-[11px]">person_pin</span>
+                    <span class="truncate">{{ logged.shift || 'Meu Turno' }}</span>
                   </button>
-                  <button id="btn-filter-outros" (click)="coworkersFilter.set('OUTROS')"
-                          class="px-2 py-1 rounded-lg border text-[8px] font-black uppercase tracking-wider transition-all duration-300 cursor-pointer shadow-sm select-none"
-                          [class]="coworkersFilter() === 'OUTROS' ? 
-                                   (isLightTheme() ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-emerald-500 text-emerald-950 border-emerald-500 font-black') : 
-                                   (isLightTheme() ? 'bg-white border-slate-200 text-slate-500 hover:text-slate-800' : 'bg-[#071426]/40 border-[#10213b]/35 text-slate-400 hover:text-white')">
-                    Outros
+                  <button id="btn-filter-anterior" (click)="coworkersFilter.set('TURNO_ANTERIOR')"
+                          class="py-2.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all duration-300 cursor-pointer flex items-center justify-center gap-1.5 border-none outline-none shadow-xs active:scale-95"
+                          [class]="coworkersFilter() === 'TURNO_ANTERIOR' ? 
+                                   (isLightTheme() ? 'bg-white text-slate-850 shadow-md border-b border-slate-200' : 'bg-emerald-500 text-emerald-950 font-black') : 
+                                   (isLightTheme() ? 'text-slate-500 hover:text-slate-700' : 'text-slate-400 hover:text-slate-200')">
+                    <span class="material-icons text-[11px]">history</span>
+                    <span class="truncate">{{ getPreviousShiftLabel() }}</span>
                   </button>
-                  <button id="btn-filter-manha-tarde" (click)="coworkersFilter.set('MANHA_TARDE')"
-                          class="px-2 py-1 rounded-lg border text-[8px] font-black uppercase tracking-wider transition-all duration-300 cursor-pointer shadow-sm select-none"
-                          [class]="coworkersFilter() === 'MANHA_TARDE' ? 
-                                   (isLightTheme() ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-emerald-500 text-emerald-950 border-emerald-500 font-black') : 
-                                   (isLightTheme() ? 'bg-white border-slate-200 text-slate-500 hover:text-slate-800' : 'bg-[#071426]/40 border-[#10213b]/35 text-slate-400 hover:text-white')">
-                    Manhã/Tarde
+                  <button id="btn-filter-posterior" (click)="coworkersFilter.set('TURNO_POSTERIOR')"
+                          class="py-2.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all duration-300 cursor-pointer flex items-center justify-center gap-1.5 border-none outline-none shadow-xs active:scale-95"
+                          [class]="coworkersFilter() === 'TURNO_POSTERIOR' ? 
+                                   (isLightTheme() ? 'bg-white text-slate-850 shadow-md border-b border-slate-200' : 'bg-emerald-500 text-emerald-950 font-black') : 
+                                   (isLightTheme() ? 'text-slate-500 hover:text-slate-700' : 'text-slate-400 hover:text-slate-200')">
+                    <span class="material-icons text-[11px]">update</span>
+                    <span class="truncate">{{ getPosteriorShiftLabel() }}</span>
                   </button>
                   <button id="btn-filter-todos" (click)="coworkersFilter.set('TODOS')"
-                          class="px-2 py-1 rounded-lg border text-[8px] font-black uppercase tracking-wider transition-all duration-300 cursor-pointer shadow-sm select-none"
+                          class="py-2.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all duration-300 cursor-pointer flex items-center justify-center gap-1.5 border-none outline-none shadow-xs active:scale-95"
                           [class]="coworkersFilter() === 'TODOS' ? 
-                                   (isLightTheme() ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-emerald-500 text-emerald-950 border-emerald-500 font-black') : 
-                                   (isLightTheme() ? 'bg-white border-slate-200 text-slate-500 hover:text-slate-800' : 'bg-[#071426]/40 border-[#10213b]/35 text-slate-400 hover:text-white')">
-                    Todos
+                                   (isLightTheme() ? 'bg-white text-slate-850 shadow-md border-b border-slate-200' : 'bg-emerald-500 text-emerald-950 font-black') : 
+                                   (isLightTheme() ? 'text-slate-500 hover:text-slate-700' : 'text-slate-400 hover:text-slate-200')">
+                    <span class="material-icons text-[11px]">groups</span>
+                    <span class="truncate">Todos</span>
                   </button>
                 </div>
 
