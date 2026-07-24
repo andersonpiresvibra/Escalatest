@@ -3764,39 +3764,83 @@ export class App {
 
   // Métodos de autenticação real integrada ao Supabase
 
-  public checkLoginName() {
+  public onLoginNameInputChange(val: string) {
+    this.loginNameInput.set(val);
     this.loginError.set(null);
-    const rawInput = this.loginNameInput().trim();
-    if (!rawInput) {
-      this.loginError.set('Por favor, insira o seu nome.');
-      return;
-    }
-    const typedName = rawInput.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-
-    const collabs = this.scaleService.collaborators();
-    // Procurar por correspondência de nome exato ou contido
-    const found = collabs.find(c => {
-      const normName = c.name.trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-      return normName === typedName || normName.includes(typedName);
-    });
-
-    if (!found) {
-      this.loginError.set('Colaborador não encontrado. Por favor, digite seu nome exatamente como cadastrado no sistema.');
-      return;
-    }
-
-    this.matchedCollab.set(found);
-    if (!found.password || found.password.trim() === '') {
-      this.isFirstAccess.set(true);
+    if (val.trim().length >= 2) {
+      this.checkLoginName();
     } else {
+      this.matchedCollab.set(null);
       this.isFirstAccess.set(false);
     }
   }
 
+  public checkLoginName(): Collaborator | null {
+    this.loginError.set(null);
+    const rawInput = this.loginNameInput().trim();
+    if (!rawInput) {
+      this.loginError.set('Por favor, insira o seu nome.');
+      this.matchedCollab.set(null);
+      this.isFirstAccess.set(false);
+      return null;
+    }
+
+    const collabs = this.scaleService.collaborators();
+    if (!collabs || collabs.length === 0) {
+      this.loginError.set('Carregando colaboradores do sistema... Por favor, aguarde um instante e tente novamente.');
+      this.matchedCollab.set(null);
+      this.isFirstAccess.set(false);
+      return null;
+    }
+
+    const typedName = rawInput.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+    // Search by ID, exact name, or partial name
+    const found = collabs.find(c => {
+      if (c.id.toLowerCase() === rawInput.toLowerCase()) return true;
+      const normName = (c.name || '').trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      if (normName === typedName || normName.includes(typedName) || typedName.includes(normName)) return true;
+      const typedParts = typedName.split(/\s+/).filter(p => p.length >= 2);
+      const normParts = normName.split(/\s+/).filter(p => p.length >= 2);
+      return typedParts.some(tp => normParts.some(np => np === tp || np.includes(tp) || tp.includes(np)));
+    });
+
+    if (!found) {
+      this.loginError.set('Colaborador não encontrado. Por favor, digite seu nome exatamente como cadastrado no sistema.');
+      this.matchedCollab.set(null);
+      this.isFirstAccess.set(false);
+      return null;
+    }
+
+    this.matchedCollab.set(found);
+    const pwdStr = String(found.password || '').trim();
+    if (!pwdStr) {
+      this.isFirstAccess.set(true);
+    } else {
+      this.isFirstAccess.set(false);
+    }
+    return found;
+  }
+
   public handleLoginSubmit() {
     this.loginError.set(null);
-    const collab = this.matchedCollab();
-    if (!collab) return;
+
+    let collab = this.matchedCollab();
+    if (!collab || !this.loginNameInput().trim()) {
+      collab = this.checkLoginName();
+    } else {
+      // Re-verify matchedCollab matches current input
+      const currentTyped = this.loginNameInput().trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      const matchedNorm = (collab.name || '').trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      if (matchedNorm !== currentTyped && !matchedNorm.includes(currentTyped) && !currentTyped.includes(matchedNorm)) {
+        collab = this.checkLoginName();
+      }
+    }
+
+    if (!collab) {
+      // checkLoginName has already set loginError
+      return;
+    }
 
     const pin = this.loginPasswordInput().trim();
     if (pin.length !== 4 || !/^\d{4}$/.test(pin)) {
@@ -3838,7 +3882,8 @@ export class App {
       }
     } else {
       // Login com senha existente
-      if (collab.password === pin) {
+      const storedPassword = String(collab.password || '').trim();
+      if (storedPassword === pin) {
         this.selectedSimulatedCollabId.set(collab.id);
         this.scaleService.selectedCollabName.set(collab.name);
         this.scaleService.currentRole.set(collab.role);

@@ -34,11 +34,17 @@
             <label for="login_name" class="text-[9px] font-bold uppercase text-slate-400 tracking-wider">Nome do Colaborador</label>
             <input type="text"
                    id="login_name"
+                   list="collab_names_list"
                    [value]="loginNameInput()"
-                   (input)="loginNameInput.set($any($event.target).value)"
+                   (input)="onLoginNameInputChange($any($event.target).value)"
                    (keydown.enter)="handleLoginSubmit()"
                    placeholder="Digite seu nome"
                    class="w-full px-3 py-2 bg-[#051124] border border-[#10213b] rounded-lg text-xs font-bold text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500 transition-all font-sans uppercase" />
+            <datalist id="collab_names_list">
+              @for (c of scaleService.collaborators(); track c.id) {
+                <option [value]="c.name"></option>
+              }
+            </datalist>
           </div>
 
           <!-- Senha (sempre visível abaixo) -->
