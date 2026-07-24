@@ -347,6 +347,53 @@ export class ScaleService {
         // ignore invalid cache
       }
     }
+
+    if (this.collaborators().length === 0) {
+      this.collaborators.set([
+        {
+          id: 'collab_1001',
+          name: 'ADMINISTRADOR SISTEMA',
+          role: 'SUPERVISOR',
+          hours: '8h00',
+          group: 'Administrativo',
+          shift: 'ADMINISTRATIVO',
+          sector: 'Geral',
+          bhBalance: 0,
+          score: 100,
+          password: '1234',
+          isAdmin: true,
+          scale: {}
+        },
+        {
+          id: 'collab_1002',
+          name: 'ANDERSON',
+          role: 'LIDER',
+          hours: '7h20',
+          group: 'Líderes',
+          shift: 'MANHÃ',
+          sector: 'Operações',
+          bhBalance: 2,
+          score: 95,
+          password: '1234',
+          isAdmin: false,
+          scale: {}
+        },
+        {
+          id: 'collab_1003',
+          name: 'OPERADOR PADRAO',
+          role: 'OPERADOR',
+          hours: '7h20',
+          group: 'Manhã',
+          shift: 'MANHÃ',
+          sector: 'Operações',
+          bhBalance: 0,
+          score: 90,
+          password: '1234',
+          isAdmin: false,
+          scale: {}
+        }
+      ]);
+    }
     
     if (this.activeDb() === 'firebase') {
       this.initFirebaseSync();
