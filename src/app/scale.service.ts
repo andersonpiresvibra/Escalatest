@@ -1434,10 +1434,56 @@ export class ScaleService {
       ]);
     }
     
-    if (this.activeDb() === 'firebase') {
-      this.initFirebaseSync();
+    if (typeof window !== 'undefined') {
+      this.fetchRuntimeConfig().then(() => {
+        if (this.activeDb() === 'firebase') {
+          this.initFirebaseSync();
+        } else {
+          this.initSupabase();
+        }
+      }).catch((e) => {
+        console.error('Failed to fetch runtime config, falling back:', e);
+        if (this.activeDb() === 'firebase') {
+          this.initFirebaseSync();
+        } else {
+          this.initSupabase();
+        }
+      });
     } else {
-      this.initSupabase();
+      if (this.activeDb() === 'firebase') {
+        this.initFirebaseSync();
+      } else {
+        this.initSupabase();
+      }
+    }
+  }
+
+  async fetchRuntimeConfig(): Promise<void> {
+    try {
+      const res = await fetch('/api/supabase-config');
+      if (res.ok) {
+        const config = await res.json();
+        if (config.url && config.key) {
+          const currentUrl = this.supabaseUrl();
+          const currentKey = this.supabaseKey();
+          const defaultUrl = 'https://vefyegxmvjficncbetyp.supabase.co';
+          const defaultKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZlZnllZ3htdmpmaWNuY2JldHlwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyNjYwMjksImV4cCI6MjA5Nzg0MjAyOX0.ioaZkwS98123Jb2xw2l6vev3FgoLwIVwsitg7pTew7c';
+          
+          if (
+            currentUrl === defaultUrl || 
+            currentKey === defaultKey || 
+            currentUrl !== config.url ||
+            currentKey !== config.key
+          ) {
+            this.supabaseUrl.set(config.url);
+            this.supabaseKey.set(config.key);
+            safeSetLocalStorageItem('supabase_url', config.url);
+            safeSetLocalStorageItem('supabase_key', config.key);
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('Could not fetch runtime Supabase config, using defaults:', e);
     }
   }
 

@@ -227,6 +227,14 @@ export async function getSystemCollaborators(activeMonth: number, activeYear: nu
   });
 }
 
+// API endpoint to retrieve the runtime Supabase URL and Anon Key for the client
+app.get('/api/supabase-config', (req, res) => {
+  res.json({
+    url: supabaseUrl,
+    key: supabaseKey
+  });
+});
+
 // API proxy for Supabase client requests to avoid CORS and "Failed to fetch" browser issues
 app.all('/api/supabase-proxy', async (req, res) => {
   try {
