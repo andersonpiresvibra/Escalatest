@@ -1,6 +1,6 @@
 import { Injectable, signal, WritableSignal } from '@angular/core';
 import { initializeApp } from 'firebase/app';
-import { initializeFirestore, getFirestore, collection, doc, onSnapshot, setDoc, deleteDoc } from 'firebase/firestore';
+import { initializeFirestore, getFirestore, collection, doc, onSnapshot, setDoc, deleteDoc, getDocs } from 'firebase/firestore';
 import { firebaseConfig } from './firebase-config';
 import { createClient } from './supabase-client';
 import { supabaseEnv } from './supabase-env';
@@ -707,7 +707,25 @@ export class ScaleService {
           if (foundInDb) return foundInDb;
         }
       } catch (err) {
-        console.warn('findCollaboratorDirect error:', err);
+        console.warn('findCollaboratorDirect error (Supabase):', err);
+      }
+    } else if (this.activeDb() === 'firebase' && this.db) {
+      try {
+        const q = collection(this.db, 'collaborators');
+        const querySnapshot = await getDocs(q);
+        const mapped: Collaborator[] = [];
+        querySnapshot.forEach((doc) => {
+          mapped.push(doc.data() as Collaborator);
+        });
+        if (mapped.length > 0) {
+          mapped.sort((a, b) => a.id.localeCompare(b.id));
+          this.collaborators.set(mapped);
+          safeSetLocalStorageItem('cached_collaborators', JSON.stringify(mapped));
+          const foundInDb = mapped.find(matchCollab);
+          if (foundInDb) return foundInDb;
+        }
+      } catch (err) {
+        console.warn('findCollaboratorDirect error (Firebase):', err);
       }
     }
 
