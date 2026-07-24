@@ -2040,45 +2040,6 @@ export class App {
       if (collabs.length > 0 && !this.selectedSimulatedCollabId() && !this.hasInitiallyLogged()) {
         this.hasInitiallyLogged.set(true); // Ensure this block runs only once
         
-        // Detect if running in development mode (AI Studio, localhost, or inside an iframe)
-        const isDevelopment = typeof window !== 'undefined' && (
-          window.location.hostname === 'localhost' ||
-          window.location.hostname.includes('127.0.0.1') ||
-          window.location.hostname.includes('ais-dev') ||
-          window.location.hostname.includes('aistudio') ||
-          window.location.hostname.includes('googleusercontent') ||
-          window.location.hostname.includes('cloudshell') ||
-          window.location.hostname.includes('web-preview') ||
-          (window.location.hostname.includes('run.app') && !window.location.hostname.includes('prod')) ||
-          (window.location.hostname.includes('run.app') && window.location.hostname.includes('-dev-')) ||
-          (window.self !== window.top) // If we are inside an iframe (AI Studio preview iframe)
-        );
-        
-        const devLoggedOut = safeGetSessionStorage('dev_logged_out') === 'true';
-
-        if (isDevelopment && !devLoggedOut) {
-          // Dev Mode Auto-Login: Find first administrator/supervisor or fall back to first collaborator
-          const devCollab = collabs.find(c => this.isAdmin(c)) || collabs[0];
-          if (devCollab) {
-            this.selectedSimulatedCollabId.set(devCollab.id);
-            this.scaleService.selectedCollabName.set(devCollab.name);
-            this.scaleService.currentRole.set(devCollab.role);
-            safeSetLocalStorage('selectedSimulatedCollabId', devCollab.id);
-            safeSetLocalStorage('lastActivityTime', Date.now().toString());
-            safeSetSessionStorage('session_active', 'true');
-            this.resetInactivityTimer();
-            const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
-            if (this.isAdmin(devCollab) && !isMobile) {
-              this.activeSubTab.set('matrix');
-            } else {
-              this.activeSubTab.set('portal');
-              this.autoSelectTodayTabForLoggedCollab(devCollab);
-            }
-            this.showToast(`Modo Desenvolvimento: Auto-login como ${devCollab.name} (${devCollab.role})`);
-            return;
-          }
-        }
-
         const restoredId = safeGetLocalStorage('selectedSimulatedCollabId');
         const lastActivity = safeGetLocalStorage('lastActivityTime');
 
