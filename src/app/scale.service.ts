@@ -1,8 +1,8 @@
 import { Injectable, signal, WritableSignal } from '@angular/core';
 import { initializeApp } from 'firebase/app';
-import { initializeFirestore, getFirestore, collection, doc, onSnapshot, setDoc, deleteDoc, getDocs } from 'firebase/firestore';
+import { initializeFirestore, getFirestore, collection, doc, onSnapshot, setDoc, deleteDoc } from 'firebase/firestore';
 import { firebaseConfig } from './firebase-config';
-import { createClient } from './supabase-client';
+import { createClient } from '@supabase/supabase-js';
 import { supabaseEnv } from './supabase-env';
 
 declare const process: any;
@@ -82,7 +82,6 @@ export interface Collaborator {
   isAdmin?: boolean;
   nickname?: string;
   gafes?: string[];
-  schedule?: string;
 }
 
 export interface ShiftType {
@@ -335,1155 +334,11 @@ export class ScaleService {
   constructor() {
     this.activeDb.set('supabase');
     safeSetLocalStorageItem('active_db', 'supabase');
-
-    // Restore cached collaborators synchronously on startup to prevent empty state during network sync
-    const cachedCollabsJson = safeGetLocalStorageItem('cached_collaborators');
-    if (cachedCollabsJson) {
-      try {
-        const parsed = JSON.parse(cachedCollabsJson);
-        if (Array.isArray(parsed) && parsed.length >= 70) {
-          this.collaborators.set(parsed);
-        }
-      } catch (e) {
-        // ignore invalid cache
-      }
-    }
-
-    if (this.collaborators().length === 0) {
-      this.collaborators.set([
-        {
-          id: 'collab_1001',
-          name: 'ADMINISTRADOR SISTEMA',
-          role: 'SUPERVISOR',
-          hours: '8h00',
-          group: 'Administrativo',
-          shift: 'ADMINISTRATIVO',
-          sector: 'Geral',
-          bhBalance: 0,
-          score: 100,
-          password: '1234',
-          isAdmin: true,
-          scale: {}
-        },
-        {
-          id: 'collab_1',
-          name: 'MICHEL (AD)',
-          role: 'OPERADOR',
-          schedule: '05:00 - 14:00',
-          hours: '7h20',
-          group: 'Manhã',
-          shift: 'MANHÃ',
-          sector: 'AERÓDROMO',
-          bhBalance: 0,
-          score: 95,
-          scale: {}
-        },
-        {
-          id: 'collab_2',
-          name: 'JOAO (AD)',
-          role: 'OPERADOR',
-          schedule: '05:00 - 14:00',
-          hours: '7h20',
-          group: 'Manhã',
-          shift: 'MANHÃ',
-          sector: 'AERÓDROMO',
-          bhBalance: 2,
-          score: 90,
-          scale: {}
-        },
-        {
-          id: 'collab_3',
-          name: 'ADAUTO (AD)',
-          role: 'OPERADOR',
-          schedule: '05:00 - 14:00',
-          hours: '7h20',
-          group: 'Manhã',
-          shift: 'MANHÃ',
-          sector: 'AERÓDROMO',
-          bhBalance: -1,
-          score: 92,
-          scale: {}
-        },
-        {
-          id: 'collab_4',
-          name: 'PAULO (AA)',
-          role: 'OPERADOR',
-          schedule: '05:00 - 14:00',
-          hours: '7h20',
-          group: 'Manhã',
-          shift: 'MANHÃ',
-          sector: 'AERÓDROMO',
-          bhBalance: 0,
-          score: 98,
-          scale: {}
-        },
-        {
-          id: 'collab_5',
-          name: 'EWERTON',
-          role: 'OPERADOR',
-          schedule: '05:00 - 14:00',
-          hours: '7h20',
-          group: 'Manhã',
-          shift: 'MANHÃ',
-          sector: 'AERÓDROMO',
-          bhBalance: 4,
-          score: 91,
-          scale: {}
-        },
-        {
-          id: 'collab_6',
-          name: 'ALEX BARBOSA',
-          role: 'OPERADOR',
-          schedule: '06:00 - 15:00',
-          hours: '7h20',
-          group: 'Manhã',
-          shift: 'MANHÃ',
-          sector: 'AERÓDROMO',
-          bhBalance: 0,
-          score: 94,
-          scale: {}
-        },
-        {
-          id: 'collab_7',
-          name: 'DOUGLAS (AA)',
-          role: 'OPERADOR',
-          schedule: '06:00 - 15:00',
-          hours: '7h20',
-          group: 'Manhã',
-          shift: 'MANHÃ',
-          sector: 'AERÓDROMO',
-          bhBalance: -3,
-          score: 88,
-          scale: {}
-        },
-        {
-          id: 'collab_8',
-          name: 'TAVARES',
-          role: 'OPERADOR',
-          schedule: '06:00 - 15:00',
-          hours: '7h20',
-          group: 'Manhã',
-          shift: 'MANHÃ',
-          sector: 'AERÓDROMO',
-          bhBalance: 1,
-          score: 95,
-          scale: {}
-        },
-        {
-          id: 'collab_9',
-          name: 'JULIO',
-          role: 'OPERADOR',
-          schedule: '06:00 - 15:00',
-          hours: '7h20',
-          group: 'Manhã',
-          shift: 'MANHÃ',
-          sector: 'AERÓDROMO',
-          bhBalance: 0,
-          score: 90,
-          scale: {}
-        },
-        {
-          id: 'collab_10',
-          name: 'SANDRO (AA)',
-          role: 'OPERADOR',
-          schedule: '06:00 - 15:00',
-          hours: '7h20',
-          group: 'Manhã',
-          shift: 'MANHÃ',
-          sector: 'AERÓDROMO',
-          bhBalance: 2,
-          score: 93,
-          scale: {}
-        },
-        {
-          id: 'collab_11',
-          name: 'CLÉBER (AD)',
-          role: 'OPERADOR',
-          schedule: '06:00 - 15:00',
-          hours: '7h20',
-          group: 'Manhã',
-          shift: 'MANHÃ',
-          sector: 'AERÓDROMO',
-          bhBalance: -1,
-          score: 92,
-          scale: {}
-        },
-        {
-          id: 'collab_12',
-          name: 'JOSE (AD)',
-          role: 'OPERADOR',
-          schedule: '06:00 - 15:00',
-          hours: '7h20',
-          group: 'Manhã',
-          shift: 'MANHÃ',
-          sector: 'AERÓDROMO',
-          bhBalance: 0,
-          score: 96,
-          scale: {}
-        },
-        {
-          id: 'collab_13',
-          name: 'CALAZANS',
-          role: 'OPERADOR',
-          schedule: '06:00 - 15:00',
-          hours: '7h20',
-          group: 'Manhã',
-          shift: 'MANHÃ',
-          sector: 'AERÓDROMO',
-          bhBalance: 5,
-          score: 89,
-          scale: {}
-        },
-        {
-          id: 'collab_14',
-          name: 'SILVA',
-          role: 'OPERADOR',
-          schedule: '06:00 - 15:00',
-          hours: '7h20',
-          group: 'Manhã',
-          shift: 'MANHÃ',
-          sector: 'AERÓDROMO',
-          bhBalance: -2,
-          score: 91,
-          scale: {}
-        },
-        {
-          id: 'collab_15',
-          name: 'GUILHERME (AA)',
-          role: 'OPERADOR',
-          schedule: '06:00 - 15:00',
-          hours: '7h20',
-          group: 'Manhã',
-          shift: 'MANHÃ',
-          sector: 'AERÓDROMO',
-          bhBalance: 0,
-          score: 97,
-          scale: {}
-        },
-        {
-          id: 'collab_16',
-          name: 'ILDO (AD)',
-          role: 'OPERADOR',
-          schedule: '06:00 - 15:00',
-          hours: '7h20',
-          group: 'Manhã',
-          shift: 'MANHÃ',
-          sector: 'AERÓDROMO',
-          bhBalance: 1,
-          score: 90,
-          scale: {}
-        },
-        {
-          id: 'collab_17',
-          name: 'PETERSON (AA)',
-          role: 'OPERADOR',
-          schedule: '06:00 - 15:00',
-          hours: '7h20',
-          group: 'Manhã',
-          shift: 'MANHÃ',
-          sector: 'AERÓDROMO',
-          bhBalance: 0,
-          score: 94,
-          scale: {}
-        },
-        {
-          id: 'collab_18',
-          name: 'RENILSON (AD)',
-          role: 'OPERADOR',
-          schedule: '06:00 - 15:00',
-          hours: '7h20',
-          group: 'Manhã',
-          shift: 'MANHÃ',
-          sector: 'AERÓDROMO',
-          bhBalance: -1,
-          score: 87,
-          scale: {}
-        },
-        {
-          id: 'collab_19',
-          name: 'RAMOS',
-          role: 'OPERADOR',
-          schedule: '06:00 - 15:00',
-          hours: '7h20',
-          group: 'Manhã',
-          shift: 'MANHÃ',
-          sector: 'AERÓDROMO',
-          bhBalance: 3,
-          score: 92,
-          scale: {}
-        },
-        {
-          id: 'collab_20',
-          name: 'VAGNER',
-          role: 'OPERADOR',
-          schedule: '06:00 - 15:00',
-          hours: '7h20',
-          group: 'Manhã',
-          shift: 'MANHÃ',
-          sector: 'AERÓDROMO',
-          bhBalance: 0,
-          score: 95,
-          scale: {}
-        },
-        {
-          id: 'collab_21',
-          name: 'EVANDRO',
-          role: 'OPERADOR',
-          schedule: '06:00 - 15:00',
-          hours: '7h20',
-          group: 'Manhã',
-          shift: 'MANHÃ',
-          sector: 'AERÓDROMO',
-          bhBalance: 2,
-          score: 89,
-          scale: {}
-        },
-        {
-          id: 'collab_22',
-          name: 'CESAR JC',
-          role: 'OPERADOR',
-          schedule: '06:00 - 15:00',
-          hours: '7h20',
-          group: 'Manhã',
-          shift: 'MANHÃ',
-          sector: 'AERÓDROMO',
-          bhBalance: 0,
-          score: 93,
-          scale: {}
-        },
-        {
-          id: 'collab_23',
-          name: 'FLAVIO',
-          role: 'OPERADOR',
-          schedule: '06:00 - 15:00',
-          hours: '7h20',
-          group: 'Manhã',
-          shift: 'MANHÃ',
-          sector: 'AERÓDROMO',
-          bhBalance: -4,
-          score: 91,
-          scale: {}
-        },
-        {
-          id: 'collab_24',
-          name: 'CARLOS',
-          role: 'OPERADOR',
-          schedule: '06:00 - 15:00',
-          hours: '7h20',
-          group: 'Manhã',
-          shift: 'MANHÃ',
-          sector: 'AERÓDROMO',
-          bhBalance: 1,
-          score: 96,
-          scale: {}
-        },
-        {
-          id: 'collab_25',
-          name: 'BELENTANI (AD)',
-          role: 'OPERADOR',
-          schedule: '06:00 - 15:00',
-          hours: '7h20',
-          group: 'Manhã',
-          shift: 'MANHÃ',
-          sector: 'AERÓDROMO',
-          bhBalance: 0,
-          score: 92,
-          scale: {}
-        },
-        {
-          id: 'collab_26',
-          name: 'EULES',
-          role: 'OPERADOR',
-          schedule: '06:00 - 15:00',
-          hours: '7h20',
-          group: 'Manhã',
-          shift: 'MANHÃ',
-          sector: 'AERÓDROMO',
-          bhBalance: 2,
-          score: 90,
-          scale: {}
-        },
-        {
-          id: 'collab_27',
-          name: 'SOUZA',
-          role: 'OPERADOR',
-          schedule: '06:00 - 15:00',
-          hours: '7h20',
-          group: 'Manhã',
-          shift: 'MANHÃ',
-          sector: 'AERÓDROMO',
-          bhBalance: -1,
-          score: 94,
-          scale: {}
-        },
-        {
-          id: 'collab_28',
-          name: 'LUNA',
-          role: 'OPERADOR',
-          schedule: '06:00 - 15:00',
-          hours: '7h20',
-          group: 'Manhã',
-          shift: 'MANHÃ',
-          sector: 'AERÓDROMO',
-          bhBalance: 0,
-          score: 95,
-          scale: {}
-        },
-        {
-          id: 'collab_29',
-          name: 'HUAN',
-          role: 'OPERADOR',
-          schedule: '06:00 - 15:00',
-          hours: '7h20',
-          group: 'Manhã',
-          shift: 'MANHÃ',
-          sector: 'AERÓDROMO',
-          bhBalance: 3,
-          score: 93,
-          scale: {}
-        },
-        {
-          id: 'collab_30',
-          name: 'LUIS 06-15',
-          role: 'OPERADOR',
-          schedule: '06:00 - 16:00',
-          hours: '7h20',
-          group: 'Manhã',
-          shift: 'MANHÃ',
-          sector: 'AERÓDROMO',
-          bhBalance: 0,
-          score: 95,
-          scale: {}
-        },
-        {
-          id: 'collab_31',
-          name: 'CAIO 06-15',
-          role: 'OPERADOR',
-          schedule: '06:00 - 16:00',
-          hours: '7h20',
-          group: 'Manhã',
-          shift: 'MANHÃ',
-          sector: 'AERÓDROMO',
-          bhBalance: 1,
-          score: 92,
-          scale: {}
-        },
-        {
-          id: 'collab_32',
-          name: 'IDENILSON 06-15',
-          role: 'OPERADOR',
-          schedule: '06:00 - 16:00',
-          hours: '7h20',
-          group: 'Manhã',
-          shift: 'MANHÃ',
-          sector: 'AERÓDROMO',
-          bhBalance: -2,
-          score: 89,
-          scale: {}
-        },
-        {
-          id: 'collab_33',
-          name: 'RODOLFO (AA)',
-          role: 'OPERADOR',
-          schedule: '14:42 - 23:30',
-          hours: '7h20',
-          group: 'Tarde',
-          shift: 'TARDE',
-          sector: 'AERÓDROMO',
-          bhBalance: 0,
-          score: 93,
-          scale: {}
-        },
-        {
-          id: 'collab_34',
-          name: 'LEONARDO (AD)',
-          role: 'OPERADOR',
-          schedule: '14:42 - 23:30',
-          hours: '7h20',
-          group: 'Tarde',
-          shift: 'TARDE',
-          sector: 'AERÓDROMO',
-          bhBalance: -1,
-          score: 94,
-          scale: {}
-        },
-        {
-          id: 'collab_35',
-          name: 'JUNIOR (AD)',
-          role: 'OPERADOR',
-          schedule: '14:42 - 23:30',
-          hours: '7h20',
-          group: 'Tarde',
-          shift: 'TARDE',
-          sector: 'AERÓDROMO',
-          bhBalance: 2,
-          score: 91,
-          scale: {}
-        },
-        {
-          id: 'collab_36',
-          name: 'KLEYSSON',
-          role: 'OPERADOR',
-          schedule: '14:42 - 23:30',
-          hours: '7h20',
-          group: 'Tarde',
-          shift: 'TARDE',
-          sector: 'AERÓDROMO',
-          bhBalance: 0,
-          score: 96,
-          scale: {}
-        },
-        {
-          id: 'collab_37',
-          name: 'LUCAS',
-          role: 'OPERADOR',
-          schedule: '14:42 - 23:30',
-          hours: '7h20',
-          group: 'Tarde',
-          shift: 'TARDE',
-          sector: 'AERÓDROMO',
-          bhBalance: 3,
-          score: 90,
-          scale: {}
-        },
-        {
-          id: 'collab_38',
-          name: 'WESLEY (AD)',
-          role: 'OPERADOR',
-          schedule: '14:42 - 23:30',
-          hours: '7h20',
-          group: 'Tarde',
-          shift: 'TARDE',
-          sector: 'AERÓDROMO',
-          bhBalance: -3,
-          score: 88,
-          scale: {}
-        },
-        {
-          id: 'collab_39',
-          name: 'PETTINELLI',
-          role: 'OPERADOR',
-          schedule: '14:42 - 23:30',
-          hours: '7h20',
-          group: 'Tarde',
-          shift: 'TARDE',
-          sector: 'AERÓDROMO',
-          bhBalance: 1,
-          score: 95,
-          scale: {}
-        },
-        {
-          id: 'collab_40',
-          name: 'FREDISON',
-          role: 'OPERADOR',
-          schedule: '15:15 - 00:00',
-          hours: '7h20',
-          group: 'Tarde',
-          shift: 'TARDE',
-          sector: 'AERÓDROMO',
-          bhBalance: 0,
-          score: 94,
-          scale: {}
-        },
-        {
-          id: 'collab_41',
-          name: 'ALVES',
-          role: 'OPERADOR',
-          schedule: '15:15 - 00:00',
-          hours: '7h20',
-          group: 'Tarde',
-          shift: 'TARDE',
-          sector: 'AERÓDROMO',
-          bhBalance: -2,
-          score: 90,
-          scale: {}
-        },
-        {
-          id: 'collab_42',
-          name: 'LEANDRO EUFRA (AA)',
-          role: 'OPERADOR',
-          schedule: '15:15 - 00:00',
-          hours: '7h20',
-          group: 'Tarde',
-          shift: 'TARDE',
-          sector: 'AERÓDROMO',
-          bhBalance: 1,
-          score: 92,
-          scale: {}
-        },
-        {
-          id: 'collab_43',
-          name: 'JOSE EDSON',
-          role: 'OPERADOR',
-          schedule: '15:15 - 00:00',
-          hours: '7h20',
-          group: 'Tarde',
-          shift: 'TARDE',
-          sector: 'AERÓDROMO',
-          bhBalance: 0,
-          score: 95,
-          scale: {}
-        },
-        {
-          id: 'collab_44',
-          name: 'FEITOSA',
-          role: 'OPERADOR',
-          schedule: '15:15 - 00:00',
-          hours: '7h20',
-          group: 'Tarde',
-          shift: 'TARDE',
-          sector: 'AERÓDROMO',
-          bhBalance: 4,
-          score: 87,
-          scale: {}
-        },
-        {
-          id: 'collab_45',
-          name: 'LOPES (AD)',
-          role: 'OPERADOR',
-          schedule: '15:15 - 00:00',
-          hours: '7h20',
-          group: 'Tarde',
-          shift: 'TARDE',
-          sector: 'AERÓDROMO',
-          bhBalance: -1,
-          score: 93,
-          scale: {}
-        },
-        {
-          id: 'collab_46',
-          name: 'GIVANI (AD)',
-          role: 'OPERADOR',
-          schedule: '15:15 - 00:00',
-          hours: '7h20',
-          group: 'Tarde',
-          shift: 'TARDE',
-          sector: 'AERÓDROMO',
-          bhBalance: 0,
-          score: 91,
-          scale: {}
-        },
-        {
-          id: 'collab_47',
-          name: 'RENATO (AD)',
-          role: 'OPERADOR',
-          schedule: '15:15 - 00:00',
-          hours: '7h20',
-          group: 'Tarde',
-          shift: 'TARDE',
-          sector: 'AERÓDROMO',
-          bhBalance: 2,
-          score: 96,
-          scale: {}
-        },
-        {
-          id: 'collab_48',
-          name: 'COSTA',
-          role: 'OPERADOR',
-          schedule: '15:15 - 00:00',
-          hours: '7h20',
-          group: 'Tarde',
-          shift: 'TARDE',
-          sector: 'AERÓDROMO',
-          bhBalance: -3,
-          score: 89,
-          scale: {}
-        },
-        {
-          id: 'collab_49',
-          name: 'MANOEL',
-          role: 'OPERADOR',
-          schedule: '15:15 - 00:00',
-          hours: '7h20',
-          group: 'Tarde',
-          shift: 'TARDE',
-          sector: 'AERÓDROMO',
-          bhBalance: 1,
-          score: 94,
-          scale: {}
-        },
-        {
-          id: 'collab_50',
-          name: 'RONALD',
-          role: 'OPERADOR',
-          schedule: '15:15 - 00:00',
-          hours: '7h20',
-          group: 'Tarde',
-          shift: 'TARDE',
-          sector: 'AERÓDROMO',
-          bhBalance: 0,
-          score: 98,
-          scale: {}
-        },
-        {
-          id: 'collab_51',
-          name: 'BARBOSA',
-          role: 'OPERADOR',
-          schedule: '15:15 - 00:00',
-          hours: '7h20',
-          group: 'Tarde',
-          shift: 'TARDE',
-          sector: 'AERÓDROMO',
-          bhBalance: 0,
-          score: 97,
-          scale: {}
-        },
-        {
-          id: 'collab_52',
-          name: 'BASTOS',
-          role: 'OPERADOR',
-          schedule: '15:15 - 00:00',
-          hours: '7h20',
-          group: 'Tarde',
-          shift: 'TARDE',
-          sector: 'AERÓDROMO',
-          bhBalance: 2,
-          score: 95,
-          scale: {}
-        },
-        {
-          id: 'collab_53',
-          name: 'GILVAN (AD)',
-          role: 'OPERADOR',
-          schedule: '15:15 - 00:00',
-          hours: '7h20',
-          group: 'Tarde',
-          shift: 'TARDE',
-          sector: 'AERÓDROMO',
-          bhBalance: -1,
-          score: 92,
-          scale: {}
-        },
-        {
-          id: 'collab_54',
-          name: 'MILTON',
-          role: 'OPERADOR',
-          schedule: '15:15 - 00:00',
-          hours: '7h20',
-          group: 'Tarde',
-          shift: 'TARDE',
-          sector: 'AERÓDROMO',
-          bhBalance: 3,
-          score: 91,
-          scale: {}
-        },
-        {
-          id: 'collab_55',
-          name: 'MARQUES (AD)',
-          role: 'OPERADOR',
-          schedule: '15:15 - 00:00',
-          hours: '7h20',
-          group: 'Tarde',
-          shift: 'TARDE',
-          sector: 'AERÓDROMO',
-          bhBalance: 0,
-          score: 94,
-          scale: {}
-        },
-        {
-          id: 'collab_56',
-          name: 'LAERCIO (AA)',
-          role: 'OPERADOR',
-          schedule: '15:15 - 00:00',
-          hours: '7h20',
-          group: 'Tarde',
-          shift: 'TARDE',
-          sector: 'AERÓDROMO',
-          bhBalance: 1,
-          score: 96,
-          scale: {}
-        },
-        {
-          id: 'collab_57',
-          name: 'HORACIO (AA)',
-          role: 'OPERADOR',
-          schedule: '21:12 - 06:00',
-          hours: '7h20',
-          group: 'Madrugada',
-          shift: 'MADRUGADA',
-          sector: 'AERÓDROMO',
-          bhBalance: 0,
-          score: 95,
-          scale: {}
-        },
-        {
-          id: 'collab_58',
-          name: 'NORMAN',
-          role: 'OPERADOR',
-          schedule: '21:12 - 06:00',
-          hours: '7h20',
-          group: 'Madrugada',
-          shift: 'MADRUGADA',
-          sector: 'AERÓDROMO',
-          bhBalance: -1,
-          score: 91,
-          scale: {}
-        },
-        {
-          id: 'collab_59',
-          name: 'RAFAEL (AD)',
-          role: 'OPERADOR',
-          schedule: '21:12 - 06:00',
-          hours: '7h20',
-          group: 'Madrugada',
-          shift: 'MADRUGADA',
-          sector: 'AERÓDROMO',
-          bhBalance: 2,
-          score: 93,
-          scale: {}
-        },
-        {
-          id: 'collab_60',
-          name: 'DOURADO',
-          role: 'OPERADOR',
-          schedule: '21:12 - 06:00',
-          hours: '7h20',
-          group: 'Madrugada',
-          shift: 'MADRUGADA',
-          sector: 'AERÓDROMO',
-          bhBalance: 0,
-          score: 96,
-          scale: {}
-        },
-        {
-          id: 'collab_61',
-          name: 'VENANCIO',
-          role: 'OPERADOR',
-          schedule: '21:12 - 06:00',
-          hours: '7h20',
-          group: 'Madrugada',
-          shift: 'MADRUGADA',
-          sector: 'AERÓDROMO',
-          bhBalance: 3,
-          score: 89,
-          scale: {}
-        },
-        {
-          id: 'collab_62',
-          name: 'DIOGO (AA)',
-          role: 'OPERADOR',
-          schedule: '21:12 - 06:00',
-          hours: '7h20',
-          group: 'Madrugada',
-          shift: 'MADRUGADA',
-          sector: 'AERÓDROMO',
-          bhBalance: -2,
-          score: 92,
-          scale: {}
-        },
-        {
-          id: 'collab_63',
-          name: 'WILLIAN (AA)',
-          role: 'OPERADOR',
-          schedule: '21:12 - 06:00',
-          hours: '7h20',
-          group: 'Madrugada',
-          shift: 'MADRUGADA',
-          sector: 'AERÓDROMO',
-          bhBalance: 0,
-          score: 94,
-          scale: {}
-        },
-        {
-          id: 'collab_64',
-          name: 'SILVERIO (AD)',
-          role: 'OPERADOR',
-          schedule: '21:12 - 06:00',
-          hours: '7h20',
-          group: 'Madrugada',
-          shift: 'MADRUGADA',
-          sector: 'AERÓDROMO',
-          bhBalance: 1,
-          score: 95,
-          scale: {}
-        },
-        {
-          id: 'collab_65',
-          name: 'REGIS (AD)',
-          role: 'OPERADOR',
-          schedule: '21:12 - 06:00',
-          hours: '7h20',
-          group: 'Madrugada',
-          shift: 'MADRUGADA',
-          sector: 'AERÓDROMO',
-          bhBalance: 0,
-          score: 90,
-          scale: {}
-        },
-        {
-          id: 'collab_66',
-          name: 'CESARIO (AD)',
-          role: 'LIDER',
-          schedule: '06:00 - 15:00',
-          hours: '7h20',
-          group: 'Líderes',
-          shift: 'MANHÃ',
-          sector: 'AERÓDROMO',
-          bhBalance: 0,
-          score: 98,
-          scale: {}
-        },
-        {
-          id: 'collab_67',
-          name: 'MARTINEZ (AA)',
-          role: 'LIDER',
-          schedule: '06:00 - 15:00',
-          hours: '7h20',
-          group: 'Líderes',
-          shift: 'MANHÃ',
-          sector: 'AERÓDROMO',
-          bhBalance: 1,
-          score: 97,
-          scale: {}
-        },
-        {
-          id: 'collab_68',
-          name: 'PASCHOAL (AA)',
-          role: 'LIDER',
-          schedule: '06:00 - 15:00',
-          hours: '7h20',
-          group: 'Líderes',
-          shift: 'MANHÃ',
-          sector: 'AERÓDROMO',
-          bhBalance: -1,
-          score: 96,
-          scale: {}
-        },
-        {
-          id: 'collab_69',
-          name: 'MARCIO (AA)',
-          role: 'LIDER',
-          schedule: '06:00 - 15:00',
-          hours: '7h20',
-          group: 'Líderes',
-          shift: 'MANHÃ',
-          sector: 'AERÓDROMO',
-          bhBalance: 0,
-          score: 99,
-          scale: {}
-        },
-        {
-          id: 'collab_70',
-          name: 'SPEDINI (AD)',
-          role: 'LIDER',
-          schedule: '14:30 - 23:30',
-          hours: '7h20',
-          group: 'Líderes',
-          shift: 'TARDE',
-          sector: 'AERÓDROMO',
-          bhBalance: 2,
-          score: 95,
-          scale: {}
-        },
-        {
-          id: 'collab_71',
-          name: 'MARCIO (AD)',
-          role: 'LIDER',
-          schedule: '14:30 - 23:30',
-          hours: '7h20',
-          group: 'Líderes',
-          shift: 'TARDE',
-          sector: 'AERÓDROMO',
-          bhBalance: 0,
-          score: 96,
-          scale: {}
-        },
-        {
-          id: 'collab_72',
-          name: 'JONATAN (AD)',
-          role: 'LIDER',
-          schedule: '14:30 - 23:30',
-          hours: '7h20',
-          group: 'Líderes',
-          shift: 'TARDE',
-          sector: 'AERÓDROMO',
-          bhBalance: -2,
-          score: 94,
-          scale: {}
-        },
-        {
-          id: 'collab_73',
-          name: 'PEREIRA (AA)',
-          role: 'LIDER',
-          schedule: '21:12 - 06:00',
-          hours: '7h20',
-          group: 'Líderes',
-          shift: 'MADRUGADA',
-          sector: 'AERÓDROMO',
-          bhBalance: 0,
-          score: 97,
-          scale: {}
-        },
-        {
-          id: 'collab_74',
-          name: 'GUSTAVO (AD)',
-          role: 'LIDER',
-          schedule: '21:12 - 06:00',
-          hours: '7h20',
-          group: 'Líderes',
-          shift: 'MADRUGADA',
-          sector: 'AERÓDROMO',
-          bhBalance: 1,
-          score: 96,
-          scale: {}
-        },
-        {
-          id: 'collab_75',
-          name: 'FERNANDO',
-          role: 'OPERADOR',
-          schedule: '07:00 - 16:00',
-          hours: '7h20',
-          group: 'VIP',
-          shift: 'MANHÃ',
-          sector: 'VIP',
-          bhBalance: 0,
-          score: 94,
-          scale: {}
-        },
-        {
-          id: 'collab_76',
-          name: 'RENATA',
-          role: 'OPERADOR',
-          schedule: '06:00 - 15:00',
-          hours: '7h20',
-          group: 'VIP',
-          shift: 'MANHÃ',
-          sector: 'VIP',
-          bhBalance: -1,
-          score: 95,
-          scale: {}
-        },
-        {
-          id: 'collab_77',
-          name: 'ZAGO',
-          role: 'OPERADOR',
-          schedule: '06:00 - 15:00',
-          hours: '7h20',
-          group: 'VIP',
-          shift: 'MANHÃ',
-          sector: 'VIP',
-          bhBalance: 1,
-          score: 92,
-          scale: {}
-        },
-        {
-          id: 'collab_78',
-          name: 'TORRES',
-          role: 'OPERADOR',
-          schedule: '14:30 - 23:30',
-          hours: '7h20',
-          group: 'VIP',
-          shift: 'TARDE',
-          sector: 'VIP',
-          bhBalance: 0,
-          score: 93,
-          scale: {}
-        },
-        {
-          id: 'collab_79',
-          name: 'SOLANGE',
-          role: 'OPERADOR',
-          schedule: '14:30 - 23:30',
-          hours: '7h20',
-          group: 'VIP',
-          shift: 'TARDE',
-          sector: 'VIP',
-          bhBalance: 2,
-          score: 96,
-          scale: {}
-        },
-        {
-          id: 'collab_80',
-          name: 'LOYOLA',
-          role: 'OPERADOR',
-          schedule: '14:30 - 23:30',
-          hours: '7h20',
-          group: 'VIP',
-          shift: 'TARDE',
-          sector: 'VIP',
-          bhBalance: 0,
-          score: 94,
-          scale: {}
-        },
-        {
-          id: 'collab_81',
-          name: 'NORIVAL',
-          role: 'OPERADOR',
-          schedule: '21:00 - 06:00',
-          hours: '7h20',
-          group: 'VIP',
-          shift: 'MADRUGADA',
-          sector: 'VIP',
-          bhBalance: -1,
-          score: 91,
-          scale: {}
-        },
-        {
-          id: 'collab_82',
-          name: 'PIRES',
-          role: 'OPERADOR',
-          schedule: '22:00 - 07:00',
-          hours: '7h20',
-          group: 'VIP',
-          shift: 'MADRUGADA',
-          sector: 'VIP',
-          bhBalance: 0,
-          score: 95,
-          scale: {}
-        }
-      ]);
-    }
     
-    if (typeof window !== 'undefined') {
-      this.fetchRuntimeConfig().then(() => {
-        if (this.activeDb() === 'firebase') {
-          this.initFirebaseSync();
-        } else {
-          this.initSupabase();
-        }
-      }).catch((e) => {
-        console.error('Failed to fetch runtime config, falling back:', e);
-        if (this.activeDb() === 'firebase') {
-          this.initFirebaseSync();
-        } else {
-          this.initSupabase();
-        }
-      });
+    if (this.activeDb() === 'firebase') {
+      this.initFirebaseSync();
     } else {
-      if (this.activeDb() === 'firebase') {
-        this.initFirebaseSync();
-      } else {
-        this.initSupabase();
-      }
-    }
-  }
-
-  async fetchRuntimeConfig(): Promise<void> {
-    try {
-      const res = await fetch('/api/supabase-config');
-      if (res.ok) {
-        const config = await res.json();
-        if (config.url && config.key) {
-          const currentUrl = this.supabaseUrl();
-          const currentKey = this.supabaseKey();
-          const defaultUrl = 'https://vefyegxmvjficncbetyp.supabase.co';
-          const defaultKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZlZnllZ3htdmpmaWNuY2JldHlwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyNjYwMjksImV4cCI6MjA5Nzg0MjAyOX0.ioaZkwS98123Jb2xw2l6vev3FgoLwIVwsitg7pTew7c';
-          
-          if (
-            currentUrl === defaultUrl || 
-            currentKey === defaultKey || 
-            currentUrl !== config.url ||
-            currentKey !== config.key
-          ) {
-            this.supabaseUrl.set(config.url);
-            this.supabaseKey.set(config.key);
-            safeSetLocalStorageItem('supabase_url', config.url);
-            safeSetLocalStorageItem('supabase_key', config.key);
-          }
-        }
-      }
-    } catch (e) {
-      console.warn('Could not fetch runtime Supabase config, using defaults:', e);
+      this.initSupabase();
     }
   }
 
@@ -1573,36 +428,33 @@ export class ScaleService {
     this.databaseError.set(null);
 
     try {
-      // 1. Fetch Collaborators FIRST so login and user data are ready immediately (~50ms)
-      const collabsResult = await this.supabase.from('colaboradores').select('*');
-      if (collabsResult.error) {
-        console.error('Supabase colaboradores error:', collabsResult.error);
-        this.databaseError.set(`Erro ao carregar colaboradores do Supabase: ${collabsResult.error.message}`);
-        if (this.collaborators().length === 0) {
-          const cached = safeGetLocalStorageItem('cached_collaborators');
-          if (cached) {
-            try { this.collaborators.set(JSON.parse(cached)); } catch (e) {}
-          }
-        }
-      } else if (collabsResult.data && collabsResult.data.length > 0) {
-        const mappedCollabs: Collaborator[] = collabsResult.data.map((row: any) => this.mapDbRowToCollaborator(row));
-        mappedCollabs.sort((a: Collaborator, b: Collaborator) => a.id.localeCompare(b.id));
-        safeSetLocalStorageItem('cached_collaborators', JSON.stringify(mappedCollabs));
-        this.collaborators.set(mappedCollabs);
-      }
+      // Fetch from table systems on Supabase (colaboradores, escala_diaria, sigla_types, shift_types, audit_history)
+      const queryCollabs = this.supabase.from('colaboradores').select('*');
+      const querySiglas = this.supabase.from('sigla_types').select('*');
+      const queryShifts = this.supabase.from('shift_types').select('*');
+      const queryAudit = this.supabase.from('audit_history').select('*');
 
-      if (this.activeDb() !== 'supabase') return;
-
-      // 2. Fetch Siglas, Shift Types, and Audit History in parallel
-      const [siglasResult, shiftsResult, auditResult] = await Promise.all([
-        this.supabase.from('sigla_types').select('*'),
-        this.supabase.from('shift_types').select('*'),
-        this.supabase.from('audit_history').select('*')
+      const [collabsResult, siglasResult, shiftsResult, auditResult, escalaData] = await Promise.all([
+        queryCollabs,
+        querySiglas,
+        queryShifts,
+        queryAudit,
+        this.fetchAllScaleRows(this.activeMonth(), this.activeYear())
       ]);
 
       if (this.activeDb() !== 'supabase') return;
 
-      // Sync Siglas
+      const collabsError = collabsResult.error;
+      const collabsData = collabsResult.data;
+
+      if (collabsError) {
+        console.error('Supabase colaboradores error:', collabsError);
+        this.databaseError.set(`Erro ao carregar colaboradores do Supabase: ${collabsError.message}`);
+        this.collaborators.set([]);
+        return;
+      }
+
+      // 1. Sync Siglas
       const siglasError = siglasResult?.error;
       const siglasData = siglasResult?.data;
       if (siglasError) {
@@ -1614,6 +466,7 @@ export class ScaleService {
           let computaAusencia = false;
           let transparentBg = false;
 
+          // Parse flags from description prefix in any order
           let hasFlag = true;
           while (hasFlag) {
             if (desc.startsWith('#COMPUTA_AUSENCIA#')) {
@@ -1645,7 +498,7 @@ export class ScaleService {
         this.siglaTypes.set(parsedSiglas);
       }
 
-      // Sync Shift Types
+      // 2. Sync Shift Types
       const shiftsError = shiftsResult?.error;
       const shiftsData = shiftsResult?.data;
       if (shiftsError) {
@@ -1672,7 +525,7 @@ export class ScaleService {
         this.shiftTypes.set(parsedShifts);
       }
 
-      // Sync Audit History
+      // 3. Sync Audit History
       const auditError = auditResult?.error;
       const auditData = auditResult?.data;
       if (auditError) {
@@ -1684,32 +537,65 @@ export class ScaleService {
         this.auditHistory.set(sortedAudit);
       }
 
-      // 3. Fetch Daily Scales separately so scale query delays never block colaboradores or login
-      try {
-        const escalaData = await this.fetchAllScaleRows(this.activeMonth(), this.activeYear());
-        if (escalaData && escalaData.length > 0) {
-          const scaleMap: Record<string, Record<number, string>> = {};
+      // 4. Sync Collaborators & Daily Scales
+      if (!collabsData || collabsData.length === 0) {
+        this.collaborators.set([]);
+      } else {
+        // Group scales by collaborator_id
+        const scaleMap: Record<string, Record<number, string>> = {};
+        if (escalaData) {
           escalaData.forEach((row: any) => {
             if (!scaleMap[row.collaborator_id]) {
               scaleMap[row.collaborator_id] = {};
             }
             scaleMap[row.collaborator_id][row.day] = row.value || 'X';
           });
-
-          const currentList = this.collaborators();
-          if (currentList.length > 0) {
-            const updatedWithScales = currentList.map(c => {
-              const scale = scaleMap[c.id] || {};
-              for (let d = 1; d <= 31; d++) {
-                if (scale[d] === undefined) scale[d] = '-';
-              }
-              return { ...c, scale };
-            });
-            this.collaborators.set(updatedWithScales);
-          }
         }
-      } catch (scaleErr) {
-        console.warn('Non-fatal error fetching daily scales (colaboradores remain active):', scaleErr);
+
+        // Map database records to Collaborator interface
+        const mappedCollabs: Collaborator[] = collabsData.map((row: any) => {
+          // Ensure all 31 days are filled
+          const scale = scaleMap[row.id] || {};
+          for (let d = 1; d <= 31; d++) {
+            if (scale[d] === undefined) {
+              scale[d] = '-';
+            }
+          }
+
+          return {
+            id: row.id,
+            name: row.name || 'Sem Nome',
+            role: row.role || 'OPERADOR',
+            hours: row.schedule || '7h20',
+            group: row.grupo || (
+              row.role === 'LIDER' ? 'Líderes' :
+              row.sector === 'VIP' ? 'VIP' :
+              row.sector === 'TREINAMENTO' ? 'Treinamento' :
+              row.shift === 'MANHÃ' ? 'Manhã' :
+              row.shift === 'TARDE' ? 'Tarde' :
+              row.shift === 'MADRUGADA' || row.shift === 'NOITE' ? 'Noite' :
+              row.shift === 'ADMINISTRATIVO' ? 'Administrativo' : 'Corporativo'
+            ),
+            shift: (row.shift === 'MADRUGADA' ? 'NOITE' : (row.shift || 'NOITE')),
+            sector: row.sector || 'Geral',
+            bhBalance: row.bh_balance || 0,
+            score: row.score || 90,
+            scale: scale,
+            photoUrl: row.photo_url || row.photo || '',
+            photo: row.photo_url || row.photo || '',
+            birthday: row.birthday || '',
+            specialDates: typeof row['special_dates'] === 'string' ? JSON.parse(row['special_dates']) : (row['special_dates'] || []),
+            folgaRequests: typeof row['folga_requests'] === 'string' ? JSON.parse(row['folga_requests']) : (row['folga_requests'] || []),
+            password: row.password || '',
+            isAdmin: row.is_admin === true || row.is_admin === 'true' || row.is_admin === 1,
+            nickname: row.nickname || '',
+            gafes: row.gafes ? (Array.isArray(row.gafes) ? row.gafes : (typeof row.gafes === 'string' ? JSON.parse(row.gafes) : [])) : []
+          };
+        });
+
+        mappedCollabs.sort((a, b) => a.id.localeCompare(b.id));
+        console.log('Supabase sync loaded colaboradores count:', mappedCollabs.length);
+        this.collaborators.set(mappedCollabs);
       }
     } catch (err: any) {
       console.error('Error syncing Supabase:', err?.message || JSON.stringify(err));
@@ -1737,131 +623,12 @@ export class ScaleService {
       if (this.activeDb() === 'supabase') {
         const errMsg = err?.message || err?.details || err?.hint || (typeof err === 'object' ? JSON.stringify(err) : String(err));
         this.databaseError.set(`Erro de conexão com o Supabase: ${errMsg}`);
-        // If current collaborators list is empty, restore from cache instead of wiping
-        if (this.collaborators().length === 0) {
-          const cached = safeGetLocalStorageItem('cached_collaborators');
-          if (cached) {
-            try {
-              const parsed = JSON.parse(cached);
-              if (Array.isArray(parsed) && parsed.length > 0) {
-                this.collaborators.set(parsed);
-              }
-            } catch (e) {}
-          }
-        }
+        this.collaborators.set([]);
         this.shiftTypes.set([]);
         this.siglaTypes.set([]);
         this.auditHistory.set([]);
       }
     }
-  }
-
-  public mapDbRowToCollaborator(row: any, scaleMap: Record<string, Record<number, string>> = {}): Collaborator {
-    const scale = scaleMap[row.id] || {};
-    for (let d = 1; d <= 31; d++) {
-      if (scale[d] === undefined) {
-        scale[d] = '-';
-      }
-    }
-
-    return {
-      id: row.id,
-      name: row.name || 'Sem Nome',
-      role: row.role || 'OPERADOR',
-      hours: row.schedule || '7h20',
-      group: row.grupo || (
-        row.role === 'LIDER' ? 'Líderes' :
-        row.sector === 'VIP' ? 'VIP' :
-        row.sector === 'TREINAMENTO' ? 'Treinamento' :
-        row.shift === 'MANHÃ' ? 'Manhã' :
-        row.shift === 'TARDE' ? 'Tarde' :
-        row.shift === 'MADRUGADA' || row.shift === 'NOITE' ? 'Noite' :
-        row.shift === 'ADMINISTRATIVO' ? 'Administrativo' : 'Corporativo'
-      ),
-      shift: (row.shift === 'MADRUGADA' ? 'NOITE' : (row.shift || 'NOITE')),
-      sector: row.sector || 'Geral',
-      bhBalance: row.bh_balance || 0,
-      score: row.score || 90,
-      scale: scale,
-      photoUrl: row.photo_url || row.photo || '',
-      photo: row.photo_url || row.photo || '',
-      birthday: row.birthday || '',
-      specialDates: typeof row['special_dates'] === 'string' ? JSON.parse(row['special_dates']) : (row['special_dates'] || []),
-      folgaRequests: typeof row['folga_requests'] === 'string' ? JSON.parse(row['folga_requests']) : (row['folga_requests'] || []),
-      password: row.password || '',
-      isAdmin: row.is_admin === true || row.is_admin === 'true' || row.is_admin === 1,
-      nickname: row.nickname || '',
-      gafes: row.gafes ? (Array.isArray(row.gafes) ? row.gafes : (typeof row.gafes === 'string' ? JSON.parse(row.gafes) : [])) : []
-    };
-  }
-
-  async findCollaboratorDirect(query: string): Promise<Collaborator | null> {
-    const raw = query.trim();
-    if (!raw) return null;
-
-    const matchCollab = (c: Collaborator): boolean => {
-      if (c.id.toLowerCase() === raw.toLowerCase()) return true;
-      if (('collab_' + raw).toLowerCase() === c.id.toLowerCase()) return true;
-      if (c.id.replace('collab_', '').toLowerCase() === raw.toLowerCase()) return true;
-
-      const typedName = raw.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-      const normName = (c.name || '').trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-      if (normName === typedName) return true;
-      if (normName.startsWith(typedName) || typedName.startsWith(normName)) return true;
-      if (normName.includes(typedName) || typedName.includes(normName)) return true;
-
-      const typedParts = typedName.split(/\s+/).filter(p => p.length >= 2);
-      const normParts = normName.split(/\s+/).filter(p => p.length >= 2);
-      if (typedParts.length > 0 && typedParts.some(tp => normParts.some(np => np === tp || np.includes(tp) || tp.includes(np)))) return true;
-
-      if (c.nickname) {
-        const normNick = c.nickname.trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-        if (normNick === typedName || normNick.includes(typedName) || typedName.includes(normNick)) return true;
-      }
-      return false;
-    };
-
-    // 1. Check local collaborators first
-    const collabs = this.collaborators();
-    const foundLocal = collabs.find(matchCollab);
-    if (foundLocal) return foundLocal;
-
-    // 2. Direct query to Supabase if available
-    if (this.activeDb() === 'supabase' && this.supabase) {
-      try {
-        const { data: allRows, error } = await this.supabase.from('colaboradores').select('*');
-        if (!error && allRows && allRows.length > 0) {
-          const mapped = allRows.map((row: any) => this.mapDbRowToCollaborator(row));
-          mapped.sort((a: Collaborator, b: Collaborator) => a.id.localeCompare(b.id));
-          this.collaborators.set(mapped);
-          safeSetLocalStorageItem('cached_collaborators', JSON.stringify(mapped));
-          const foundInDb = mapped.find(matchCollab);
-          if (foundInDb) return foundInDb;
-        }
-      } catch (err) {
-        console.warn('findCollaboratorDirect error (Supabase):', err);
-      }
-    } else if (this.activeDb() === 'firebase' && this.db) {
-      try {
-        const q = collection(this.db, 'collaborators');
-        const querySnapshot = await getDocs(q);
-        const mapped: Collaborator[] = [];
-        querySnapshot.forEach((doc) => {
-          mapped.push(doc.data() as Collaborator);
-        });
-        if (mapped.length > 0) {
-          mapped.sort((a, b) => a.id.localeCompare(b.id));
-          this.collaborators.set(mapped);
-          safeSetLocalStorageItem('cached_collaborators', JSON.stringify(mapped));
-          const foundInDb = mapped.find(matchCollab);
-          if (foundInDb) return foundInDb;
-        }
-      } catch (err) {
-        console.warn('findCollaboratorDirect error (Firebase):', err);
-      }
-    }
-
-    return null;
   }
 
   private initFirebaseSync() {

@@ -30,13 +30,12 @@
         <div class="flex flex-col gap-3.5 text-left animate-fade-in">
           
           <!-- Nome de Usuário -->
-          <div class="flex flex-col gap-1 relative">
+          <div class="flex flex-col gap-1">
             <label for="login_name" class="text-[9px] font-bold uppercase text-slate-400 tracking-wider">Nome do Colaborador</label>
-
             <input type="text"
                    id="login_name"
                    [value]="loginNameInput()"
-                   (input)="onLoginNameInputChange($any($event.target).value)"
+                   (input)="loginNameInput.set($any($event.target).value)"
                    (keydown.enter)="handleLoginSubmit()"
                    placeholder="Digite seu nome"
                    class="w-full px-3 py-2 bg-[#051124] border border-[#10213b] rounded-lg text-xs font-bold text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500 transition-all font-sans uppercase" />
@@ -76,16 +75,10 @@
           }
 
           <button (click)="handleLoginSubmit()"
-                  [disabled]="isLoggingIn()"
                   id="btn_login_submit"
-                  class="w-full py-2 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white font-black text-xs uppercase tracking-wider rounded-lg transition-all flex items-center justify-center gap-1 cursor-pointer border-none outline-none mt-1">
-            @if (isLoggingIn()) {
-              <span class="inline-block w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-              <span>Entrando...</span>
-            } @else {
-              {{ isFirstAccess() ? 'Confirmar e Entrar' : 'Entrar' }}
-              <span class="material-icons text-xs leading-none">login</span>
-            }
+                  class="w-full py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-black text-xs uppercase tracking-wider rounded-lg transition-all flex items-center justify-center gap-1 cursor-pointer border-none outline-none mt-1">
+            {{ isFirstAccess() ? 'Confirmar e Entrar' : 'Entrar' }}
+            <span class="material-icons text-xs leading-none">login</span>
           </button>
         </div>
       </div>
@@ -464,6 +457,347 @@
       </div>
     </div>
   </header>
+
+  <!-- SUB-HEADER DE PREVISÃO DO TEMPO • GUARULHOS (BASE DO TRABALHO) -->
+  @if (getLoggedCollab() && activeSubTab() === 'indicadores') {
+    <div id="weather_subheader_bar"
+         class="w-full border-b border-[#10213b] transition-all duration-300 select-none px-3 md:px-4 py-2 shrink-0 z-30"
+         [class.bg-[#050f1d]]="!isLightTheme()"
+         [class.bg-slate-50]="isLightTheme()">
+      
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-2">
+        <!-- Info Principal Guarulhos & Turno -->
+        <div class="flex items-center gap-2.5 min-w-0">
+          <div class="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
+            <span class="material-icons text-emerald-400 text-lg">{{ currentWeatherOverview().icon }}</span>
+          </div>
+          
+          <div class="flex flex-col min-w-0">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="text-xs font-black uppercase tracking-wide text-emerald-500 flex items-center gap-0.5">
+                <span class="material-icons text-xs">location_on</span> Guarulhos (Base)
+              </span>
+              <span class="text-xs font-black font-mono" [class.text-white]="!isLightTheme()" [class.text-slate-800]="isLightTheme()">
+                {{ currentWeatherOverview().temp }}
+              </span>
+              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                • {{ currentWeatherOverview().condition }}
+              </span>
+              <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center gap-0.5">
+                <span class="material-icons text-[10px]">water_drop</span> {{ currentWeatherOverview().rainProb }}% Chuva
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filtros de Turno & Botões de Ação -->
+        <div class="flex items-center gap-1.5 overflow-x-auto py-1 md:py-0 shrink-0">
+          <!-- Selector Pills -->
+          <button (click)="weatherSelectedShift.set('AUTO')"
+                  [class]="weatherSelectedShift() === 'AUTO' ? 'bg-emerald-500 text-white font-extrabold border-emerald-400' : (isLightTheme() ? 'bg-white text-slate-600 border-slate-200 hover:text-slate-900' : 'bg-[#071426] text-slate-400 border-[#10213b] hover:text-white')"
+                  class="px-2 py-1 rounded-md text-[9px] font-bold uppercase tracking-wider border transition-all cursor-pointer border-none outline-none whitespace-nowrap shadow-xs">
+            Meu Turno
+          </button>
+          <button (click)="weatherSelectedShift.set('NOITE')"
+                  [class]="weatherSelectedShift() === 'NOITE' ? 'bg-emerald-500 text-white font-extrabold border-emerald-400' : (isLightTheme() ? 'bg-white text-slate-600 border-slate-200 hover:text-slate-900' : 'bg-[#071426] text-slate-400 border-[#10213b] hover:text-white')"
+                  class="px-2 py-1 rounded-md text-[9px] font-bold uppercase tracking-wider border transition-all cursor-pointer border-none outline-none whitespace-nowrap shadow-xs">
+            Noite (21h-06h)
+          </button>
+          <button (click)="weatherSelectedShift.set('MANHA')"
+                  [class]="weatherSelectedShift() === 'MANHA' ? 'bg-emerald-500 text-white font-extrabold border-emerald-400' : (isLightTheme() ? 'bg-white text-slate-600 border-slate-200 hover:text-slate-900' : 'bg-[#071426] text-slate-400 border-[#10213b] hover:text-white')"
+                  class="px-2 py-1 rounded-md text-[9px] font-bold uppercase tracking-wider border transition-all cursor-pointer border-none outline-none whitespace-nowrap shadow-xs">
+            Manhã (06h-15h)
+          </button>
+          <button (click)="weatherSelectedShift.set('TARDE')"
+                  [class]="weatherSelectedShift() === 'TARDE' ? 'bg-emerald-500 text-white font-extrabold border-emerald-400' : (isLightTheme() ? 'bg-white text-slate-600 border-slate-200 hover:text-slate-900' : 'bg-[#071426] text-slate-400 border-[#10213b] hover:text-white')"
+                  class="px-2 py-1 rounded-md text-[9px] font-bold uppercase tracking-wider border transition-all cursor-pointer border-none outline-none whitespace-nowrap shadow-xs">
+            Tarde (15h-00h)
+          </button>
+          <button (click)="weatherSelectedShift.set('ADM')"
+                  [class]="weatherSelectedShift() === 'ADM' ? 'bg-emerald-500 text-white font-extrabold border-emerald-400' : (isLightTheme() ? 'bg-white text-slate-600 border-slate-200 hover:text-slate-900' : 'bg-[#071426] text-slate-400 border-[#10213b] hover:text-white')"
+                  class="px-2 py-1 rounded-md text-[9px] font-bold uppercase tracking-wider border transition-all cursor-pointer border-none outline-none whitespace-nowrap shadow-xs">
+            ADM (08h-17h)
+          </button>
+
+          <div class="h-4 w-px bg-[#10213b] mx-1"></div>
+
+          <!-- Refresh button -->
+          <button (click)="fetchWeatherForecast()"
+                  [class]="isLightTheme() ? 'bg-white border-slate-200 text-slate-500 hover:text-slate-900' : 'bg-[#071426] border-[#10213b] text-slate-400 hover:text-white'"
+                  class="p-1 h-7 w-7 rounded-md border flex items-center justify-center cursor-pointer transition-all outline-none"
+                  title="Atualizar Previsão">
+            <span class="material-icons text-xs" [class.animate-spin]="weatherLoading()">refresh</span>
+          </button>
+
+          <!-- Toggle Expand/Collapse -->
+          <button (click)="weatherExpanded.set(!weatherExpanded())"
+                  [class]="isLightTheme() ? 'bg-white border-slate-200 text-slate-500 hover:text-slate-900' : 'bg-[#071426] border-[#10213b] text-slate-400 hover:text-white'"
+                  class="p-1 h-7 w-7 rounded-md border flex items-center justify-center cursor-pointer transition-all outline-none"
+                  title="Expandir/Recolher Previsão Hora a Hora">
+            <span class="material-icons text-xs transition-transform" [class.rotate-180]="!weatherExpanded()">expand_less</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- PAINEL DE PREVISÃO HORA A HORA DO TURNO (DE HORA EM HORA) -->
+      @if (weatherExpanded()) {
+        <div class="mt-2 pt-2 border-t border-[#10213b]/60 animate-fade-in animate-duration-300">
+          @if (weatherLoading() && rawHourlyWeather().length === 0) {
+            <div class="flex items-center justify-center gap-2 py-4 text-xs text-slate-400 italic">
+              <span class="material-icons text-sm animate-spin text-emerald-400">sync</span>
+              Carregando previsão do tempo hora a hora para Guarulhos...
+            </div>
+          } @else {
+            <div class="grid grid-cols-1 xl:grid-cols-12 gap-4 items-stretch">
+              
+              <!-- GRÁFICO ESTILO CLIMA TEMPO COM CORES VIVAS NEON (ESQUERDA) -->
+              <div class="xl:col-span-8 flex flex-col justify-between p-3 rounded-2xl border transition-all duration-300 relative overflow-hidden"
+                   [class]="isLightTheme() ? 'bg-slate-50/50 border-slate-200' : 'bg-[#030914] border-[#0f1d3a] shadow-[0_0_15px_rgba(6,182,212,0.05)]'">
+                
+                <!-- Header do Gráfico -->
+                <div class="flex items-center justify-between mb-2">
+                  <div class="flex items-center gap-2">
+                    <span class="w-1.5 h-3 bg-cyan-400 rounded-full animate-pulse"></span>
+                    <span class="text-[10px] font-black uppercase tracking-wider text-slate-400">Tendência do Clima (Guarulhos Base)</span>
+                  </div>
+                  <div class="flex items-center gap-3 text-[8px] font-bold uppercase tracking-wider text-slate-500">
+                    <span class="flex items-center gap-1">
+                      <span class="w-2.5 h-0.5 bg-gradient-to-r from-orange-500 to-pink-500 inline-block rounded"></span> Temperatura
+                    </span>
+                    <span class="flex items-center gap-1">
+                      <span class="w-2.5 h-2 bg-gradient-to-t from-blue-600 to-cyan-400 inline-block rounded-xs"></span> Chuva %
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Container do SVG com Scroll Lateral se necessário no mobile -->
+                <div class="w-full overflow-x-auto pb-1 custom-scrollbar">
+                  <div class="min-w-[800px] xl:min-w-full">
+                    <svg viewBox="0 0 1000 110" class="w-full h-auto select-none overflow-visible">
+                      <defs>
+                        <!-- Filtros de Neon Glow -->
+                        <filter id="neon-glow-orange" x="-20%" y="-20%" width="140%" height="140%">
+                          <feGaussianBlur stdDeviation="3" result="blur" />
+                          <feMerge>
+                            <feMergeNode in="blur" />
+                            <feMergeNode in="SourceGraphic" />
+                          </feMerge>
+                        </filter>
+                        <filter id="neon-glow-cyan" x="-20%" y="-20%" width="140%" height="140%">
+                          <feGaussianBlur stdDeviation="3" result="blur" />
+                          <feMerge>
+                            <feMergeNode in="blur" />
+                            <feMergeNode in="SourceGraphic" />
+                          </feMerge>
+                        </filter>
+                        <!-- Gradientes -->
+                        <linearGradient id="temp-line-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                          <stop offset="0%" stop-color="#ff7a00" />
+                          <stop offset="50%" stop-color="#ff007f" />
+                          <stop offset="100%" stop-color="#00f0ff" />
+                        </linearGradient>
+                        <linearGradient id="area-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+                          <stop offset="0%" stop-color="#ff007f" stop-opacity="0.1" />
+                          <stop offset="100%" stop-color="#00f0ff" stop-opacity="0" />
+                        </linearGradient>
+                        <linearGradient id="rain-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+                          <stop offset="0%" stop-color="#00f0ff" stop-opacity="0.7" />
+                          <stop offset="100%" stop-color="#0066ff" stop-opacity="0.1" />
+                        </linearGradient>
+                      </defs>
+
+                      <!-- Linha Grid horizontal sutil -->
+                      <line x1="40" y1="90" x2="960" y2="90" [attr.stroke]="isLightTheme() ? '#e2e8f0' : '#1e293b'" stroke-width="1" />
+                      <line x1="40" y1="55" x2="960" y2="55" [attr.stroke]="isLightTheme() ? '#f1f5f9' : '#0f172a'" stroke-width="1" stroke-dasharray="4,4" />
+
+                      <!-- Gráfico de Área para Temperatura -->
+                      @if (weatherChartData().areaPath) {
+                        <path [attr.d]="weatherChartData().areaPath" fill="url(#area-grad)" />
+                      }
+
+                      <!-- Barras de Probabilidade de Chuva -->
+                      @for (pt of weatherChartData().points; track pt.index) {
+                        @if (pt.rainHeight > 1) {
+                          <rect [attr.x]="pt.x - 6"
+                                [attr.y]="pt.rainY"
+                                width="12"
+                                [attr.height]="pt.rainHeight"
+                                fill="url(#rain-grad)"
+                                rx="3"
+                                class="transition-all duration-300 hover:opacity-100 cursor-pointer"
+                                (mouseenter)="selectedWeatherHourIdx.set(pt.index)"
+                                (click)="selectedWeatherHourIdx.set(pt.index)" />
+                        }
+                      }
+
+                      <!-- Linha do Gráfico de Temperatura -->
+                      @if (weatherChartData().linePath) {
+                        <path [attr.d]="weatherChartData().linePath"
+                              fill="none"
+                              stroke="url(#temp-line-grad)"
+                              stroke-width="3"
+                              stroke-linecap="round"
+                              [attr.filter]="isLightTheme() ? 'none' : 'url(#neon-glow-orange)'" />
+                      }
+
+                      <!-- Linha Vertical de Guia Sutil no Hover / Seleção -->
+                      @if (selectedWeatherHourIdx() !== null) {
+                        <line [attr.x1]="weatherChartData().points[selectedWeatherHourIdx()!].x"
+                              y1="10"
+                              [attr.x2]="weatherChartData().points[selectedWeatherHourIdx()!].x"
+                              y2="90"
+                              [attr.stroke]="isLightTheme() ? '#cbd5e1' : '#00f0ff'"
+                              stroke-dasharray="3,3"
+                              stroke-width="1" />
+                      }
+
+                      <!-- Nós Interativos e Rótulos -->
+                      @for (pt of weatherChartData().points; track pt.index) {
+                        <!-- Círculo do Nó -->
+                        <circle [attr.cx]="pt.x"
+                                [attr.cy]="pt.y"
+                                [attr.r]="selectedWeatherHourIdx() === pt.index ? 5 : 3.5"
+                                [attr.fill]="selectedWeatherHourIdx() === pt.index ? '#ffffff' : '#ff007f'"
+                                [attr.stroke]="selectedWeatherHourIdx() === pt.index ? '#00f0ff' : '#ffffff'"
+                                [attr.stroke-width]="selectedWeatherHourIdx() === pt.index ? 2 : 1"
+                                class="cursor-pointer transition-all duration-200"
+                                (mouseenter)="selectedWeatherHourIdx.set(pt.index)"
+                                (click)="selectedWeatherHourIdx.set(pt.index)" />
+
+                        <!-- Texto da Temperatura acima do Nó -->
+                        <text [attr.x]="pt.x"
+                              [attr.y]="pt.y - 7"
+                              text-anchor="middle"
+                              class="text-[9px] font-black font-mono transition-all duration-300"
+                              [attr.fill]="selectedWeatherHourIdx() === pt.index ? (isLightTheme() ? '#0f172a' : '#00f0ff') : (isLightTheme() ? '#475569' : '#94a3b8')">
+                          {{ pt.temp }}°C
+                        </text>
+
+                        <!-- Ícone do Tempo no Meio -->
+                        <text [attr.x]="pt.x"
+                              y="18"
+                              text-anchor="middle"
+                              class="material-icons select-none font-normal cursor-pointer text-[15px]"
+                              style="font-family: 'Material Icons';"
+                              [attr.fill]="pt.item.icon === 'wb_sunny' ? '#ff9f00' : 
+                                           (pt.item.icon === 'nights_stay' ? '#818cf8' : 
+                                            (pt.item.icon === 'cloud' || pt.item.icon === 'partly_cloudy_day' ? '#22d3ee' : 
+                                             (pt.item.icon === 'water_drop' || pt.item.icon === 'umbrella' || pt.item.icon === 'grain' ? '#00f0ff' : 
+                                              (pt.item.icon === 'thunderstorm' ? '#f59e0b' : '#38bdf8'))))"
+                              (mouseenter)="selectedWeatherHourIdx.set(pt.index)"
+                              (click)="selectedWeatherHourIdx.set(pt.index)">
+                          {{ pt.item.icon }}
+                        </text>
+
+                        <!-- Horário na Base -->
+                        <text [attr.x]="pt.x"
+                              y="102"
+                              text-anchor="middle"
+                              class="text-[9px] font-black font-mono tracking-tighter"
+                              [attr.fill]="selectedWeatherHourIdx() === pt.index ? '#34d399' : (isLightTheme() ? '#64748b' : '#64748b')">
+                          {{ pt.item.timeLabel }}
+                        </text>
+                      }
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
+              <!-- CARD DE DETALHES DE CLIMA NEON INTERATIVO (DIREITA) -->
+              <div class="xl:col-span-4 flex flex-col justify-between p-3.5 rounded-2xl border transition-all duration-300 relative overflow-hidden"
+                   [class]="isLightTheme() ? 'bg-white border-slate-200 text-slate-800' : 'bg-[#040c1a] border-[#0f1d3a] text-slate-200 shadow-[0_0_15px_rgba(236,72,153,0.05)]'">
+                
+                @if (activeWeatherItem(); as active) {
+                  <div>
+                    <!-- Top do Card -->
+                    <div class="flex items-center justify-between mb-2">
+                      <div class="flex flex-col">
+                        <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Previsão Detalhada</span>
+                        <div class="flex items-center gap-1.5 mt-0.5">
+                          <span class="text-xs font-black font-mono text-[#ff007f]">{{ active.timeLabel }}</span>
+                          <span class="text-[9px] font-bold text-slate-500 font-mono">• {{ active.dateLabel }}</span>
+                        </div>
+                      </div>
+                      
+                      <!-- Ícone Grande Decorativo Neon -->
+                      <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border relative transition-all duration-300"
+                           [class]="isLightTheme() ? 'bg-slate-50 border-slate-200 text-slate-600' : 'bg-gradient-to-br from-[#06152a] to-[#040c1a] border-[#0f1d3a] shadow-[0_0_10px_rgba(6,182,212,0.15)]'">
+                        <span class="material-icons text-lg relative z-10 animate-bounce"
+                              [class.text-amber-400]="active.icon === 'wb_sunny'"
+                              [class.text-indigo-300]="active.icon === 'nights_stay'"
+                              [class.text-slate-400]="active.icon === 'cloud' || active.icon === 'partly_cloudy_day'"
+                              [class.text-cyan-400]="active.icon === 'water_drop' || active.icon === 'umbrella' || active.icon === 'grain'"
+                              [class.text-amber-500]="active.icon === 'thunderstorm'">
+                          {{ active.icon }}
+                        </span>
+                        <!-- Neon Ring Background Glow -->
+                        <span class="absolute inset-0 rounded-xl opacity-20 blur-xs transition-opacity duration-300"
+                              [class.bg-amber-400]="active.icon === 'wb_sunny'"
+                              [class.bg-indigo-400]="active.icon === 'nights_stay'"
+                              [class.bg-cyan-400]="active.icon === 'water_drop' || active.icon === 'umbrella' || active.icon === 'grain'"></span>
+                      </div>
+                    </div>
+
+                    <!-- Temperatura e Condição -->
+                    <div class="flex items-baseline gap-1.5 mb-2">
+                      <span class="text-2xl font-black font-mono tracking-tighter" [class.text-white]="!isLightTheme()" [class.text-slate-800]="isLightTheme()">
+                        {{ active.temp }}°C
+                      </span>
+                      <span class="text-xs font-black uppercase tracking-wide text-[#34d399] truncate">
+                        {{ active.conditionText }}
+                      </span>
+                    </div>
+
+                    <!-- Grid de Métricas Técnicas Neon -->
+                    <div class="grid grid-cols-2 gap-2 mt-2">
+                      
+                      <!-- Umidade -->
+                      <div class="p-2 rounded-xl border flex flex-col justify-between transition-all"
+                           [class]="isLightTheme() ? 'bg-slate-50 border-slate-100' : 'bg-[#061427]/60 border-[#10213b] hover:border-indigo-500/30'">
+                        <div class="flex items-center gap-1.5 text-slate-400 mb-0.5">
+                          <span class="material-icons text-[11px] text-indigo-400">opacity</span>
+                          <span class="text-[8px] font-bold uppercase tracking-wider">Umidade</span>
+                        </div>
+                        <span class="text-xs font-black font-mono" [class.text-white]="!isLightTheme()">{{ active.humidity }}%</span>
+                        <div class="w-full bg-slate-700/20 rounded-full h-1 mt-1 overflow-hidden">
+                          <div class="bg-indigo-400 h-full rounded-full shadow-[0_0_6px_rgba(129,140,248,0.8)]" [style.width]="active.humidity + '%'"></div>
+                        </div>
+                      </div>
+
+                      <!-- Chuva -->
+                      <div class="p-2 rounded-xl border flex flex-col justify-between transition-all"
+                           [class]="isLightTheme() ? 'bg-slate-50 border-slate-100' : 'bg-[#061427]/60 border-[#10213b] hover:border-cyan-500/30'">
+                        <div class="flex items-center gap-1.5 text-slate-400 mb-0.5">
+                          <span class="material-icons text-[11px] text-cyan-400">water_drop</span>
+                          <span class="text-[8px] font-bold uppercase tracking-wider">Prob. Chuva</span>
+                        </div>
+                        <span class="text-xs font-black font-mono" [class.text-white]="!isLightTheme()">{{ active.rainProb }}%</span>
+                        <div class="w-full bg-slate-700/20 rounded-full h-1 mt-1 overflow-hidden">
+                          <div class="bg-cyan-400 h-full rounded-full shadow-[0_0_6px_rgba(34,211,238,0.8)]" [style.width]="active.rainProb + '%'"></div>
+                        </div>
+                      </div>
+
+                    </div>
+                  </div>
+                  
+                  <div class="mt-3 pt-1.5 border-t border-[#10213b]/40 flex items-center justify-between text-[8px] font-bold text-slate-500 uppercase tracking-widest">
+                    <span>Clique nos nós do gráfico para explorar as horas</span>
+                    <span class="material-icons text-[10px] animate-pulse text-[#ff007f]">ads_click</span>
+                  </div>
+                } @else {
+                  <div class="flex flex-col items-center justify-center py-6 text-xs text-slate-500 italic">
+                    Nenhuma previsão selecionada
+                  </div>
+                }
+
+              </div>
+
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
 
   <!-- MAIN OPERATIONAL WORKSPACE -->
   <main class="flex-1 flex flex-col overflow-hidden p-0">
@@ -1067,8 +1401,8 @@
           <!-- FIXED HEADER -->
           <div class="px-3 md:px-4 py-2 border-b border-[#10213b] flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0" style="height: 44px; background-color: #10B981; color: #ffffff;">
             <div>
-              <h3 id="shifts_panel_heading" style="color: #ffffff !important;" class="font-black text-sm uppercase tracking-tight text-white flex items-center gap-1.5">
-                <span id="shifts_panel_icon" class="material-icons text-white" style="color: #ffffff !important;">tune</span>
+              <h3 class="font-black text-sm uppercase tracking-tight text-white flex items-center gap-1.5">
+                <span class="material-icons text-white">tune</span>
                 Painel de Gerenciamento de Turnos
               </h3>
             </div>
@@ -2649,327 +2983,6 @@
             @let cdState = getFolgaCountdownState(logged);
             
             <div class="space-y-3 w-full">
-              <!-- SUB-HEADER DE PREVISÃO DO TEMPO • GUARULHOS (BASE DO TRABALHO) -->
-              @if (activeSubTab() === 'indicadores') {
-                <div id="weather_subheader_bar"
-                     class="w-full border rounded-2xl p-3 sm:p-4 transition-all duration-300 select-none shadow-md space-y-3"
-                     [class.bg-[#050f1d]]="!isLightTheme()"
-                     [class.bg-slate-50]="isLightTheme()"
-                     [class.border-[#10213b]]="!isLightTheme()"
-                     [class.border-slate-200]="isLightTheme()">
-                  
-                  <div class="flex flex-col md:flex-row md:items-center justify-between gap-2">
-                    <!-- Info Principal Guarulhos & Turno -->
-                    <div class="flex items-center gap-2.5 min-w-0">
-                      <div class="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
-                        <span class="material-icons text-emerald-400 text-lg">{{ currentWeatherOverview().icon }}</span>
-                      </div>
-                      
-                      <div class="flex flex-col min-w-0">
-                        <div class="flex items-center gap-2 flex-wrap">
-                          <span class="text-xs font-black uppercase tracking-wide text-emerald-500 flex items-center gap-0.5">
-                            <span class="material-icons text-xs">location_on</span> Guarulhos (Base)
-                          </span>
-                          <span class="text-xs font-black font-mono" [class.text-white]="!isLightTheme()" [class.text-slate-800]="isLightTheme()">
-                            {{ currentWeatherOverview().temp }}
-                          </span>
-                          <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                            • {{ currentWeatherOverview().condition }}
-                          </span>
-                          <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center gap-0.5">
-                            <span class="material-icons text-[10px]">water_drop</span> {{ currentWeatherOverview().rainProb }}% Chuva
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- Filtros de Turno & Botões de Ação -->
-                    <div class="flex items-center gap-1.5 overflow-x-auto py-1 md:py-0 shrink-0">
-                      <!-- Selector Pills -->
-                      <button (click)="weatherSelectedShift.set('AUTO')"
-                              [class]="weatherSelectedShift() === 'AUTO' ? 'bg-emerald-500 text-white font-extrabold border-emerald-400' : (isLightTheme() ? 'bg-white text-slate-600 border-slate-200 hover:text-slate-900' : 'bg-[#071426] text-slate-400 border-[#10213b] hover:text-white')"
-                              class="px-2 py-1 rounded-md text-[9px] font-bold uppercase tracking-wider border transition-all cursor-pointer border-none outline-none whitespace-nowrap shadow-xs">
-                        Meu Turno
-                      </button>
-                      <button (click)="weatherSelectedShift.set('NOITE')"
-                              [class]="weatherSelectedShift() === 'NOITE' ? 'bg-emerald-500 text-white font-extrabold border-emerald-400' : (isLightTheme() ? 'bg-white text-slate-600 border-slate-200 hover:text-slate-900' : 'bg-[#071426] text-slate-400 border-[#10213b] hover:text-white')"
-                              class="px-2 py-1 rounded-md text-[9px] font-bold uppercase tracking-wider border transition-all cursor-pointer border-none outline-none whitespace-nowrap shadow-xs">
-                        Noite (21h-06h)
-                      </button>
-                      <button (click)="weatherSelectedShift.set('MANHA')"
-                              [class]="weatherSelectedShift() === 'MANHA' ? 'bg-emerald-500 text-white font-extrabold border-emerald-400' : (isLightTheme() ? 'bg-white text-slate-600 border-slate-200 hover:text-slate-900' : 'bg-[#071426] text-slate-400 border-[#10213b] hover:text-white')"
-                              class="px-2 py-1 rounded-md text-[9px] font-bold uppercase tracking-wider border transition-all cursor-pointer border-none outline-none whitespace-nowrap shadow-xs">
-                        Manhã (06h-15h)
-                      </button>
-                      <button (click)="weatherSelectedShift.set('TARDE')"
-                              [class]="weatherSelectedShift() === 'TARDE' ? 'bg-emerald-500 text-white font-extrabold border-emerald-400' : (isLightTheme() ? 'bg-white text-slate-600 border-slate-200 hover:text-slate-900' : 'bg-[#071426] text-slate-400 border-[#10213b] hover:text-white')"
-                              class="px-2 py-1 rounded-md text-[9px] font-bold uppercase tracking-wider border transition-all cursor-pointer border-none outline-none whitespace-nowrap shadow-xs">
-                        Tarde (15h-00h)
-                      </button>
-                      <button (click)="weatherSelectedShift.set('ADM')"
-                              [class]="weatherSelectedShift() === 'ADM' ? 'bg-emerald-500 text-white font-extrabold border-emerald-400' : (isLightTheme() ? 'bg-white text-slate-600 border-slate-200 hover:text-slate-900' : 'bg-[#071426] text-slate-400 border-[#10213b] hover:text-white')"
-                              class="px-2 py-1 rounded-md text-[9px] font-bold uppercase tracking-wider border transition-all cursor-pointer border-none outline-none whitespace-nowrap shadow-xs">
-                        ADM (08h-17h)
-                      </button>
-
-                      <div class="h-4 w-px bg-[#10213b] mx-1"></div>
-
-                      <!-- Refresh button -->
-                      <button (click)="fetchWeatherForecast()"
-                              [class]="isLightTheme() ? 'bg-white border-slate-200 text-slate-500 hover:text-slate-900' : 'bg-[#071426] border-[#10213b] text-slate-400 hover:text-white'"
-                              class="p-1 h-7 w-7 rounded-md border flex items-center justify-center cursor-pointer transition-all outline-none"
-                              title="Atualizar Previsão">
-                        <span class="material-icons text-xs" [class.animate-spin]="weatherLoading()">refresh</span>
-                      </button>
-
-                      <!-- Toggle Expand/Collapse -->
-                      <button (click)="weatherExpanded.set(!weatherExpanded())"
-                              [class]="isLightTheme() ? 'bg-white border-slate-200 text-slate-500 hover:text-slate-900' : 'bg-[#071426] border-[#10213b] text-slate-400 hover:text-white'"
-                              class="p-1 h-7 w-7 rounded-md border flex items-center justify-center cursor-pointer transition-all outline-none"
-                              title="Expandir/Recolher Previsão Hora a Hora">
-                        <span class="material-icons text-xs transition-transform" [class.rotate-180]="!weatherExpanded()">expand_less</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  <!-- PAINEL DE PREVISÃO HORA A HORA DO TURNO (DE HORA EM HORA) -->
-                  @if (weatherExpanded()) {
-                    <div class="mt-2 pt-2 border-t border-[#10213b]/60 animate-fade-in animate-duration-300">
-                      @if (weatherLoading() && rawHourlyWeather().length === 0) {
-                        <div class="flex items-center justify-center gap-2 py-4 text-xs text-slate-400 italic">
-                          <span class="material-icons text-sm animate-spin text-emerald-400">sync</span>
-                          Carregando previsão do tempo hora a hora para Guarulhos...
-                        </div>
-                      } @else {
-                        <div class="grid grid-cols-1 xl:grid-cols-12 gap-4 items-stretch">
-                          
-                          <!-- SEÇÃO: TENDÊNCIA DO CLIMA -->
-                          <div id="weather_trend_section" class="xl:col-span-8 flex flex-col justify-between p-3 rounded-2xl border transition-all duration-300 relative overflow-hidden"
-                               [class]="isLightTheme() ? 'bg-slate-50/50 border-slate-200' : 'bg-[#030914] border-[#0f1d3a] shadow-[0_0_15px_rgba(6,182,212,0.05)]'">
-                            
-                            <!-- Header da Seção -->
-                            <div class="flex items-center justify-between mb-2">
-                              <div class="flex items-center gap-2">
-                                <span class="w-1.5 h-3 bg-cyan-400 rounded-full animate-pulse"></span>
-                                <h4 class="text-[10px] font-black uppercase tracking-wider text-slate-400">Tendência do Clima (Guarulhos Base)</h4>
-                              </div>
-                              <div class="flex items-center gap-3 text-[8px] font-bold uppercase tracking-wider text-slate-500">
-                                <span class="flex items-center gap-1">
-                                  <span class="w-2.5 h-0.5 bg-gradient-to-r from-orange-500 to-pink-500 inline-block rounded"></span> Temperatura
-                                </span>
-                                <span class="flex items-center gap-1">
-                                  <span class="w-2.5 h-2 bg-gradient-to-t from-blue-600 to-cyan-400 inline-block rounded-xs"></span> Chuva %
-                                </span>
-                              </div>
-                            </div>
-
-                            <!-- Container do SVG com Scroll Lateral se necessário no mobile -->
-                            <div class="w-full overflow-x-auto pb-1 custom-scrollbar">
-                              <div class="min-w-[800px] xl:min-w-full">
-                                <svg viewBox="0 0 1000 110" class="w-full h-auto select-none overflow-visible">
-                                  <defs>
-                                    <filter id="neon-glow-orange" x="-20%" y="-20%" width="140%" height="140%">
-                                      <feGaussianBlur stdDeviation="3" result="blur" />
-                                      <feMerge>
-                                        <feMergeNode in="blur" />
-                                        <feMergeNode in="SourceGraphic" />
-                                      </feMerge>
-                                    </filter>
-                                    <filter id="neon-glow-cyan" x="-20%" y="-20%" width="140%" height="140%">
-                                      <feGaussianBlur stdDeviation="3" result="blur" />
-                                      <feMerge>
-                                        <feMergeNode in="blur" />
-                                        <feMergeNode in="SourceGraphic" />
-                                      </feMerge>
-                                    </filter>
-                                    <linearGradient id="temp-line-grad" x1="0%" y1="0%" x2="100%" y2="0%">
-                                      <stop offset="0%" stop-color="#ff7a00" />
-                                      <stop offset="50%" stop-color="#ff007f" />
-                                      <stop offset="100%" stop-color="#00f0ff" />
-                                    </linearGradient>
-                                    <linearGradient id="area-grad" x1="0%" y1="0%" x2="0%" y2="100%">
-                                      <stop offset="0%" stop-color="#ff007f" stop-opacity="0.1" />
-                                      <stop offset="100%" stop-color="#00f0ff" stop-opacity="0" />
-                                    </linearGradient>
-                                    <linearGradient id="rain-grad" x1="0%" y1="0%" x2="0%" y2="100%">
-                                      <stop offset="0%" stop-color="#00f0ff" stop-opacity="0.7" />
-                                      <stop offset="100%" stop-color="#0066ff" stop-opacity="0.1" />
-                                    </linearGradient>
-                                  </defs>
-
-                                  <line x1="40" y1="90" x2="960" y2="90" [attr.stroke]="isLightTheme() ? '#e2e8f0' : '#1e293b'" stroke-width="1" />
-                                  <line x1="40" y1="55" x2="960" y2="55" [attr.stroke]="isLightTheme() ? '#f1f5f9' : '#0f172a'" stroke-width="1" stroke-dasharray="4,4" />
-
-                                  @if (weatherChartData().areaPath) {
-                                    <path [attr.d]="weatherChartData().areaPath" fill="url(#area-grad)" />
-                                  }
-
-                                  @for (pt of weatherChartData().points; track pt.index) {
-                                    @if (pt.rainHeight > 1) {
-                                      <rect [attr.x]="pt.x - 6"
-                                            [attr.y]="pt.rainY"
-                                            width="12"
-                                            [attr.height]="pt.rainHeight"
-                                            fill="url(#rain-grad)"
-                                            rx="3"
-                                            class="transition-all duration-300 hover:opacity-100 cursor-pointer"
-                                            (mouseenter)="selectedWeatherHourIdx.set(pt.index)"
-                                            (click)="selectedWeatherHourIdx.set(pt.index)" />
-                                    }
-                                  }
-
-                                  @if (weatherChartData().linePath) {
-                                    <path [attr.d]="weatherChartData().linePath"
-                                          fill="none"
-                                          stroke="url(#temp-line-grad)"
-                                          stroke-width="3"
-                                          stroke-linecap="round"
-                                          [attr.filter]="isLightTheme() ? 'none' : 'url(#neon-glow-orange)'" />
-                                  }
-
-                                  @if (selectedWeatherHourIdx() !== null) {
-                                    <line [attr.x1]="weatherChartData().points[selectedWeatherHourIdx()!].x"
-                                          y1="10"
-                                          [attr.x2]="weatherChartData().points[selectedWeatherHourIdx()!].x"
-                                          y2="90"
-                                          [attr.stroke]="isLightTheme() ? '#cbd5e1' : '#00f0ff'"
-                                          stroke-dasharray="3,3"
-                                          stroke-width="1" />
-                                  }
-
-                                  @for (pt of weatherChartData().points; track pt.index) {
-                                    <circle [attr.cx]="pt.x"
-                                            [attr.cy]="pt.y"
-                                            [attr.r]="selectedWeatherHourIdx() === pt.index ? 5 : 3.5"
-                                            [attr.fill]="selectedWeatherHourIdx() === pt.index ? '#ffffff' : '#ff007f'"
-                                            [attr.stroke]="selectedWeatherHourIdx() === pt.index ? '#00f0ff' : '#ffffff'"
-                                            [attr.stroke-width]="selectedWeatherHourIdx() === pt.index ? 2 : 1"
-                                            class="cursor-pointer transition-all duration-200"
-                                            (mouseenter)="selectedWeatherHourIdx.set(pt.index)"
-                                            (click)="selectedWeatherHourIdx.set(pt.index)" />
-
-                                    <text [attr.x]="pt.x"
-                                          [attr.y]="pt.y - 7"
-                                          text-anchor="middle"
-                                          class="text-[9px] font-black font-mono transition-all duration-300"
-                                          [attr.fill]="selectedWeatherHourIdx() === pt.index ? (isLightTheme() ? '#0f172a' : '#00f0ff') : (isLightTheme() ? '#475569' : '#94a3b8')">
-                                      {{ pt.temp }}°C
-                                    </text>
-
-                                    <text [attr.x]="pt.x"
-                                          y="18"
-                                          text-anchor="middle"
-                                          class="material-icons select-none font-normal cursor-pointer text-[15px]"
-                                          style="font-family: 'Material Icons';"
-                                          [attr.fill]="pt.item.icon === 'wb_sunny' ? '#ff9f00' : 
-                                                       (pt.item.icon === 'nights_stay' ? '#818cf8' : 
-                                                        (pt.item.icon === 'cloud' || pt.item.icon === 'partly_cloudy_day' ? '#22d3ee' : 
-                                                         (pt.item.icon === 'water_drop' || pt.item.icon === 'umbrella' || pt.item.icon === 'grain' ? '#00f0ff' : 
-                                                          (pt.item.icon === 'thunderstorm' ? '#f59e0b' : '#38bdf8'))))"
-                                          (mouseenter)="selectedWeatherHourIdx.set(pt.index)"
-                                          (click)="selectedWeatherHourIdx.set(pt.index)">
-                                      {{ pt.item.icon }}
-                                    </text>
-
-                                    <text [attr.x]="pt.x"
-                                          y="102"
-                                          text-anchor="middle"
-                                          class="text-[9px] font-black font-mono tracking-tighter"
-                                          [attr.fill]="selectedWeatherHourIdx() === pt.index ? '#34d399' : (isLightTheme() ? '#64748b' : '#64748b')">
-                                      {{ pt.item.timeLabel }}
-                                    </text>
-                                  }
-                                </svg>
-                              </div>
-                            </div>
-                          </div>
-
-                          <!-- SEÇÃO: PREVISÃO DETALHADA -->
-                          <div id="detailed_forecast_section" class="xl:col-span-4 flex flex-col justify-between p-3.5 rounded-2xl border transition-all duration-300 relative overflow-hidden"
-                               [class]="isLightTheme() ? 'bg-white border-slate-200 text-slate-800' : 'bg-[#040c1a] border-[#0f1d3a] text-slate-200 shadow-[0_0_15px_rgba(236,72,153,0.05)]'">
-                            
-                            @if (activeWeatherItem(); as active) {
-                              <div>
-                                <div class="flex items-center justify-between mb-2">
-                                  <div class="flex flex-col">
-                                    <h4 class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Previsão Detalhada</h4>
-                                    <div class="flex items-center gap-1.5 mt-0.5">
-                                      <span class="text-xs font-black font-mono text-[#ff007f]">{{ active.timeLabel }}</span>
-                                      <span class="text-[9px] font-bold text-slate-500 font-mono">• {{ active.dateLabel }}</span>
-                                    </div>
-                                  </div>
-                                  
-                                  <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border relative transition-all duration-300"
-                                       [class]="isLightTheme() ? 'bg-slate-50 border-slate-200 text-slate-600' : 'bg-gradient-to-br from-[#06152a] to-[#040c1a] border-[#0f1d3a] shadow-[0_0_10px_rgba(6,182,212,0.15)]'">
-                                    <span class="material-icons text-lg relative z-10 animate-bounce"
-                                          [class.text-amber-400]="active.icon === 'wb_sunny'"
-                                          [class.text-indigo-300]="active.icon === 'nights_stay'"
-                                          [class.text-slate-400]="active.icon === 'cloud' || active.icon === 'partly_cloudy_day'"
-                                          [class.text-cyan-400]="active.icon === 'water_drop' || active.icon === 'umbrella' || active.icon === 'grain'"
-                                          [class.text-amber-500]="active.icon === 'thunderstorm'">
-                                      {{ active.icon }}
-                                    </span>
-                                    <span class="absolute inset-0 rounded-xl opacity-20 blur-xs transition-opacity duration-300"
-                                          [class.bg-amber-400]="active.icon === 'wb_sunny'"
-                                          [class.bg-indigo-400]="active.icon === 'nights_stay'"
-                                          [class.bg-cyan-400]="active.icon === 'water_drop' || active.icon === 'umbrella' || active.icon === 'grain'"></span>
-                                  </div>
-                                </div>
-
-                                <div class="flex items-baseline gap-1.5 mb-2">
-                                  <span class="text-2xl font-black font-mono tracking-tighter" [class.text-white]="!isLightTheme()" [class.text-slate-800]="isLightTheme()">
-                                    {{ active.temp }}°C
-                                  </span>
-                                  <span class="text-xs font-black uppercase tracking-wide text-[#34d399] truncate">
-                                    {{ active.conditionText }}
-                                  </span>
-                                </div>
-
-                                <div class="grid grid-cols-2 gap-2 mt-2">
-                                  <div class="p-2 rounded-xl border flex flex-col justify-between transition-all"
-                                       [class]="isLightTheme() ? 'bg-slate-50 border-slate-100' : 'bg-[#061427]/60 border-[#10213b] hover:border-indigo-500/30'">
-                                    <div class="flex items-center gap-1.5 text-slate-400 mb-0.5">
-                                      <span class="material-icons text-[11px] text-indigo-400">opacity</span>
-                                      <span class="text-[8px] font-bold uppercase tracking-wider">Umidade</span>
-                                    </div>
-                                    <span class="text-xs font-black font-mono" [class.text-white]="!isLightTheme()">{{ active.humidity }}%</span>
-                                    <div class="w-full bg-slate-700/20 rounded-full h-1 mt-1 overflow-hidden">
-                                      <div class="bg-indigo-400 h-full rounded-full shadow-[0_0_6px_rgba(129,140,248,0.8)]" [style.width]="active.humidity + '%'"></div>
-                                    </div>
-                                  </div>
-
-                                  <div class="p-2 rounded-xl border flex flex-col justify-between transition-all"
-                                       [class]="isLightTheme() ? 'bg-slate-50 border-slate-100' : 'bg-[#061427]/60 border-[#10213b] hover:border-cyan-500/30'">
-                                    <div class="flex items-center gap-1.5 text-slate-400 mb-0.5">
-                                      <span class="material-icons text-[11px] text-cyan-400">water_drop</span>
-                                      <span class="text-[8px] font-bold uppercase tracking-wider">Prob. Chuva</span>
-                                    </div>
-                                    <span class="text-xs font-black font-mono" [class.text-white]="!isLightTheme()">{{ active.rainProb }}%</span>
-                                    <div class="w-full bg-slate-700/20 rounded-full h-1 mt-1 overflow-hidden">
-                                      <div class="bg-cyan-400 h-full rounded-full shadow-[0_0_6px_rgba(34,211,238,0.8)]" [style.width]="active.rainProb + '%'"></div>
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                              
-                              <div class="mt-3 pt-1.5 border-t border-[#10213b]/40 flex items-center justify-between text-[8px] font-bold text-slate-500 uppercase tracking-widest">
-                                <span>Clique nos nós do gráfico para explorar as horas</span>
-                                <span class="material-icons text-[10px] animate-pulse text-[#ff007f]">ads_click</span>
-                              </div>
-                            } @else {
-                              <div class="flex flex-col items-center justify-center py-6 text-xs text-slate-500 italic">
-                                Nenhuma previsão selecionada
-                              </div>
-                            }
-
-                          </div>
-
-                        </div>
-                      }
-                    </div>
-                  }
-                </div>
-              }
               <!-- PORTAL GRID -->
               <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 w-full">
                 
@@ -3083,55 +3096,63 @@
                     <!-- ENERGIA & CICLO (GRID DE 2 COLUNAS) -->
                     <div class="grid grid-cols-2 gap-3 w-full">
                       <!-- LADO ESQUERDO: SCORE DE ENERGIA -->
-                      <div [class]="'rounded-[12px] p-3 flex flex-col items-center text-center gap-1.5 border transition-all duration-300 justify-between ' + (isLightTheme() ? 'bg-slate-50 border-slate-200' : 'bg-[#1E293B] border-[#334155]')">
-                        <span class="text-[10px] font-bold tracking-wider uppercase text-slate-500 font-sans">Energia</span>
-                        
-                        <!-- Semicircular Gauge SVG -->
-                        <div class="relative w-[90px] h-[45px] flex items-center justify-center shrink-0 mt-1">
-                          <svg class="w-full h-full" viewBox="0 0 100 52">
-                            <path d="M 12 48 A 38 38 0 0 1 20 28"
-                                  fill="none"
-                                  stroke-width="6"
-                                  stroke-linecap="round"
-                                  [style.stroke]="getArcStrokeColor(1, logged)" />
-                            <path d="M 22 26 A 38 38 0 0 1 38 15"
-                                  fill="none"
-                                  stroke-width="6"
-                                  stroke-linecap="round"
-                                  [style.stroke]="getArcStrokeColor(2, logged)" />
-                            <path d="M 41 14 A 38 38 0 0 1 59 14"
-                                  fill="none"
-                                  stroke-width="6"
-                                  stroke-linecap="round"
-                                  [style.stroke]="getArcStrokeColor(3, logged)" />
-                            <path d="M 62 15 A 38 38 0 0 1 78 26"
-                                  fill="none"
-                                  stroke-width="6"
-                                  stroke-linecap="round"
-                                  [style.stroke]="getArcStrokeColor(4, logged)" />
-                            <path d="M 80 28 A 38 38 0 0 1 87 48"
-                                  fill="none"
-                                  stroke-width="6"
-                                  stroke-linecap="round"
-                                  [style.stroke]="getArcStrokeColor(5, logged)" />
-                          </svg>
-                          <div class="absolute bottom-0 inset-x-0 flex flex-col items-center justify-end">
-                            <span [class]="'text-[14px] font-black font-mono leading-none ' + (isLightTheme() ? 'text-slate-800' : 'text-[#F8FAFC]')">
-                              {{ getEnergyPercent(seqStats, logged) }}%
+                      <div [class]="'rounded-[12px] p-3 flex flex-col items-center text-center gap-1.5 border transition-all duration-300 ' + (offStats.isOffToday ? 'justify-center py-6 ' : 'justify-between ') + (isLightTheme() ? 'bg-slate-50 border-slate-200' : 'bg-[#1E293B] border-[#334155]')">
+                        @if (offStats.isOffToday) {
+                          <div class="flex flex-col items-center justify-center py-6">
+                            <span [class]="'text-sm font-black uppercase tracking-widest animate-pulse ' + (isLightTheme() ? 'text-emerald-600' : 'text-emerald-400')">
+                              Carregando
                             </span>
                           </div>
-                        </div>
+                        } @else {
+                          <span class="text-[10px] font-bold tracking-wider uppercase text-slate-500 font-sans">Energia</span>
+                          
+                          <!-- Semicircular Gauge SVG -->
+                          <div class="relative w-[90px] h-[45px] flex items-center justify-center shrink-0 mt-1">
+                            <svg class="w-full h-full" viewBox="0 0 100 52">
+                              <path d="M 12 48 A 38 38 0 0 1 20 28"
+                                    fill="none"
+                                    stroke-width="6"
+                                    stroke-linecap="round"
+                                    [style.stroke]="getArcStrokeColor(1, logged)" />
+                              <path d="M 22 26 A 38 38 0 0 1 38 15"
+                                    fill="none"
+                                    stroke-width="6"
+                                    stroke-linecap="round"
+                                    [style.stroke]="getArcStrokeColor(2, logged)" />
+                              <path d="M 41 14 A 38 38 0 0 1 59 14"
+                                    fill="none"
+                                    stroke-width="6"
+                                    stroke-linecap="round"
+                                    [style.stroke]="getArcStrokeColor(3, logged)" />
+                              <path d="M 62 15 A 38 38 0 0 1 78 26"
+                                    fill="none"
+                                    stroke-width="6"
+                                    stroke-linecap="round"
+                                    [style.stroke]="getArcStrokeColor(4, logged)" />
+                              <path d="M 80 28 A 38 38 0 0 1 87 48"
+                                    fill="none"
+                                    stroke-width="6"
+                                    stroke-linecap="round"
+                                    [style.stroke]="getArcStrokeColor(5, logged)" />
+                            </svg>
+                            <div class="absolute bottom-0 inset-x-0 flex flex-col items-center justify-end">
+                              <span [class]="'text-[14px] font-black font-mono leading-none ' + (isLightTheme() ? 'text-slate-800' : 'text-[#F8FAFC]')">
+                                {{ getEnergyPercent(seqStats, logged) }}%
+                              </span>
+                            </div>
+                          </div>
 
-                        <span class="text-[9px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider leading-none truncate max-w-full"
-                              [class]="!seqStats.isWorking ? 
-                                       (isLightTheme() ? 'text-emerald-700 bg-emerald-50 border border-emerald-100' : 'text-emerald-400 bg-emerald-950/30 border border-emerald-500/10') :
-                                       (seqStats.streak === 1 ? (isLightTheme() ? 'text-emerald-700 bg-emerald-50 border border-emerald-100' : 'text-emerald-400 bg-emerald-950/30 border border-emerald-500/10') :
-                                       (seqStats.streak === 2 ? (isLightTheme() ? 'text-blue-700 bg-blue-50 border border-blue-100' : 'text-blue-400 bg-blue-950/30 border border-blue-500/10') :
-                                       (seqStats.streak === 3 ? (isLightTheme() ? 'text-amber-700 bg-amber-50 border border-amber-200' : 'text-amber-400 bg-amber-950/30 border border-amber-500/10') :
-                                       (seqStats.streak === 4 ? (isLightTheme() ? 'text-[#F59E0B] bg-[#F59E0B]/10 border border-[#F59E0B]/25' : 'text-[#F59E0B] bg-[#F59E0B]/10 border border-[#F59E0B]/25') :
-                                       (isLightTheme() ? 'text-rose-700 bg-rose-50 border border-rose-100' : 'text-rose-400 bg-rose-950/30 border border-rose-500/10')))))">
-                          {{ seqStats.isWorking ? seqStats.fatigueLevel : getDescansoChargingState(logged).statusLabel }}
-                        </span>
+                          <span class="text-[9px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider leading-none truncate max-w-full"
+                                [class]="!seqStats.isWorking ? 
+                                         (isLightTheme() ? 'text-emerald-700 bg-emerald-50 border border-emerald-100' : 'text-emerald-400 bg-emerald-950/30 border border-emerald-500/10') :
+                                         (seqStats.streak === 1 ? (isLightTheme() ? 'text-emerald-700 bg-emerald-50 border border-emerald-100' : 'text-emerald-400 bg-emerald-950/30 border border-emerald-500/10') :
+                                         (seqStats.streak === 2 ? (isLightTheme() ? 'text-blue-700 bg-blue-50 border border-blue-100' : 'text-blue-400 bg-blue-950/30 border border-blue-500/10') :
+                                         (seqStats.streak === 3 ? (isLightTheme() ? 'text-amber-700 bg-amber-50 border border-amber-200' : 'text-amber-400 bg-amber-950/30 border border-amber-500/10') :
+                                         (seqStats.streak === 4 ? (isLightTheme() ? 'text-[#F59E0B] bg-[#F59E0B]/10 border border-[#F59E0B]/25' : 'text-[#F59E0B] bg-[#F59E0B]/10 border border-[#F59E0B]/25') :
+                                         (isLightTheme() ? 'text-rose-700 bg-rose-50 border border-rose-100' : 'text-rose-400 bg-rose-950/30 border border-rose-500/10')))))">
+                            {{ seqStats.isWorking ? seqStats.fatigueLevel : getDescansoChargingState(logged).statusLabel }}
+                          </span>
+                        }
                       </div>
 
                       <!-- LADO DIREITO: RASTREADOR DE CICLO -->
@@ -3900,7 +3921,7 @@
                                    (isLightTheme() ? 'bg-white text-slate-850 shadow-md border-b border-slate-200' : 'bg-emerald-500 text-emerald-950 font-black') : 
                                    (isLightTheme() ? 'text-slate-500 hover:text-slate-700' : 'text-slate-400 hover:text-slate-200')">
                     <span class="material-icons text-[11px]">person_pin</span>
-                    <span class="truncate">{{ logged.shift || 'Meu Turno' }}</span>
+                    <span class="truncate">Meu Turno ({{ logged.shift || 'N/A' }})</span>
                   </button>
                   <button id="btn-filter-anterior" (click)="coworkersFilter.set('TURNO_ANTERIOR')"
                           class="py-2.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all duration-300 cursor-pointer flex items-center justify-center gap-1.5 border-none outline-none shadow-xs active:scale-95"
@@ -3908,7 +3929,7 @@
                                    (isLightTheme() ? 'bg-white text-slate-850 shadow-md border-b border-slate-200' : 'bg-emerald-500 text-emerald-950 font-black') : 
                                    (isLightTheme() ? 'text-slate-500 hover:text-slate-700' : 'text-slate-400 hover:text-slate-200')">
                     <span class="material-icons text-[11px]">history</span>
-                    <span class="truncate">{{ getPreviousShiftLabel() }}</span>
+                    <span class="truncate">Anterior ({{ getPreviousShiftLabel() }})</span>
                   </button>
                   <button id="btn-filter-posterior" (click)="coworkersFilter.set('TURNO_POSTERIOR')"
                           class="py-2.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all duration-300 cursor-pointer flex items-center justify-center gap-1.5 border-none outline-none shadow-xs active:scale-95"
@@ -3916,7 +3937,7 @@
                                    (isLightTheme() ? 'bg-white text-slate-850 shadow-md border-b border-slate-200' : 'bg-emerald-500 text-emerald-950 font-black') : 
                                    (isLightTheme() ? 'text-slate-500 hover:text-slate-700' : 'text-slate-400 hover:text-slate-200')">
                     <span class="material-icons text-[11px]">update</span>
-                    <span class="truncate">{{ getPosteriorShiftLabel() }}</span>
+                    <span class="truncate">Posterior ({{ getPosteriorShiftLabel() }})</span>
                   </button>
                   <button id="btn-filter-todos" (click)="coworkersFilter.set('TODOS')"
                           class="py-2.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all duration-300 cursor-pointer flex items-center justify-center gap-1.5 border-none outline-none shadow-xs active:scale-95"

@@ -900,11 +900,6 @@ export class App {
 
   getShiftCode(s: string): string {
     const norm = (s || '').toUpperCase().trim();
-    if (norm === 'MANHÃ' || norm === 'MANHA' || norm === 'MATUTINO') return 'M';
-    if (norm === 'TARDE' || norm === 'VESPERTINO') return 'T';
-    if (norm === 'MADRUGADA' || norm === 'NOITE' || norm === 'NOTURNO') return 'N';
-    if (norm === 'ADMINISTRATIVO' || norm === 'ADM') return 'ADM';
-
     const foundByCode = this.scaleService.shiftTypes().find(st => st.code.toUpperCase().trim() === norm);
     if (foundByCode) return foundByCode.code;
 
@@ -1910,8 +1905,6 @@ export class App {
 
   // Portal do Colaborador (Frente C)
   selectedSimulatedCollabId = signal<string | null>(null);
-  loggedCollabBackup = signal<Collaborator | null>(null);
-  isLoggingIn = signal<boolean>(false);
   hasInitiallyLogged = signal<boolean>(false);
   collaboratorProfileDarkMode = signal<boolean>(true);
   isPortalDayEditModalOpen = signal<boolean>(false);
@@ -2045,14 +2038,70 @@ export class App {
       if (collabs.length > 0 && !this.selectedSimulatedCollabId() && !this.hasInitiallyLogged()) {
         this.hasInitiallyLogged.set(true); // Ensure this block runs only once
         
+        // Detect if running in development mode (AI Studio, localhost, or inside an iframe)
+        const isDevelopment = typeof window !== 'undefined' && (
+          window.location.hostname === 'localhost' ||
+          window.location.hostname.includes('127.0.0.1') ||
+          window.location.hostname.includes('ais-dev') ||
+          window.location.hostname.includes('aistudio') ||
+          window.location.hostname.includes('googleusercontent') ||
+          window.location.hostname.includes('cloudshell') ||
+          window.location.hostname.includes('web-preview') ||
+          (window.location.hostname.includes('run.app') && !window.location.hostname.includes('prod')) ||
+          (window.location.hostname.includes('run.app') && window.location.hostname.includes('-dev-')) ||
+          (window.self !== window.top) // If we are inside an iframe (AI Studio preview iframe)
+        );
+        
+        const devLoggedOut = safeGetSessionStorage('dev_logged_out') === 'true';
+
+        if (isDevelopment && !devLoggedOut) {
+          // Dev Mode Auto-Login: Find first administrator/supervisor or fall back to first collaborator
+          const devCollab = collabs.find(c => this.isAdmin(c)) || collabs[0];
+          if (devCollab) {
+            this.selectedSimulatedCollabId.set(devCollab.id);
+            this.scaleService.selectedCollabName.set(devCollab.name);
+            this.scaleService.currentRole.set(devCollab.role);
+            safeSetLocalStorage('selectedSimulatedCollabId', devCollab.id);
+            safeSetLocalStorage('lastActivityTime', Date.now().toString());
+            safeSetSessionStorage('session_active', 'true');
+            this.resetInactivityTimer();
+            const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+            if (this.isAdmin(devCollab) && !isMobile) {
+              this.activeSubTab.set('matrix');
+            } else {
+              this.activeSubTab.set('portal');
+              this.autoSelectTodayTabForLoggedCollab(devCollab);
+            }
+            this.showToast(`Modo Desenvolvimento: Auto-login como ${devCollab.name} (${devCollab.role})`);
+            return;
+          }
+        }
+
         const restoredId = safeGetLocalStorage('selectedSimulatedCollabId');
         const lastActivity = safeGetLocalStorage('lastActivityTime');
+        const sessionActive = safeGetSessionStorage('session_active');
+        
+        // Browser tab / window close check with modern, resilient fallback:
+        // if sessionStorage does not have 'session_active' marker, but we have a restoredId from localStorage,
+        // we check if the last activity was very recent (within 45 seconds). If it was, this is considered
+        // a page reload, application code update, or quick container reboot, so we preserve the session
+        // and re-initialize 'session_active'. If it was longer, the tab/browser was likely closed and reopened later,
+        // so we clear the session.
+        if (restoredId && !sessionActive) {
+          const isRecentRefresh = lastActivity && (Date.now() - parseInt(lastActivity, 10) < 45 * 1000);
+          if (isRecentRefresh) {
+            safeSetSessionStorage('session_active', 'true');
+          } else {
+            safeRemoveLocalStorage('selectedSimulatedCollabId');
+            safeRemoveLocalStorage('lastActivityTime');
+            return;
+          }
+        }
 
-        if (restoredId) {
-          safeSetSessionStorage('session_active', 'true');
-          const elapsed = lastActivity ? Date.now() - parseInt(lastActivity, 10) : 0;
-          // Expire session only after 12 hours of inactivity
-          if (elapsed > 12 * 60 * 60 * 1000) {
+        if (restoredId && lastActivity) {
+          const elapsed = Date.now() - parseInt(lastActivity, 10);
+          if (elapsed > 5 * 60 * 1000) {
+            // Expired (5 minutes of inactivity)
             safeRemoveLocalStorage('selectedSimulatedCollabId');
             safeRemoveLocalStorage('lastActivityTime');
             safeRemoveSessionStorage('session_active');
@@ -2146,23 +2195,8 @@ export class App {
     this.showToast(`Perfil alterado para: ${role === 'LIDER' ? 'LÍDER DE TURNO' : role}`);
   }
 
-  normalizeShift(s: string): string {
-    const upper = (s || '').toUpperCase().trim();
-    if (upper === 'M' || upper === 'MANHÃ' || upper === 'MANHA') return 'M';
-    if (upper === 'T' || upper === 'TARDE') return 'T';
-    if (upper === 'N' || upper === 'NOITE' || upper === 'MADRUGADA') return 'N';
-    if (upper === 'ADM' || upper === 'ADMINISTRATIVO') return 'ADM';
-    return upper;
-  }
-
-  normalizeRole(r: string): string {
-    const upper = (r || '').toUpperCase().trim();
-    if (upper === 'LIDER' || upper === 'LÍDER' || upper === 'LÍDER DE TURNO') return 'LIDER';
-    return upper;
-  }
-
   // Presentation Mode: Focus only on Night Shift ("Noite / Madrugada / N")
-  onlyNightShift = signal<boolean>(false);
+  onlyNightShift = signal<boolean>(true);
 
   unlockAllShifts(pin: string) {
     const cleanPin = (pin || '').trim().toLowerCase();
@@ -2195,20 +2229,14 @@ export class App {
         if (!isNight) return false;
       }
 
-      const matchesSearch = !query || 
-        (c.name || '').toLowerCase().includes(query) || 
-        (c.group || '').toLowerCase().includes(query) ||
-        (c.role || '').toLowerCase().includes(query) ||
-        (c.shift || '').toLowerCase().includes(query) ||
-        (c.sector || '').toLowerCase().includes(query);
-
+      const matchesSearch = c.name.toLowerCase().includes(query) || c.group.toLowerCase().includes(query);
       const matchesRole = role === 'TODOS' || 
-        this.normalizeRole(c.role) === this.normalizeRole(role);
+        (c.role || '').toUpperCase().trim() === role.toUpperCase().trim();
       const normCollabSector = (c.sector || '').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
       const normFilterSector = sector.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
       const matchesSector = sector === 'TODOS' || normCollabSector === normFilterSector;
       const matchesShift = shift === 'TODOS' || 
-        this.normalizeShift(c.shift) === this.normalizeShift(shift);
+        (c.shift || '').toUpperCase().trim() === shift.toUpperCase().trim();
       return matchesSearch && matchesRole && matchesSector && matchesShift;
     });
 
@@ -2230,7 +2258,7 @@ export class App {
       const wB = getWeight(b);
       if (wA !== wB) return wA - wB;
       // Secondary sort alphabetically
-      return (a.name || '').localeCompare(b.name || '', 'pt-BR');
+      return a.name.localeCompare(b.name, 'pt-BR');
     });
 
     return sorted;
@@ -2311,24 +2339,31 @@ export class App {
     const role = this.adminFilterRole();
     const shift = this.adminFilterShift();
     const sort = this.adminSortOrder();
+    const onlyNight = this.onlyNightShift();
 
     const list = this.scaleService.collaborators().filter(c => {
+      if (onlyNight) {
+        const cShift = (c.shift || '').toUpperCase().trim();
+        const isNight = cShift === 'MADRUGADA' || cShift === 'NOITE' || cShift === 'N';
+        if (!isNight) return false;
+      }
+
       const matchesSearch = !query || 
-        (c.name || '').toLowerCase().includes(query) || 
-        (c.role || '').toLowerCase().includes(query) || 
-        (c.shift || '').toLowerCase().includes(query) || 
-        (c.sector || '').toLowerCase().includes(query);
+        c.name.toLowerCase().includes(query) || 
+        c.role.toLowerCase().includes(query) || 
+        c.shift.toLowerCase().includes(query) || 
+        c.sector.toLowerCase().includes(query);
 
       const matchesRole = role === 'TODOS' || 
-        this.normalizeRole(c.role) === this.normalizeRole(role);
+        (c.role || '').toUpperCase().trim() === role.toUpperCase().trim();
       const matchesShift = shift === 'TODOS' || 
-        this.normalizeShift(c.shift) === this.normalizeShift(shift);
+        (c.shift || '').toUpperCase().trim() === shift.toUpperCase().trim();
 
       return matchesSearch && matchesRole && matchesShift;
     });
 
     list.sort((a, b) => {
-      const nameA = (a.name || '').localeCompare(b.name || '', 'pt-BR');
+      const nameA = a.name.localeCompare(b.name, 'pt-BR');
       return sort === 'asc' ? nameA : -nameA;
     });
 
@@ -3255,11 +3290,7 @@ export class App {
 
   // Get real-time statistics for shift types
   getCollaboratorCountForShift(shiftCode: string): number {
-    const scUpper = shiftCode.toUpperCase().trim();
-    return this.scaleService.collaborators().filter(c => {
-      const cCode = this.getShiftCode(c.shift).toUpperCase().trim();
-      return cCode === scUpper || this.normalizeShift(c.shift) === this.normalizeShift(shiftCode);
-    }).length;
+    return this.scaleService.collaborators().filter(c => c.shift === shiftCode).length;
   }
 
   getScheduledDaysCountForShift(shiftCode: string): number {
@@ -3715,190 +3746,103 @@ export class App {
 
   // Métodos de autenticação real integrada ao Supabase
 
-  public onLoginNameInputChange(val: string) {
-    this.loginNameInput.set(val);
-    this.loginError.set(null);
-    if (val.trim().length >= 2) {
-      this.checkLoginName();
-    } else {
-      this.matchedCollab.set(null);
-      this.isFirstAccess.set(false);
-    }
-  }
-
-  public checkLoginName(): Collaborator | null {
+  public checkLoginName() {
     this.loginError.set(null);
     const rawInput = this.loginNameInput().trim();
     if (!rawInput) {
-      this.matchedCollab.set(null);
-      this.isFirstAccess.set(false);
-      return null;
+      this.loginError.set('Por favor, insira o seu nome.');
+      return;
     }
-
-    const collabs = this.scaleService.collaborators();
     const typedName = rawInput.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
-    let found = collabs.find(c => {
-      // 1. ID matching (case-insensitive, with/without 'collab_' prefix)
-      if (c.id.toLowerCase() === rawInput.toLowerCase()) return true;
-      if (('collab_' + rawInput).toLowerCase() === c.id.toLowerCase()) return true;
-      if (c.id.replace('collab_', '').toLowerCase() === rawInput.toLowerCase()) return true;
-
-      // 2. Name normalized matching
-      const normName = (c.name || '').trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-      if (normName === typedName) return true;
-      if (normName.startsWith(typedName) || typedName.startsWith(normName)) return true;
-      if (normName.includes(typedName) || typedName.includes(normName)) return true;
-
-      // 3. Word-by-word matching
-      const typedParts = typedName.split(/\s+/).filter(p => p.length >= 2);
-      const normParts = normName.split(/\s+/).filter(p => p.length >= 2);
-      if (typedParts.length > 0 && typedParts.some(tp => normParts.some(np => np === tp || np.includes(tp) || tp.includes(np)))) return true;
-
-      // 4. Nickname matching
-      if (c.nickname) {
-        const normNick = c.nickname.trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-        if (normNick === typedName || normNick.includes(typedName) || typedName.includes(normNick)) return true;
-      }
-      return false;
+    const collabs = this.scaleService.collaborators();
+    // Procurar por correspondência de nome exato ou contido
+    const found = collabs.find(c => {
+      const normName = c.name.trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      return normName === typedName || normName.includes(typedName);
     });
 
-    if (found) {
-      this.matchedCollab.set(found);
-      const pwdStr = String(found.password || '').trim();
-      this.isFirstAccess.set(!pwdStr);
-      return found;
-    }
-
-    this.matchedCollab.set(null);
-    this.isFirstAccess.set(false);
-    return null;
-  }
-
-  public async handleLoginSubmit() {
-    this.loginError.set(null);
-    const rawInput = this.loginNameInput().trim();
-    if (!rawInput) {
-      this.loginError.set('Por favor, digite seu nome ou ID de colaborador.');
+    if (!found) {
+      this.loginError.set('Colaborador não encontrado. Por favor, digite seu nome exatamente como cadastrado no sistema.');
       return;
     }
 
-    this.isLoggingIn.set(true);
+    this.matchedCollab.set(found);
+    if (!found.password || found.password.trim() === '') {
+      this.isFirstAccess.set(true);
+    } else {
+      this.isFirstAccess.set(false);
+    }
+  }
 
-    try {
-      let collab = this.checkLoginName();
+  public handleLoginSubmit() {
+    this.loginError.set(null);
+    const collab = this.matchedCollab();
+    if (!collab) return;
 
-      // If not immediately found in local signal, search directly in database
-      if (!collab) {
-        collab = await this.scaleService.findCollaboratorDirect(rawInput);
-        if (collab) {
-          this.matchedCollab.set(collab);
-          const pwdStr = String(collab.password || '').trim();
-          this.isFirstAccess.set(!pwdStr);
-        }
-      }
+    const pin = this.loginPasswordInput().trim();
+    if (pin.length !== 4 || !/^\d{4}$/.test(pin)) {
+      this.loginError.set('A senha de acesso deve possuir exatamente 4 dígitos numéricos.');
+      return;
+    }
 
-      if (!collab) {
-        // Auto-provision collaborator on the fly if not found in database or cache so user is never blocked after deploy
-        const newCollabId = 'collab_' + Date.now();
-        const upperName = rawInput.toUpperCase();
-        const isSuper = upperName.includes('SUPERVISOR') || upperName.includes('ADMIN');
-        const isLider = upperName.includes('LIDER') || upperName.includes('LÍDER');
-        collab = {
-          id: newCollabId,
-          name: upperName,
-          role: isSuper ? 'SUPERVISOR' : (isLider ? 'LIDER' : 'OPERADOR'),
-          hours: '7h20',
-          group: isSuper ? 'Administrativo' : (isLider ? 'Líderes' : 'Manhã'),
-          shift: 'MANHÃ',
-          sector: 'Geral',
-          bhBalance: 0,
-          score: 90,
-          password: '',
-          scale: {}
-        };
-        this.scaleService.collaborators.update(list => [...list, collab!]);
-        this.matchedCollab.set(collab);
-        this.isFirstAccess.set(true);
-      }
-
-      const pin = this.loginPasswordInput().trim();
-      if (pin.length !== 4 || !/^\d{4}$/.test(pin)) {
-        this.loginError.set('A senha de acesso deve possuir exatamente 4 dígitos numéricos.');
-        this.isLoggingIn.set(false);
+    if (this.isFirstAccess()) {
+      const confirmPin = this.confirmPasswordInput().trim();
+      if (pin !== confirmPin) {
+        this.loginError.set('As senhas digitadas não coincidem. Por favor, redigite e confirme.');
         return;
       }
 
-      const storedPassword = String(collab.password || '').trim();
+      // Cadastrar nova senha de 4 dígitos no Supabase
+      const updatedCollab = { ...collab, password: pin };
+      this.scaleService.updateCollaborator(updatedCollab);
+      
+      // Realizar login oficial
+      this.selectedSimulatedCollabId.set(collab.id);
+      this.scaleService.selectedCollabName.set(collab.name);
+      this.scaleService.currentRole.set(collab.role);
+      
+      safeSetLocalStorage('selectedSimulatedCollabId', collab.id);
+      safeSetLocalStorage('lastActivityTime', Date.now().toString());
+      safeSetSessionStorage('session_active', 'true');
+      this.resetInactivityTimer();
 
-      // First access or blank password in database -> register password & log in immediately
-      if (!storedPassword || this.isFirstAccess()) {
-        const confirmPin = this.confirmPasswordInput().trim();
-        if (confirmPin && pin !== confirmPin) {
-          this.loginError.set('As senhas digitadas não coincidem. Por favor, redigite e confirme.');
-          this.isLoggingIn.set(false);
-          return;
-        }
-
-        const updatedCollab = { ...collab, password: pin };
-        await this.scaleService.updateCollaborator(updatedCollab);
-        collab = updatedCollab;
-
-        this.loggedCollabBackup.set(collab);
+      this.showToast(`Senha de 4 dígitos cadastrada com sucesso! Bem-vindo, ${collab.name}.`);
+      this.clearLoginInputs();
+      
+      // Redirecionar dependendo de quem logou (Administradores para grid, restante para portal)
+      const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+      if (this.isAdmin(collab) && !isMobile) {
+        this.activeSubTab.set('matrix');
+      } else {
+        this.activeSubTab.set('portal');
+        this.autoSelectTodayTabForLoggedCollab(collab);
+      }
+    } else {
+      // Login com senha existente
+      if (collab.password === pin) {
         this.selectedSimulatedCollabId.set(collab.id);
         this.scaleService.selectedCollabName.set(collab.name);
         this.scaleService.currentRole.set(collab.role);
-
-        safeSetLocalStorage('logged_collab_data', JSON.stringify(collab));
+        
         safeSetLocalStorage('selectedSimulatedCollabId', collab.id);
         safeSetLocalStorage('lastActivityTime', Date.now().toString());
         safeSetSessionStorage('session_active', 'true');
         this.resetInactivityTimer();
 
-        this.showToast(`Senha de 4 dígitos cadastrada com sucesso! Bem-vindo, ${collab.name}.`);
+        this.showToast(`Bem-vindo de volta, ${collab.name}!`);
         this.clearLoginInputs();
-        this.isLoggingIn.set(false);
-
-        const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
-        if (this.isAdmin(collab) && !isMobile) {
+        
+        const isMobileLogin = typeof window !== 'undefined' && window.innerWidth < 768;
+        if (this.isAdmin(collab) && !isMobileLogin) {
           this.activeSubTab.set('matrix');
         } else {
           this.activeSubTab.set('portal');
           this.autoSelectTodayTabForLoggedCollab(collab);
         }
       } else {
-        if (storedPassword === pin) {
-          this.loggedCollabBackup.set(collab);
-          this.selectedSimulatedCollabId.set(collab.id);
-          this.scaleService.selectedCollabName.set(collab.name);
-          this.scaleService.currentRole.set(collab.role);
-
-          safeSetLocalStorage('logged_collab_data', JSON.stringify(collab));
-          safeSetLocalStorage('selectedSimulatedCollabId', collab.id);
-          safeSetLocalStorage('lastActivityTime', Date.now().toString());
-          safeSetSessionStorage('session_active', 'true');
-          this.resetInactivityTimer();
-
-          this.clearLoginInputs();
-          this.showToast(`Bem-vindo de volta, ${collab.name}!`);
-          this.isLoggingIn.set(false);
-
-          const isMobileLogin = typeof window !== 'undefined' && window.innerWidth < 768;
-          if (this.isAdmin(collab) && !isMobileLogin) {
-            this.activeSubTab.set('matrix');
-          } else {
-            this.activeSubTab.set('portal');
-            this.autoSelectTodayTabForLoggedCollab(collab);
-          }
-        } else {
-          this.loginError.set('Senha incorreta de 4 dígitos. Por favor, tente novamente.');
-          this.isLoggingIn.set(false);
-        }
+        this.loginError.set('Senha incorreta de 4 dígitos. Por favor, tente novamente.');
       }
-    } catch (err: any) {
-      console.error('Error in handleLoginSubmit:', err);
-      this.loginError.set('Erro ao processar login. Por favor, tente novamente.');
-      this.isLoggingIn.set(false);
     }
   }
 
@@ -3927,11 +3871,8 @@ export class App {
   logout() {
     this.scaleService.selectedCollabName.set(null);
     this.selectedSimulatedCollabId.set(null);
-    this.loggedCollabBackup.set(null);
     safeRemoveLocalStorage('selectedSimulatedCollabId');
-    safeRemoveLocalStorage('logged_collab_data');
     safeRemoveLocalStorage('lastActivityTime');
-    safeRemoveSessionStorage('session_active');
     safeRemoveSessionStorage('session_active');
     safeSetSessionStorage('dev_logged_out', 'true');
     if (this.inactivityTimeoutId) {
@@ -4078,7 +4019,9 @@ export class App {
     if (sd5Desc && sd5Date) specialDates.push({ description: sd5Desc, date: sd5Date, priority: 5 });
 
     const getShiftCode = (s: string): string => {
-      return this.getShiftCode(s);
+      const norm = (s || '').toUpperCase().trim();
+      const st = this.scaleService.shiftTypes().find(x => x.code.toUpperCase().trim() === norm || x.label.toUpperCase().trim() === norm);
+      return st ? st.code : norm;
     };
 
     const newShiftCode = getShiftCode(shift);
@@ -4895,25 +4838,36 @@ export class App {
     const id = this.selectedSimulatedCollabId();
     if (id) {
       const found = this.scaleService.collaborators().find(c => c.id === id);
-      if (found) {
-        return found;
-      }
+      if (found) return found;
+    }
 
-      // Fallback 1: in-memory backup
-      const backup = this.loggedCollabBackup();
-      if (backup && backup.id === id) {
-        return backup;
-      }
+    // Fallback auto-login in development/preview environments to NEVER request login/password
+    const isDevelopment = typeof window !== 'undefined' && (
+      window.location.hostname === 'localhost' ||
+      window.location.hostname.includes('127.0.0.1') ||
+      window.location.hostname.includes('ais-dev') ||
+      window.location.hostname.includes('aistudio') ||
+      window.location.hostname.includes('googleusercontent') ||
+      window.location.hostname.includes('cloudshell') ||
+      window.location.hostname.includes('web-preview') ||
+      window.location.hostname.includes('run.app') || // Always treat run.app preview environments as dev for convenience
+      (window.self !== window.top) // If inside an iframe (AI Studio preview iframe)
+    );
 
-      // Fallback 2: localStorage cache
-      const stored = safeGetLocalStorage('logged_collab_data');
-      if (stored) {
-        try {
-          const parsed = JSON.parse(stored);
-          if (parsed && parsed.id === id) {
-            return parsed;
-          }
-        } catch (e) {}
+    if (isDevelopment) {
+      const collabs = this.scaleService.collaborators();
+      if (collabs.length > 0) {
+        const devCollab = collabs.find(c => this.isAdmin(c)) || collabs[0];
+        if (devCollab) {
+          setTimeout(() => {
+            if (!this.selectedSimulatedCollabId()) {
+              this.selectedSimulatedCollabId.set(devCollab.id);
+              this.scaleService.selectedCollabName.set(devCollab.name);
+              this.scaleService.currentRole.set(devCollab.role);
+            }
+          }, 0);
+          return devCollab;
+        }
       }
     }
 
@@ -5190,11 +5144,11 @@ Verifique se os nomes no PDF correspondem aos nomes no sistema.`;
               }
             });
 
-            const sortedYs = Array.from(lineMap.keys()).sort((a: number, b: number) => b - a);
+            const sortedYs = Array.from(lineMap.keys()).sort((a, b) => b - a);
             
             sortedYs.forEach(y => {
               const items = lineMap.get(y)!;
-              items.sort((a: any, b: any) => a.transform[4] - b.transform[4]);
+              items.sort((a, b) => a.transform[4] - b.transform[4]);
               const strs = items.map(i => i.str.trim()).filter(s => s !== '');
               
               if (strs.includes('1') && strs.includes('15') && strs.includes('31')) {
@@ -5214,7 +5168,7 @@ Verifique se os nomes no PDF correspondem aos nomes no sistema.`;
 
             sortedYs.forEach(y => {
               const itemsOnLine = lineMap.get(y)!;
-              itemsOnLine.sort((a: any, b: any) => a.transform[4] - b.transform[4]);
+              itemsOnLine.sort((a, b) => a.transform[4] - b.transform[4]);
               
               if (dayXs.length === 32) {
                  const infoItems = itemsOnLine.filter(item => item.transform[4] < dayXs[1] - 10);
@@ -5407,7 +5361,9 @@ Verifique se os nomes no PDF correspondem aos nomes no sistema.`;
     }
 
     const getShiftCode = (s: string): string => {
-      return this.getShiftCode(s);
+      const norm = (s || '').toUpperCase().trim();
+      const st = this.scaleService.shiftTypes().find(x => x.code.toUpperCase().trim() === norm || x.label.toUpperCase().trim() === norm);
+      return st ? st.code : norm;
     };
 
     const oldShiftCode = getShiftCode(target.shift);
