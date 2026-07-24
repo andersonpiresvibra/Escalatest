@@ -17,6 +17,14 @@ export const customProxyFetch = async (input: RequestInfo | URL, init?: RequestI
   }
 
   if (originalUrl.includes('supabase.co')) {
+    const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
+    const isDevEnv = hostname === 'localhost' || hostname === '127.0.0.1' || hostname.includes('run.app');
+    
+    if (!isDevEnv) {
+      // In production (e.g. Cloudflare Pages static), fetch directly to Supabase to bypass non-existent server proxy
+      return fetch(input, init);
+    }
+
     const base = typeof window !== 'undefined' ? window.location.origin : '';
     const proxyUrl = `${base}/api/supabase-proxy?url=${encodeURIComponent(originalUrl)}`;
     const options: RequestInit = {
@@ -41,7 +49,17 @@ export const customProxyFetch = async (input: RequestInfo | URL, init?: RequestI
       options.body = await input.text();
     }
 
-    return fetch(proxyUrl, options);
+    try {
+      const response = await fetch(proxyUrl, options);
+      if (!response.ok && (response.status === 404 || response.status === 500 || response.status === 502 || response.status === 504)) {
+        console.warn(`Proxy fetch returned status ${response.status}. Falling back to direct Supabase connection.`);
+        return fetch(input, init);
+      }
+      return response;
+    } catch (err) {
+      console.warn('Proxy fetch failed, falling back to direct Supabase connection:', err);
+      return fetch(input, init);
+    }
   }
 
   return fetch(input, init);
