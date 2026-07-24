@@ -900,6 +900,11 @@ export class App {
 
   getShiftCode(s: string): string {
     const norm = (s || '').toUpperCase().trim();
+    if (norm === 'MANHÃ' || norm === 'MANHA' || norm === 'MATUTINO') return 'M';
+    if (norm === 'TARDE' || norm === 'VESPERTINO') return 'T';
+    if (norm === 'MADRUGADA' || norm === 'NOITE' || norm === 'NOTURNO') return 'N';
+    if (norm === 'ADMINISTRATIVO' || norm === 'ADM') return 'ADM';
+
     const foundByCode = this.scaleService.shiftTypes().find(st => st.code.toUpperCase().trim() === norm);
     if (foundByCode) return foundByCode.code;
 
@@ -4073,9 +4078,7 @@ export class App {
     if (sd5Desc && sd5Date) specialDates.push({ description: sd5Desc, date: sd5Date, priority: 5 });
 
     const getShiftCode = (s: string): string => {
-      const norm = (s || '').toUpperCase().trim();
-      const st = this.scaleService.shiftTypes().find(x => x.code.toUpperCase().trim() === norm || x.label.toUpperCase().trim() === norm);
-      return st ? st.code : norm;
+      return this.getShiftCode(s);
     };
 
     const newShiftCode = getShiftCode(shift);
@@ -5404,9 +5407,7 @@ Verifique se os nomes no PDF correspondem aos nomes no sistema.`;
     }
 
     const getShiftCode = (s: string): string => {
-      const norm = (s || '').toUpperCase().trim();
-      const st = this.scaleService.shiftTypes().find(x => x.code.toUpperCase().trim() === norm || x.label.toUpperCase().trim() === norm);
-      return st ? st.code : norm;
+      return this.getShiftCode(s);
     };
 
     const oldShiftCode = getShiftCode(target.shift);
