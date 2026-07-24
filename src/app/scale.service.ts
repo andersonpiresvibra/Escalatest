@@ -441,33 +441,36 @@ export class ScaleService {
     this.databaseError.set(null);
 
     try {
-      // Fetch from table systems on Supabase (colaboradores, escala_diaria, sigla_types, shift_types, audit_history)
-      const queryCollabs = this.supabase.from('colaboradores').select('*');
-      const querySiglas = this.supabase.from('sigla_types').select('*');
-      const queryShifts = this.supabase.from('shift_types').select('*');
-      const queryAudit = this.supabase.from('audit_history').select('*');
+      // 1. Fetch Collaborators FIRST so login and user data are ready immediately (~50ms)
+      const collabsResult = await this.supabase.from('colaboradores').select('*');
+      if (collabsResult.error) {
+        console.error('Supabase colaboradores error:', collabsResult.error);
+        this.databaseError.set(`Erro ao carregar colaboradores do Supabase: ${collabsResult.error.message}`);
+        if (this.collaborators().length === 0) {
+          const cached = safeGetLocalStorageItem('cached_collaborators');
+          if (cached) {
+            try { this.collaborators.set(JSON.parse(cached)); } catch (e) {}
+          }
+        }
+      } else if (collabsResult.data && collabsResult.data.length > 0) {
+        const mappedCollabs: Collaborator[] = collabsResult.data.map((row: any) => this.mapDbRowToCollaborator(row));
+        mappedCollabs.sort((a: Collaborator, b: Collaborator) => a.id.localeCompare(b.id));
+        safeSetLocalStorageItem('cached_collaborators', JSON.stringify(mappedCollabs));
+        this.collaborators.set(mappedCollabs);
+      }
 
-      const [collabsResult, siglasResult, shiftsResult, auditResult, escalaData] = await Promise.all([
-        queryCollabs,
-        querySiglas,
-        queryShifts,
-        queryAudit,
-        this.fetchAllScaleRows(this.activeMonth(), this.activeYear())
+      if (this.activeDb() !== 'supabase') return;
+
+      // 2. Fetch Siglas, Shift Types, and Audit History in parallel
+      const [siglasResult, shiftsResult, auditResult] = await Promise.all([
+        this.supabase.from('sigla_types').select('*'),
+        this.supabase.from('shift_types').select('*'),
+        this.supabase.from('audit_history').select('*')
       ]);
 
       if (this.activeDb() !== 'supabase') return;
 
-      const collabsError = collabsResult.error;
-      const collabsData = collabsResult.data;
-
-      if (collabsError) {
-        console.error('Supabase colaboradores error:', collabsError);
-        this.databaseError.set(`Erro ao carregar colaboradores do Supabase: ${collabsError.message}`);
-        this.collaborators.set([]);
-        return;
-      }
-
-      // 1. Sync Siglas
+      // Sync Siglas
       const siglasError = siglasResult?.error;
       const siglasData = siglasResult?.data;
       if (siglasError) {
@@ -479,7 +482,6 @@ export class ScaleService {
           let computaAusencia = false;
           let transparentBg = false;
 
-          // Parse flags from description prefix in any order
           let hasFlag = true;
           while (hasFlag) {
             if (desc.startsWith('#COMPUTA_AUSENCIA#')) {
@@ -511,7 +513,7 @@ export class ScaleService {
         this.siglaTypes.set(parsedSiglas);
       }
 
-      // 2. Sync Shift Types
+      // Sync Shift Types
       const shiftsError = shiftsResult?.error;
       const shiftsData = shiftsResult?.data;
       if (shiftsError) {
@@ -538,7 +540,7 @@ export class ScaleService {
         this.shiftTypes.set(parsedShifts);
       }
 
-      // 3. Sync Audit History
+      // Sync Audit History
       const auditError = auditResult?.error;
       const auditData = auditResult?.data;
       if (auditError) {
@@ -550,33 +552,32 @@ export class ScaleService {
         this.auditHistory.set(sortedAudit);
       }
 
-      // 4. Sync Collaborators & Daily Scales
-      if (!collabsData || collabsData.length === 0) {
-        if (this.collaborators().length === 0) {
-          const cached = safeGetLocalStorageItem('cached_collaborators');
-          if (cached) {
-            try { this.collaborators.set(JSON.parse(cached)); } catch (e) {}
-          }
-        }
-      } else {
-        // Group scales by collaborator_id
-        const scaleMap: Record<string, Record<number, string>> = {};
-        if (escalaData) {
+      // 3. Fetch Daily Scales separately so scale query delays never block colaboradores or login
+      try {
+        const escalaData = await this.fetchAllScaleRows(this.activeMonth(), this.activeYear());
+        if (escalaData && escalaData.length > 0) {
+          const scaleMap: Record<string, Record<number, string>> = {};
           escalaData.forEach((row: any) => {
             if (!scaleMap[row.collaborator_id]) {
               scaleMap[row.collaborator_id] = {};
             }
             scaleMap[row.collaborator_id][row.day] = row.value || 'X';
           });
+
+          const currentList = this.collaborators();
+          if (currentList.length > 0) {
+            const updatedWithScales = currentList.map(c => {
+              const scale = scaleMap[c.id] || {};
+              for (let d = 1; d <= 31; d++) {
+                if (scale[d] === undefined) scale[d] = '-';
+              }
+              return { ...c, scale };
+            });
+            this.collaborators.set(updatedWithScales);
+          }
         }
-
-        // Map database records to Collaborator interface
-        const mappedCollabs: Collaborator[] = collabsData.map((row: any) => this.mapDbRowToCollaborator(row, scaleMap));
-
-        mappedCollabs.sort((a, b) => a.id.localeCompare(b.id));
-        console.log('Supabase sync loaded colaboradores count:', mappedCollabs.length);
-        safeSetLocalStorageItem('cached_collaborators', JSON.stringify(mappedCollabs));
-        this.collaborators.set(mappedCollabs);
+      } catch (scaleErr) {
+        console.warn('Non-fatal error fetching daily scales (colaboradores remain active):', scaleErr);
       }
     } catch (err: any) {
       console.error('Error syncing Supabase:', err?.message || JSON.stringify(err));
@@ -666,35 +667,44 @@ export class ScaleService {
     const raw = query.trim();
     if (!raw) return null;
 
-    // 1. Check local collaborators first
-    const collabs = this.collaborators();
-    const typedName = raw.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-    const foundLocal = collabs.find(c => {
+    const matchCollab = (c: Collaborator): boolean => {
       if (c.id.toLowerCase() === raw.toLowerCase()) return true;
+      if (('collab_' + raw).toLowerCase() === c.id.toLowerCase()) return true;
+      if (c.id.replace('collab_', '').toLowerCase() === raw.toLowerCase()) return true;
+
+      const typedName = raw.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
       const normName = (c.name || '').trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-      if (normName === typedName || normName.includes(typedName) || typedName.includes(normName)) return true;
+      if (normName === typedName) return true;
+      if (normName.startsWith(typedName) || typedName.startsWith(normName)) return true;
+      if (normName.includes(typedName) || typedName.includes(normName)) return true;
+
       const typedParts = typedName.split(/\s+/).filter(p => p.length >= 2);
       const normParts = normName.split(/\s+/).filter(p => p.length >= 2);
-      return typedParts.some(tp => normParts.some(np => np === tp || np.includes(tp) || tp.includes(np)));
-    });
+      if (typedParts.length > 0 && typedParts.some(tp => normParts.some(np => np === tp || np.includes(tp) || tp.includes(np)))) return true;
 
+      if (c.nickname) {
+        const normNick = c.nickname.trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        if (normNick === typedName || normNick.includes(typedName) || typedName.includes(normNick)) return true;
+      }
+      return false;
+    };
+
+    // 1. Check local collaborators first
+    const collabs = this.collaborators();
+    const foundLocal = collabs.find(matchCollab);
     if (foundLocal) return foundLocal;
 
     // 2. Direct query to Supabase if available
     if (this.activeDb() === 'supabase' && this.supabase) {
       try {
-        const { data: byId } = await this.supabase.from('colaboradores').select('*').eq('id', raw);
-        if (byId && byId.length > 0) {
-          const col = this.mapDbRowToCollaborator(byId[0]);
-          this.collaborators.update(list => [...list.filter(c => c.id !== col.id), col]);
-          return col;
-        }
-
-        const { data: byName } = await this.supabase.from('colaboradores').select('*').ilike('name', `%${raw}%`);
-        if (byName && byName.length > 0) {
-          const col = this.mapDbRowToCollaborator(byName[0]);
-          this.collaborators.update(list => [...list.filter(c => c.id !== col.id), col]);
-          return col;
+        const { data: allRows, error } = await this.supabase.from('colaboradores').select('*');
+        if (!error && allRows && allRows.length > 0) {
+          const mapped = allRows.map((row: any) => this.mapDbRowToCollaborator(row));
+          mapped.sort((a: Collaborator, b: Collaborator) => a.id.localeCompare(b.id));
+          this.collaborators.set(mapped);
+          safeSetLocalStorageItem('cached_collaborators', JSON.stringify(mapped));
+          const foundInDb = mapped.find(matchCollab);
+          if (foundInDb) return foundInDb;
         }
       } catch (err) {
         console.warn('findCollaboratorDirect error:', err);

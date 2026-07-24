@@ -3772,36 +3772,30 @@ export class App {
     const collabs = this.scaleService.collaborators();
     const typedName = rawInput.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
-    // 1. Exact ID match
-    let found = collabs.find(c => c.id.toLowerCase() === rawInput.toLowerCase());
+    let found = collabs.find(c => {
+      // 1. ID matching (case-insensitive, with/without 'collab_' prefix)
+      if (c.id.toLowerCase() === rawInput.toLowerCase()) return true;
+      if (('collab_' + rawInput).toLowerCase() === c.id.toLowerCase()) return true;
+      if (c.id.replace('collab_', '').toLowerCase() === rawInput.toLowerCase()) return true;
 
-    // 2. Exact normalized name match
-    if (!found) {
-      found = collabs.find(c => {
-        const normName = (c.name || '').trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-        return normName === typedName;
-      });
-    }
+      // 2. Name normalized matching
+      const normName = (c.name || '').trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      if (normName === typedName) return true;
+      if (normName.startsWith(typedName) || typedName.startsWith(normName)) return true;
+      if (normName.includes(typedName) || typedName.includes(normName)) return true;
 
-    // 3. Name starts with typed input
-    if (!found) {
-      found = collabs.find(c => {
-        const normName = (c.name || '').trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-        return normName.startsWith(typedName);
-      });
-    }
+      // 3. Word-by-word matching
+      const typedParts = typedName.split(/\s+/).filter(p => p.length >= 2);
+      const normParts = normName.split(/\s+/).filter(p => p.length >= 2);
+      if (typedParts.length > 0 && typedParts.some(tp => normParts.some(np => np === tp || np.includes(tp) || tp.includes(np)))) return true;
 
-    // 4. Multi-word name inclusion (excluding short prepositions)
-    if (!found && typedName.length >= 3) {
-      const stopWords = new Set(['DE', 'DA', 'DO', 'DOS', 'DAS', 'E']);
-      const typedParts = typedName.split(/\s+/).filter(p => p.length >= 2 && !stopWords.has(p));
-      if (typedParts.length > 0) {
-        found = collabs.find(c => {
-          const normName = (c.name || '').trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-          return typedParts.every(tp => normName.includes(tp));
-        });
+      // 4. Nickname matching
+      if (c.nickname) {
+        const normNick = c.nickname.trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        if (normNick === typedName || normNick.includes(typedName) || typedName.includes(normNick)) return true;
       }
-    }
+      return false;
+    });
 
     if (found) {
       this.matchedCollab.set(found);
@@ -4920,8 +4914,6 @@ export class App {
     if (id) {
       const found = this.scaleService.collaborators().find(c => c.id === id);
       if (found) {
-        this.loggedCollabBackup.set(found);
-        safeSetLocalStorage('logged_collab_data', JSON.stringify(found));
         return found;
       }
 
@@ -4937,40 +4929,9 @@ export class App {
         try {
           const parsed = JSON.parse(stored);
           if (parsed && parsed.id === id) {
-            this.loggedCollabBackup.set(parsed);
             return parsed;
           }
         } catch (e) {}
-      }
-    }
-
-    // Fallback auto-login in development/preview environments to NEVER request login/password
-    const isDevelopment = typeof window !== 'undefined' && (
-      window.location.hostname === 'localhost' ||
-      window.location.hostname.includes('127.0.0.1') ||
-      window.location.hostname.includes('ais-dev') ||
-      window.location.hostname.includes('aistudio') ||
-      window.location.hostname.includes('googleusercontent') ||
-      window.location.hostname.includes('cloudshell') ||
-      window.location.hostname.includes('web-preview') ||
-      window.location.hostname.includes('run.app') || // Always treat run.app preview environments as dev for convenience
-      (window.self !== window.top) // If inside an iframe (AI Studio preview iframe)
-    );
-
-    if (isDevelopment) {
-      const collabs = this.scaleService.collaborators();
-      if (collabs.length > 0) {
-        const devCollab = collabs.find(c => this.isAdmin(c)) || collabs[0];
-        if (devCollab) {
-          setTimeout(() => {
-            if (!this.selectedSimulatedCollabId()) {
-              this.selectedSimulatedCollabId.set(devCollab.id);
-              this.scaleService.selectedCollabName.set(devCollab.name);
-              this.scaleService.currentRole.set(devCollab.role);
-            }
-          }, 0);
-          return devCollab;
-        }
       }
     }
 
@@ -5247,11 +5208,11 @@ Verifique se os nomes no PDF correspondem aos nomes no sistema.`;
               }
             });
 
-            const sortedYs = Array.from(lineMap.keys()).sort((a, b) => b - a);
+            const sortedYs = Array.from(lineMap.keys()).sort((a: number, b: number) => b - a);
             
             sortedYs.forEach(y => {
               const items = lineMap.get(y)!;
-              items.sort((a, b) => a.transform[4] - b.transform[4]);
+              items.sort((a: any, b: any) => a.transform[4] - b.transform[4]);
               const strs = items.map(i => i.str.trim()).filter(s => s !== '');
               
               if (strs.includes('1') && strs.includes('15') && strs.includes('31')) {
@@ -5271,7 +5232,7 @@ Verifique se os nomes no PDF correspondem aos nomes no sistema.`;
 
             sortedYs.forEach(y => {
               const itemsOnLine = lineMap.get(y)!;
-              itemsOnLine.sort((a, b) => a.transform[4] - b.transform[4]);
+              itemsOnLine.sort((a: any, b: any) => a.transform[4] - b.transform[4]);
               
               if (dayXs.length === 32) {
                  const infoItems = itemsOnLine.filter(item => item.transform[4] < dayXs[1] - 10);
