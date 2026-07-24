@@ -334,6 +334,19 @@ export class ScaleService {
   constructor() {
     this.activeDb.set('supabase');
     safeSetLocalStorageItem('active_db', 'supabase');
+
+    // Restore cached collaborators synchronously on startup to prevent empty state during network sync
+    const cachedCollabsJson = safeGetLocalStorageItem('cached_collaborators');
+    if (cachedCollabsJson) {
+      try {
+        const parsed = JSON.parse(cachedCollabsJson);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          this.collaborators.set(parsed);
+        }
+      } catch (e) {
+        // ignore invalid cache
+      }
+    }
     
     if (this.activeDb() === 'firebase') {
       this.initFirebaseSync();
@@ -539,7 +552,12 @@ export class ScaleService {
 
       // 4. Sync Collaborators & Daily Scales
       if (!collabsData || collabsData.length === 0) {
-        this.collaborators.set([]);
+        if (this.collaborators().length === 0) {
+          const cached = safeGetLocalStorageItem('cached_collaborators');
+          if (cached) {
+            try { this.collaborators.set(JSON.parse(cached)); } catch (e) {}
+          }
+        }
       } else {
         // Group scales by collaborator_id
         const scaleMap: Record<string, Record<number, string>> = {};
@@ -553,48 +571,11 @@ export class ScaleService {
         }
 
         // Map database records to Collaborator interface
-        const mappedCollabs: Collaborator[] = collabsData.map((row: any) => {
-          // Ensure all 31 days are filled
-          const scale = scaleMap[row.id] || {};
-          for (let d = 1; d <= 31; d++) {
-            if (scale[d] === undefined) {
-              scale[d] = '-';
-            }
-          }
-
-          return {
-            id: row.id,
-            name: row.name || 'Sem Nome',
-            role: row.role || 'OPERADOR',
-            hours: row.schedule || '7h20',
-            group: row.grupo || (
-              row.role === 'LIDER' ? 'Líderes' :
-              row.sector === 'VIP' ? 'VIP' :
-              row.sector === 'TREINAMENTO' ? 'Treinamento' :
-              row.shift === 'MANHÃ' ? 'Manhã' :
-              row.shift === 'TARDE' ? 'Tarde' :
-              row.shift === 'MADRUGADA' || row.shift === 'NOITE' ? 'Noite' :
-              row.shift === 'ADMINISTRATIVO' ? 'Administrativo' : 'Corporativo'
-            ),
-            shift: (row.shift === 'MADRUGADA' ? 'NOITE' : (row.shift || 'NOITE')),
-            sector: row.sector || 'Geral',
-            bhBalance: row.bh_balance || 0,
-            score: row.score || 90,
-            scale: scale,
-            photoUrl: row.photo_url || row.photo || '',
-            photo: row.photo_url || row.photo || '',
-            birthday: row.birthday || '',
-            specialDates: typeof row['special_dates'] === 'string' ? JSON.parse(row['special_dates']) : (row['special_dates'] || []),
-            folgaRequests: typeof row['folga_requests'] === 'string' ? JSON.parse(row['folga_requests']) : (row['folga_requests'] || []),
-            password: row.password || '',
-            isAdmin: row.is_admin === true || row.is_admin === 'true' || row.is_admin === 1,
-            nickname: row.nickname || '',
-            gafes: row.gafes ? (Array.isArray(row.gafes) ? row.gafes : (typeof row.gafes === 'string' ? JSON.parse(row.gafes) : [])) : []
-          };
-        });
+        const mappedCollabs: Collaborator[] = collabsData.map((row: any) => this.mapDbRowToCollaborator(row, scaleMap));
 
         mappedCollabs.sort((a, b) => a.id.localeCompare(b.id));
         console.log('Supabase sync loaded colaboradores count:', mappedCollabs.length);
+        safeSetLocalStorageItem('cached_collaborators', JSON.stringify(mappedCollabs));
         this.collaborators.set(mappedCollabs);
       }
     } catch (err: any) {
@@ -623,12 +604,104 @@ export class ScaleService {
       if (this.activeDb() === 'supabase') {
         const errMsg = err?.message || err?.details || err?.hint || (typeof err === 'object' ? JSON.stringify(err) : String(err));
         this.databaseError.set(`Erro de conexão com o Supabase: ${errMsg}`);
-        this.collaborators.set([]);
+        // If current collaborators list is empty, restore from cache instead of wiping
+        if (this.collaborators().length === 0) {
+          const cached = safeGetLocalStorageItem('cached_collaborators');
+          if (cached) {
+            try {
+              const parsed = JSON.parse(cached);
+              if (Array.isArray(parsed) && parsed.length > 0) {
+                this.collaborators.set(parsed);
+              }
+            } catch (e) {}
+          }
+        }
         this.shiftTypes.set([]);
         this.siglaTypes.set([]);
         this.auditHistory.set([]);
       }
     }
+  }
+
+  public mapDbRowToCollaborator(row: any, scaleMap: Record<string, Record<number, string>> = {}): Collaborator {
+    const scale = scaleMap[row.id] || {};
+    for (let d = 1; d <= 31; d++) {
+      if (scale[d] === undefined) {
+        scale[d] = '-';
+      }
+    }
+
+    return {
+      id: row.id,
+      name: row.name || 'Sem Nome',
+      role: row.role || 'OPERADOR',
+      hours: row.schedule || '7h20',
+      group: row.grupo || (
+        row.role === 'LIDER' ? 'Líderes' :
+        row.sector === 'VIP' ? 'VIP' :
+        row.sector === 'TREINAMENTO' ? 'Treinamento' :
+        row.shift === 'MANHÃ' ? 'Manhã' :
+        row.shift === 'TARDE' ? 'Tarde' :
+        row.shift === 'MADRUGADA' || row.shift === 'NOITE' ? 'Noite' :
+        row.shift === 'ADMINISTRATIVO' ? 'Administrativo' : 'Corporativo'
+      ),
+      shift: (row.shift === 'MADRUGADA' ? 'NOITE' : (row.shift || 'NOITE')),
+      sector: row.sector || 'Geral',
+      bhBalance: row.bh_balance || 0,
+      score: row.score || 90,
+      scale: scale,
+      photoUrl: row.photo_url || row.photo || '',
+      photo: row.photo_url || row.photo || '',
+      birthday: row.birthday || '',
+      specialDates: typeof row['special_dates'] === 'string' ? JSON.parse(row['special_dates']) : (row['special_dates'] || []),
+      folgaRequests: typeof row['folga_requests'] === 'string' ? JSON.parse(row['folga_requests']) : (row['folga_requests'] || []),
+      password: row.password || '',
+      isAdmin: row.is_admin === true || row.is_admin === 'true' || row.is_admin === 1,
+      nickname: row.nickname || '',
+      gafes: row.gafes ? (Array.isArray(row.gafes) ? row.gafes : (typeof row.gafes === 'string' ? JSON.parse(row.gafes) : [])) : []
+    };
+  }
+
+  async findCollaboratorDirect(query: string): Promise<Collaborator | null> {
+    const raw = query.trim();
+    if (!raw) return null;
+
+    // 1. Check local collaborators first
+    const collabs = this.collaborators();
+    const typedName = raw.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const foundLocal = collabs.find(c => {
+      if (c.id.toLowerCase() === raw.toLowerCase()) return true;
+      const normName = (c.name || '').trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      if (normName === typedName || normName.includes(typedName) || typedName.includes(normName)) return true;
+      const typedParts = typedName.split(/\s+/).filter(p => p.length >= 2);
+      const normParts = normName.split(/\s+/).filter(p => p.length >= 2);
+      return typedParts.some(tp => normParts.some(np => np === tp || np.includes(tp) || tp.includes(np)));
+    });
+
+    if (foundLocal) return foundLocal;
+
+    // 2. Direct query to Supabase if available
+    if (this.activeDb() === 'supabase' && this.supabase) {
+      try {
+        const { data: byId } = await this.supabase.from('colaboradores').select('*').eq('id', raw);
+        if (byId && byId.length > 0) {
+          const col = this.mapDbRowToCollaborator(byId[0]);
+          this.collaborators.update(list => [...list.filter(c => c.id !== col.id), col]);
+          return col;
+        }
+
+        const { data: byName } = await this.supabase.from('colaboradores').select('*').ilike('name', `%${raw}%`);
+        if (byName && byName.length > 0) {
+          const col = this.mapDbRowToCollaborator(byName[0]);
+          this.collaborators.update(list => [...list.filter(c => c.id !== col.id), col]);
+          return col;
+        }
+      } catch (err) {
+        console.warn('findCollaboratorDirect error:', err);
+      }
+    }
+
+    return null;
   }
 
   private initFirebaseSync() {

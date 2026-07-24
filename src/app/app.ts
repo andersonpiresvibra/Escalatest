@@ -1905,6 +1905,8 @@ export class App {
 
   // Portal do Colaborador (Frente C)
   selectedSimulatedCollabId = signal<string | null>(null);
+  loggedCollabBackup = signal<Collaborator | null>(null);
+  isLoggingIn = signal<boolean>(false);
   hasInitiallyLogged = signal<boolean>(false);
   collaboratorProfileDarkMode = signal<boolean>(true);
   isPortalDayEditModalOpen = signal<boolean>(false);
@@ -2079,29 +2081,12 @@ export class App {
 
         const restoredId = safeGetLocalStorage('selectedSimulatedCollabId');
         const lastActivity = safeGetLocalStorage('lastActivityTime');
-        const sessionActive = safeGetSessionStorage('session_active');
-        
-        // Browser tab / window close check with modern, resilient fallback:
-        // if sessionStorage does not have 'session_active' marker, but we have a restoredId from localStorage,
-        // we check if the last activity was very recent (within 45 seconds). If it was, this is considered
-        // a page reload, application code update, or quick container reboot, so we preserve the session
-        // and re-initialize 'session_active'. If it was longer, the tab/browser was likely closed and reopened later,
-        // so we clear the session.
-        if (restoredId && !sessionActive) {
-          const isRecentRefresh = lastActivity && (Date.now() - parseInt(lastActivity, 10) < 45 * 1000);
-          if (isRecentRefresh) {
-            safeSetSessionStorage('session_active', 'true');
-          } else {
-            safeRemoveLocalStorage('selectedSimulatedCollabId');
-            safeRemoveLocalStorage('lastActivityTime');
-            return;
-          }
-        }
 
-        if (restoredId && lastActivity) {
-          const elapsed = Date.now() - parseInt(lastActivity, 10);
-          if (elapsed > 5 * 60 * 1000) {
-            // Expired (5 minutes of inactivity)
+        if (restoredId) {
+          safeSetSessionStorage('session_active', 'true');
+          const elapsed = lastActivity ? Date.now() - parseInt(lastActivity, 10) : 0;
+          // Expire session only after 12 hours of inactivity
+          if (elapsed > 12 * 60 * 60 * 1000) {
             safeRemoveLocalStorage('selectedSimulatedCollabId');
             safeRemoveLocalStorage('lastActivityTime');
             safeRemoveSessionStorage('session_active');
@@ -3779,133 +3764,163 @@ export class App {
     this.loginError.set(null);
     const rawInput = this.loginNameInput().trim();
     if (!rawInput) {
-      this.loginError.set('Por favor, insira o seu nome.');
       this.matchedCollab.set(null);
       this.isFirstAccess.set(false);
       return null;
     }
 
     const collabs = this.scaleService.collaborators();
-    if (!collabs || collabs.length === 0) {
-      this.loginError.set('Carregando colaboradores do sistema... Por favor, aguarde um instante e tente novamente.');
-      this.matchedCollab.set(null);
-      this.isFirstAccess.set(false);
-      return null;
-    }
-
     const typedName = rawInput.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
-    // Search by ID, exact name, or partial name
-    const found = collabs.find(c => {
-      if (c.id.toLowerCase() === rawInput.toLowerCase()) return true;
-      const normName = (c.name || '').trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-      if (normName === typedName || normName.includes(typedName) || typedName.includes(normName)) return true;
-      const typedParts = typedName.split(/\s+/).filter(p => p.length >= 2);
-      const normParts = normName.split(/\s+/).filter(p => p.length >= 2);
-      return typedParts.some(tp => normParts.some(np => np === tp || np.includes(tp) || tp.includes(np)));
-    });
+    // 1. Exact ID match
+    let found = collabs.find(c => c.id.toLowerCase() === rawInput.toLowerCase());
 
+    // 2. Exact normalized name match
     if (!found) {
-      this.loginError.set('Colaborador não encontrado. Por favor, digite seu nome exatamente como cadastrado no sistema.');
-      this.matchedCollab.set(null);
-      this.isFirstAccess.set(false);
-      return null;
+      found = collabs.find(c => {
+        const normName = (c.name || '').trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        return normName === typedName;
+      });
     }
 
-    this.matchedCollab.set(found);
-    const pwdStr = String(found.password || '').trim();
-    if (!pwdStr) {
-      this.isFirstAccess.set(true);
-    } else {
-      this.isFirstAccess.set(false);
+    // 3. Name starts with typed input
+    if (!found) {
+      found = collabs.find(c => {
+        const normName = (c.name || '').trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        return normName.startsWith(typedName);
+      });
     }
-    return found;
-  }
 
-  public handleLoginSubmit() {
-    this.loginError.set(null);
-
-    let collab = this.matchedCollab();
-    if (!collab || !this.loginNameInput().trim()) {
-      collab = this.checkLoginName();
-    } else {
-      // Re-verify matchedCollab matches current input
-      const currentTyped = this.loginNameInput().trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-      const matchedNorm = (collab.name || '').trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-      if (matchedNorm !== currentTyped && !matchedNorm.includes(currentTyped) && !currentTyped.includes(matchedNorm)) {
-        collab = this.checkLoginName();
+    // 4. Multi-word name inclusion (excluding short prepositions)
+    if (!found && typedName.length >= 3) {
+      const stopWords = new Set(['DE', 'DA', 'DO', 'DOS', 'DAS', 'E']);
+      const typedParts = typedName.split(/\s+/).filter(p => p.length >= 2 && !stopWords.has(p));
+      if (typedParts.length > 0) {
+        found = collabs.find(c => {
+          const normName = (c.name || '').trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+          return typedParts.every(tp => normName.includes(tp));
+        });
       }
     }
 
-    if (!collab) {
-      // checkLoginName has already set loginError
+    if (found) {
+      this.matchedCollab.set(found);
+      const pwdStr = String(found.password || '').trim();
+      this.isFirstAccess.set(!pwdStr);
+      return found;
+    }
+
+    this.matchedCollab.set(null);
+    this.isFirstAccess.set(false);
+    return null;
+  }
+
+  public async handleLoginSubmit() {
+    this.loginError.set(null);
+    const rawInput = this.loginNameInput().trim();
+    if (!rawInput) {
+      this.loginError.set('Por favor, digite seu nome ou ID de colaborador.');
       return;
     }
 
-    const pin = this.loginPasswordInput().trim();
-    if (pin.length !== 4 || !/^\d{4}$/.test(pin)) {
-      this.loginError.set('A senha de acesso deve possuir exatamente 4 dígitos numéricos.');
-      return;
-    }
+    this.isLoggingIn.set(true);
 
-    if (this.isFirstAccess()) {
-      const confirmPin = this.confirmPasswordInput().trim();
-      if (pin !== confirmPin) {
-        this.loginError.set('As senhas digitadas não coincidem. Por favor, redigite e confirme.');
+    try {
+      let collab = this.checkLoginName();
+
+      // If not immediately found in local signal, search directly in database
+      if (!collab) {
+        collab = await this.scaleService.findCollaboratorDirect(rawInput);
+        if (collab) {
+          this.matchedCollab.set(collab);
+          const pwdStr = String(collab.password || '').trim();
+          this.isFirstAccess.set(!pwdStr);
+        }
+      }
+
+      if (!collab) {
+        this.loginError.set('Colaborador não encontrado. Por favor, digite seu nome exatamente como cadastrado no sistema.');
+        this.isLoggingIn.set(false);
         return;
       }
 
-      // Cadastrar nova senha de 4 dígitos no Supabase
-      const updatedCollab = { ...collab, password: pin };
-      this.scaleService.updateCollaborator(updatedCollab);
-      
-      // Realizar login oficial
-      this.selectedSimulatedCollabId.set(collab.id);
-      this.scaleService.selectedCollabName.set(collab.name);
-      this.scaleService.currentRole.set(collab.role);
-      
-      safeSetLocalStorage('selectedSimulatedCollabId', collab.id);
-      safeSetLocalStorage('lastActivityTime', Date.now().toString());
-      safeSetSessionStorage('session_active', 'true');
-      this.resetInactivityTimer();
-
-      this.showToast(`Senha de 4 dígitos cadastrada com sucesso! Bem-vindo, ${collab.name}.`);
-      this.clearLoginInputs();
-      
-      // Redirecionar dependendo de quem logou (Administradores para grid, restante para portal)
-      const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
-      if (this.isAdmin(collab) && !isMobile) {
-        this.activeSubTab.set('matrix');
-      } else {
-        this.activeSubTab.set('portal');
-        this.autoSelectTodayTabForLoggedCollab(collab);
+      const pin = this.loginPasswordInput().trim();
+      if (pin.length !== 4 || !/^\d{4}$/.test(pin)) {
+        this.loginError.set('A senha de acesso deve possuir exatamente 4 dígitos numéricos.');
+        this.isLoggingIn.set(false);
+        return;
       }
-    } else {
-      // Login com senha existente
+
       const storedPassword = String(collab.password || '').trim();
-      if (storedPassword === pin) {
+
+      // First access or blank password in database -> register password & log in immediately
+      if (!storedPassword || this.isFirstAccess()) {
+        const confirmPin = this.confirmPasswordInput().trim();
+        if (confirmPin && pin !== confirmPin) {
+          this.loginError.set('As senhas digitadas não coincidem. Por favor, redigite e confirme.');
+          this.isLoggingIn.set(false);
+          return;
+        }
+
+        const updatedCollab = { ...collab, password: pin };
+        await this.scaleService.updateCollaborator(updatedCollab);
+        collab = updatedCollab;
+
+        this.loggedCollabBackup.set(collab);
         this.selectedSimulatedCollabId.set(collab.id);
         this.scaleService.selectedCollabName.set(collab.name);
         this.scaleService.currentRole.set(collab.role);
-        
+
+        safeSetLocalStorage('logged_collab_data', JSON.stringify(collab));
         safeSetLocalStorage('selectedSimulatedCollabId', collab.id);
         safeSetLocalStorage('lastActivityTime', Date.now().toString());
         safeSetSessionStorage('session_active', 'true');
         this.resetInactivityTimer();
 
-        this.showToast(`Bem-vindo de volta, ${collab.name}!`);
+        this.showToast(`Senha de 4 dígitos cadastrada com sucesso! Bem-vindo, ${collab.name}.`);
         this.clearLoginInputs();
-        
-        const isMobileLogin = typeof window !== 'undefined' && window.innerWidth < 768;
-        if (this.isAdmin(collab) && !isMobileLogin) {
+        this.isLoggingIn.set(false);
+
+        const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+        if (this.isAdmin(collab) && !isMobile) {
           this.activeSubTab.set('matrix');
         } else {
           this.activeSubTab.set('portal');
           this.autoSelectTodayTabForLoggedCollab(collab);
         }
       } else {
-        this.loginError.set('Senha incorreta de 4 dígitos. Por favor, tente novamente.');
+        if (storedPassword === pin) {
+          this.loggedCollabBackup.set(collab);
+          this.selectedSimulatedCollabId.set(collab.id);
+          this.scaleService.selectedCollabName.set(collab.name);
+          this.scaleService.currentRole.set(collab.role);
+
+          safeSetLocalStorage('logged_collab_data', JSON.stringify(collab));
+          safeSetLocalStorage('selectedSimulatedCollabId', collab.id);
+          safeSetLocalStorage('lastActivityTime', Date.now().toString());
+          safeSetSessionStorage('session_active', 'true');
+          this.resetInactivityTimer();
+
+          this.clearLoginInputs();
+          this.showToast(`Bem-vindo de volta, ${collab.name}!`);
+          this.isLoggingIn.set(false);
+
+          const isMobileLogin = typeof window !== 'undefined' && window.innerWidth < 768;
+          if (this.isAdmin(collab) && !isMobileLogin) {
+            this.activeSubTab.set('matrix');
+          } else {
+            this.activeSubTab.set('portal');
+            this.autoSelectTodayTabForLoggedCollab(collab);
+          }
+        } else {
+          this.loginError.set('Senha incorreta de 4 dígitos. Por favor, tente novamente.');
+          this.isLoggingIn.set(false);
+        }
       }
+    } catch (err: any) {
+      console.error('Error in handleLoginSubmit:', err);
+      this.loginError.set('Erro ao processar login. Por favor, tente novamente.');
+      this.isLoggingIn.set(false);
     }
   }
 
@@ -3934,8 +3949,11 @@ export class App {
   logout() {
     this.scaleService.selectedCollabName.set(null);
     this.selectedSimulatedCollabId.set(null);
+    this.loggedCollabBackup.set(null);
     safeRemoveLocalStorage('selectedSimulatedCollabId');
+    safeRemoveLocalStorage('logged_collab_data');
     safeRemoveLocalStorage('lastActivityTime');
+    safeRemoveSessionStorage('session_active');
     safeRemoveSessionStorage('session_active');
     safeSetSessionStorage('dev_logged_out', 'true');
     if (this.inactivityTimeoutId) {
@@ -4901,7 +4919,29 @@ export class App {
     const id = this.selectedSimulatedCollabId();
     if (id) {
       const found = this.scaleService.collaborators().find(c => c.id === id);
-      if (found) return found;
+      if (found) {
+        this.loggedCollabBackup.set(found);
+        safeSetLocalStorage('logged_collab_data', JSON.stringify(found));
+        return found;
+      }
+
+      // Fallback 1: in-memory backup
+      const backup = this.loggedCollabBackup();
+      if (backup && backup.id === id) {
+        return backup;
+      }
+
+      // Fallback 2: localStorage cache
+      const stored = safeGetLocalStorage('logged_collab_data');
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          if (parsed && parsed.id === id) {
+            this.loggedCollabBackup.set(parsed);
+            return parsed;
+          }
+        } catch (e) {}
+      }
     }
 
     // Fallback auto-login in development/preview environments to NEVER request login/password
